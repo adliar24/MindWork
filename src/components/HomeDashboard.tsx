@@ -165,12 +165,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     <div>
                       {/* Project Card Cover Banner */}
                       <div className="relative -mx-5 -mt-5 mb-5">
-                        <div className="w-full h-24 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden">
+                        <div className="w-full aspect-[3/1] min-h-[96px] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden">
                           {project.coverImage ? (
                             <img
                               src={project.coverImage}
                               alt={project.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 flex items-center justify-end pr-4 text-white/20 font-black text-2xl select-none">

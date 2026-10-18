@@ -143,12 +143,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative">
             {/* Cover Banner */}
             {!isBannerCollapsed && (
-              <div className="relative w-full h-36 sm:h-48 md:h-56 rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
+              <div className="relative w-full aspect-[3/1] max-h-[380px] min-h-[110px] rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
                     alt="Sampul Proyek"
-                    className="w-full h-full object-cover select-none"
+                    className="w-full h-full object-cover object-center select-none"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/35">
