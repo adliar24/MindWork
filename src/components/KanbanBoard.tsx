@@ -143,7 +143,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative">
             {/* Cover Banner */}
             {!isBannerCollapsed && (
-              <div className="relative w-full aspect-[3/1] max-h-[380px] min-h-[110px] rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
+              <div className="relative w-full h-28 sm:h-32 md:h-36 lg:h-40 rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
@@ -152,7 +152,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/35">
-                    <span className="text-2xl sm:text-5xl font-black uppercase tracking-widest select-none">
+                    <span className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-widest select-none">
                       {project.name}
                     </span>
                   </div>
@@ -167,7 +167,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       coverInputRef.current?.click();
                     }}
                     disabled={isUploadingCover}
-                    className="absolute bottom-3 right-3 z-30 px-3 py-1.5 rounded-xl bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span className="inline">
@@ -186,8 +186,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 {/* Left: Avatar + Title + Description */}
                 <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
                   {/* Project Profile Avatar - only the avatar overlaps into the banner */}
-                  <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-12 sm:-mt-16' : 'mt-4'} z-20`}>
-                    <div className="w-20 h-20 sm:w-26 sm:h-26 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
+                  <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-9 sm:-mt-11 md:-mt-12' : 'mt-3.5'} z-20`}>
+                    <div className="w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
                       {project.avatar ? (
                         <img
                           src={project.avatar}
@@ -195,7 +195,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           className="w-full h-full object-cover select-none"
                         />
                       ) : (
-                        <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-2xl sm:text-3xl select-none`}>
+                        <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-xl sm:text-2xl md:text-3xl select-none`}>
                           {project.name.charAt(0).toUpperCase()}
                         </div>
                       )}
