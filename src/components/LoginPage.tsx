@@ -239,40 +239,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
           {/* Form Card */}
           <div className="rounded-2xl border border-neutral-200 dark:border-[#242731] bg-white dark:bg-[#12141a] shadow-sm p-6 space-y-5">
-            {/* Tab Buttons */}
-            <div className="grid grid-cols-2 p-1 bg-neutral-100 dark:bg-[#1a1c24] rounded-xl text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('login');
-                  setLoginError(null);
-                  setRegError(null);
-                }}
-                className={`py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeTab === 'login'
-                    ? 'bg-white dark:bg-[#262934] text-neutral-900 dark:text-white shadow-xs'
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-              >
-                {t('signInTitle')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('register');
-                  setLoginError(null);
-                  setRegError(null);
-                }}
-                className={`py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeTab === 'register'
-                    ? 'bg-white dark:bg-[#262934] text-neutral-900 dark:text-white shadow-xs'
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-              >
-                {language === 'id' ? 'Daftar' : 'Register'}
-              </button>
-            </div>
-
             {/* TAB: LOGIN */}
             {activeTab === 'login' && (
               <div className="space-y-4 tab-transition">
