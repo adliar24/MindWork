@@ -3,7 +3,6 @@ import {
   Search,
   Moon,
   Sun,
-  Plus,
   UserPlus,
   Menu,
   X,
@@ -215,32 +214,6 @@ export const Header: React.FC<HeaderProps> = ({
               {currentUser.name}
             </span>
           </button>
-
-          {/* Primary Action Button: + Tugas / + Proyek */}
-          {project ? (
-            <button
-              disabled={currentUserRole === 'viewer'}
-              onClick={onOpenNewTaskModal}
-              title={t('newTask')}
-              className={`flex items-center justify-center gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-xl text-xs font-semibold shadow-xs transition-all shrink-0 ${
-                currentUserRole === 'viewer'
-                  ? 'bg-neutral-300 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed opacity-60'
-                  : 'bg-red-600 hover:bg-red-700 active:scale-95 text-white shadow-red-600/30 cursor-pointer'
-              }`}
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">{t('newTask')}</span>
-            </button>
-          ) : (
-            <button
-              onClick={onOpenNewProjectModal}
-              title={t('createNewProject')}
-              className="flex items-center justify-center gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-xl text-xs font-semibold shadow-xs transition-all shrink-0 bg-red-600 hover:bg-red-700 active:scale-95 text-white shadow-red-600/30 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">{t('newProject')}</span>
-            </button>
-          )}
         </div>
       </div>
 
