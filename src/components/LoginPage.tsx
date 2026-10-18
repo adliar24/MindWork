@@ -34,9 +34,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onRegister,
 }) => {
   const { t, language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(
-    users.length === 0 ? 'register' : 'login'
-  );
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -350,6 +348,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       t('loginBtn')
                     )}
                   </button>
+
+                  <p className="text-center text-xs text-neutral-500 dark:text-neutral-400 pt-1">
+                    {language === 'id' ? 'Belum punya akun? ' : "Don't have an account? "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('register');
+                        setLoginError(null);
+                        setRegError(null);
+                      }}
+                      className="text-red-600 dark:text-red-400 font-semibold hover:underline cursor-pointer"
+                    >
+                      {language === 'id' ? 'Daftar sekarang' : 'Register now'}
+                    </button>
+                  </p>
                 </form>
               </div>
             )}
@@ -491,6 +504,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                       language === 'id' ? 'Daftar Akun' : 'Create Account'
                     )}
                   </button>
+
+                  <p className="text-center text-xs text-neutral-500 dark:text-neutral-400 pt-1">
+                    {language === 'id' ? 'Sudah punya akun? ' : 'Already have an account? '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('login');
+                        setLoginError(null);
+                        setRegError(null);
+                      }}
+                      className="text-red-600 dark:text-red-400 font-semibold hover:underline cursor-pointer"
+                    >
+                      {language === 'id' ? 'Masuk sekarang' : 'Sign in'}
+                    </button>
+                  </p>
                 </form>
               </div>
             )}
