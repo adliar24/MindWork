@@ -165,7 +165,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                     <div>
                       {/* Project Card Cover Banner */}
                       <div className="relative -mx-5 -mt-5 mb-5">
-                        <div className="w-full aspect-[3/1] min-h-[96px] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden">
+                        <div className="w-full aspect-[3/1] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden">
                           {project.coverImage ? (
                             <img
                               src={project.coverImage}

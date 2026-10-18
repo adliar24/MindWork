@@ -138,7 +138,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
             </label>
             <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-100 dark:bg-neutral-800/40">
               {/* Cover Preview */}
-              <div className="relative w-full aspect-[3/1] min-h-[110px] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden group">
+              <div className="relative w-full aspect-[3/1] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden group">
                 {coverImage ? (
                   <img src={coverImage} alt="Cover preview" className="w-full h-full object-cover object-center" />
                 ) : (

@@ -141,9 +141,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
           <div className="max-w-[860px] mx-auto sm:mx-0 rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
-            {/* Cover Banner - Fixed 3:1 Ratio, Left-aligned on Desktop/Tablet, Centered on Mobile */}
+            {/* Cover Banner - Strict 3:1 Aspect Ratio on All Devices */}
             {!isBannerCollapsed && (
-              <div className="relative w-full aspect-[3/1] max-h-[260px] min-h-[110px] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
+              <div className="relative w-full aspect-[3/1] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
