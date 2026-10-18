@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, FolderPlus, Layers, Users } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, FolderPlus, Layers, Users, Camera, Image as ImageIcon } from 'lucide-react';
 import { Project, ProjectRole, User } from '../types';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
+import { compressCoverBannerFile, compressImageFile } from '../utils/imageCompressor';
 
 interface NewProjectModalProps {
   users: User[];
@@ -39,6 +40,10 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   const [selectedMembers, setSelectedMembers] = useState<string[]>(
     currentUser?.id ? [currentUser.id] : []
   );
+  const [avatar, setAvatar] = useState('');
+  const [coverImage, setCoverImage] = useState('');
+  const modalCoverRef = useRef<HTMLInputElement>(null);
+  const modalAvatarRef = useRef<HTMLInputElement>(null);
 
   const toggleMember = (id: string) => {
     setSelectedMembers((prev) =>
@@ -87,6 +92,8 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
       memberIds: finalMemberIds,
       memberRoles: initialRoles,
       iconColor: 'bg-red-600',
+      avatar: avatar || undefined,
+      coverImage: coverImage || undefined,
     };
 
     onCreateProject(newProject);
@@ -124,6 +131,87 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
+          {/* Fanpage Cover & Profile Picture Preview */}
+          <div className="space-y-1.5">
+            <label className="block font-semibold text-neutral-700 dark:text-neutral-300">
+              Sampul & Foto Profil Proyek (Opsional)
+            </label>
+            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-neutral-100 dark:bg-neutral-800/40">
+              {/* Cover Preview */}
+              <div className="relative w-full h-24 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden group">
+                {coverImage ? (
+                  <img src={coverImage} alt="Cover preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white/30 text-xs font-bold uppercase tracking-wider">
+                    Preview Sampul
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => modalCoverRef.current?.click()}
+                  className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+                >
+                  <Camera className="w-3 h-3" />
+                  <span>{coverImage ? 'Ubah Sampul' : '+ Unggah Sampul'}</span>
+                </button>
+              </div>
+
+              {/* Avatar Preview */}
+              <div className="px-3 pb-2.5 -mt-6 flex items-end justify-between gap-3 relative z-10">
+                <div className="relative group">
+                  <div className="w-13 h-13 rounded-xl overflow-hidden border-2 border-white dark:border-neutral-900 shadow-md bg-white dark:bg-neutral-800 flex items-center justify-center">
+                    {avatar ? (
+                      <img src={avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-red-600 text-white flex items-center justify-center font-black text-lg">
+                        {name ? name.charAt(0).toUpperCase() : 'P'}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => modalAvatarRef.current?.click()}
+                    className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-semibold transition-opacity cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5 mb-0.5" />
+                    <span>Foto</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 pb-0.5">
+                  Klik foto / tombol sampul untuk mengganti
+                </p>
+              </div>
+            </div>
+
+            {/* Hidden file inputs */}
+            <input
+              ref={modalCoverRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const compressed = await compressCoverBannerFile(file, 1200, 400);
+                  setCoverImage(compressed);
+                }
+              }}
+            />
+            <input
+              ref={modalAvatarRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const compressed = await compressImageFile(file, 200);
+                  setAvatar(compressed);
+                }
+              }}
+            />
+          </div>
           <div>
             <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
               {t('projectNameLabel')} <span className="text-red-500">*</span>

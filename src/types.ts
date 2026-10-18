@@ -97,6 +97,8 @@ export interface Project {
   memberIds: string[];
   memberRoles: Record<string, ProjectRole>;
   iconColor: string;
+  avatar?: string;
+  coverImage?: string;
 }
 
 export type ThemeMode = 'dark' | 'light';

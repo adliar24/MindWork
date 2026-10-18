@@ -160,11 +160,41 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   <div
                     key={project.id}
                     onClick={() => onSelectProject(project.id)}
-                    className="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item animate-card-enter"
+                    className="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item animate-card-enter overflow-hidden"
                   >
                     <div>
-                      {/* Top Row: Key, Category & Role Badge */}
-                      <div className="flex items-center justify-between gap-2 mb-3">
+                      {/* Project Card Cover Banner */}
+                      <div className="relative w-[calc(100%+2.5rem)] h-24 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 -mx-5 -mt-5 mb-4 overflow-hidden">
+                        {project.coverImage ? (
+                          <img
+                            src={project.coverImage}
+                            alt={project.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 flex items-center justify-end pr-4 text-white/20 font-black text-2xl select-none">
+                            {project.key}
+                          </div>
+                        )}
+
+                        {/* Avatar Overlapping Cover */}
+                        <div className="absolute -bottom-3 left-4 w-12 h-12 rounded-xl overflow-hidden border-2 border-white dark:border-[#12141a] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center">
+                          {project.avatar ? (
+                            <img
+                              src={project.avatar}
+                              alt={project.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-bold text-base select-none`}>
+                              {project.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Key, Category & Role Badge */}
+                      <div className="flex items-center justify-between gap-2 mb-2 pt-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60 shrink-0">
                             {project.key}

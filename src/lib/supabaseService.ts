@@ -260,6 +260,8 @@ export async function fetchCloudProjects(): Promise<Project[] | null> {
         memberIds,
         memberRoles,
         iconColor: p.icon_color || 'bg-red-600',
+        avatar: p.avatar || '',
+        coverImage: p.cover_image || '',
       };
     });
 
@@ -273,7 +275,7 @@ export async function saveCloudProject(project: Project): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
     // 1. Upsert project
-    const { error: projError } = await supabase.from('projects').upsert({
+    const row: any = {
       id: project.id,
       name: project.name,
       description: project.description,
@@ -281,7 +283,11 @@ export async function saveCloudProject(project: Project): Promise<boolean> {
       category: project.category,
       leader_id: project.leaderId,
       icon_color: project.iconColor,
-    });
+    };
+    if (project.avatar !== undefined) row.avatar = project.avatar;
+    if (project.coverImage !== undefined) row.cover_image = project.coverImage;
+
+    const { error: projError } = await supabase.from('projects').upsert(row);
 
     if (projError) return false;
 

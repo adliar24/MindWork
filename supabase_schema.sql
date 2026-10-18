@@ -33,8 +33,13 @@ CREATE TABLE IF NOT EXISTS public.projects (
   category TEXT DEFAULT 'Umum',
   leader_id TEXT REFERENCES public.profiles(id) ON DELETE SET NULL,
   icon_color TEXT DEFAULT 'bg-red-600',
+  avatar TEXT DEFAULT '',
+  cover_image TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '';
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS cover_image TEXT DEFAULT '';
 
 -- 3. TABEL PROJECT_MEMBERS (Relasi Anggota & Peran Proyek: Leader / Member / Viewer)
 CREATE TABLE IF NOT EXISTS public.project_members (

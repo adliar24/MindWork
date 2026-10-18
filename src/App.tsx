@@ -444,6 +444,17 @@ export default function App() {
     }
   };
 
+  const handleUpdateProject = (updatedProject: Project) => {
+    setProjects((prev) => {
+      const next = prev.map((p) => (p.id === updatedProject.id ? updatedProject : p));
+      localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      return next;
+    });
+    if (cloudStatus.tableReady) {
+      saveCloudProject(updatedProject);
+    }
+  };
+
   const handleRegisterUser = (newUser: User) => {
     setUsers((prev) => {
       const filtered = prev.filter(
@@ -662,6 +673,8 @@ export default function App() {
             ) : (
               <div key={activeProject.id} className="flex-1 flex overflow-hidden animate-view-fade">
                 <KanbanBoard
+                  project={activeProject}
+                  onUpdateProject={handleUpdateProject}
                   columns={INITIAL_COLUMNS}
                   tasks={filteredTasks}
                   users={users}

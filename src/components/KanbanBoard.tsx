@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { Plus, MoreHorizontal, Eye } from 'lucide-react';
-import { Column, ColumnId, ProjectRole, Task, User } from '../types';
+import React, { useState, useRef } from 'react';
+import { Plus, Eye, Camera, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
+import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
+import { compressCoverBannerFile, compressImageFile } from '../utils/imageCompressor';
 
 interface KanbanBoardProps {
+  project?: Project | null;
+  onUpdateProject?: (updatedProject: Project) => void;
   columns: Column[];
   tasks: Task[];
   users: User[];
@@ -15,6 +18,8 @@ interface KanbanBoardProps {
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
+  project,
+  onUpdateProject,
   columns,
   tasks,
   users,
@@ -27,6 +32,52 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const isViewer = currentUserRole === 'viewer';
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<ColumnId | null>(null);
+  const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const doneCount = tasks.filter((t) => t.columnId === 'done').length;
+  const totalCount = tasks.length;
+  const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+  const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project || !onUpdateProject) return;
+    try {
+      setIsUploadingCover(true);
+      const compressed = await compressCoverBannerFile(file, 1200, 400);
+      onUpdateProject({
+        ...project,
+        coverImage: compressed,
+      });
+    } catch (err) {
+      console.error('Gagal mengupload sampul proyek:', err);
+    } finally {
+      setIsUploadingCover(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project || !onUpdateProject) return;
+    try {
+      setIsUploadingAvatar(true);
+      const compressed = await compressImageFile(file, 240);
+      onUpdateProject({
+        ...project,
+        avatar: compressed,
+      });
+    } catch (err) {
+      console.error('Gagal mengupload avatar proyek:', err);
+    } finally {
+      setIsUploadingAvatar(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const getColumnTitle = (colId: ColumnId, defaultTitle: string) => {
     switch (colId) {
@@ -85,10 +136,161 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const getUser = (id: string) => users.find((u) => u.id === id);
 
   return (
-    <div className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden p-3 sm:p-4 md:p-6 bg-[#f0f2f5] dark:bg-[#090a0d] transition-colors scroll-smooth">
-      {/* Viewer Notice Banner */}
+    <div className="flex-1 flex flex-col overflow-y-auto bg-[#f0f2f5] dark:bg-[#090a0d] transition-colors scroll-smooth">
+      {/* 1. Facebook Fanpage-style Project Header (Cover + Profile Picture) */}
+      {project && (
+        <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
+          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] overflow-hidden shadow-xs">
+            {/* Cover Banner */}
+            {!isBannerCollapsed && (
+              <div className="relative w-full h-32 sm:h-44 md:h-52 overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
+                {project.coverImage ? (
+                  <img
+                    src={project.coverImage}
+                    alt="Sampul Proyek"
+                    className="w-full h-full object-cover select-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/35">
+                    <span className="text-2xl sm:text-5xl font-black uppercase tracking-widest select-none">
+                      {project.name}
+                    </span>
+                  </div>
+                )}
+
+                {/* Cover Action Button */}
+                {!isViewer && onUpdateProject && (
+                  <button
+                    type="button"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={isUploadingCover}
+                    className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span className="hidden xs:inline">
+                      {isUploadingCover
+                        ? (language === 'id' ? 'Memproses...' : 'Processing...')
+                        : (language === 'id' ? 'Ubah Sampul' : 'Change Cover')}
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Profile Avatar & Details Section */}
+            <div className={`px-4 sm:px-6 pb-4 sm:pb-5 ${!isBannerCollapsed ? '-mt-10 sm:-mt-14' : 'pt-4 sm:pt-5'} relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4`}>
+              {/* Left: Avatar + Title + Description */}
+              <div className="flex items-end gap-3.5 sm:gap-4.5 min-w-0">
+                {/* Project Profile Avatar */}
+                <div className="relative group shrink-0">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
+                    {project.avatar ? (
+                      <img
+                        src={project.avatar}
+                        alt={project.name}
+                        className="w-full h-full object-cover select-none"
+                      />
+                    ) : (
+                      <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-2xl sm:text-3xl select-none`}>
+                        {project.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Change Profile Avatar Overlay Button */}
+                  {!isViewer && onUpdateProject && (
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity cursor-pointer border-4 border-transparent"
+                      title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
+                    >
+                      <Camera className="w-5 h-5 mb-0.5" />
+                      <span>
+                        {isUploadingAvatar ? '...' : (language === 'id' ? 'Ubah' : 'Edit')}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Project Titles & Category */}
+                <div className="pb-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight truncate">
+                      {project.name}
+                    </h2>
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                      {project.key}
+                    </span>
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                      {project.category}
+                    </span>
+                  </div>
+                  {project.description && (
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl line-clamp-1 sm:line-clamp-2">
+                      {project.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Stats & Collapse Toggle */}
+              <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto pb-1 text-xs">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium">
+                  <span>{language === 'id' ? 'Progres' : 'Progress'}:</span>
+                  <span className="font-bold text-neutral-900 dark:text-white">
+                    {doneCount}/{totalCount} ({progressPercent}%)
+                  </span>
+                </div>
+
+                {!isViewer && onQuickAddTask && (
+                  <button
+                    onClick={() => onQuickAddTask('todo')}
+                    className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>{t('newTask')}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
+                  title={isBannerCollapsed ? (language === 'id' ? 'Tampilkan Sampul' : 'Show Cover') : (language === 'id' ? 'Sembunyikan Sampul' : 'Hide Cover')}
+                  className="p-1.5 rounded-xl border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
+                >
+                  {isBannerCollapsed ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Hidden file inputs */}
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCoverFileChange}
+            />
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarFileChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 2. Viewer Notice Banner */}
       {isViewer && (
-        <div className="mb-4 px-4 py-2.5 rounded-xl bg-neutral-200/70 dark:bg-[#161822] border border-[#cfd5de] dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 text-xs flex items-center justify-between gap-3 shadow-xs shrink-0">
+        <div className="mx-3 sm:mx-5 md:mx-6 mb-3 px-4 py-2.5 rounded-xl bg-neutral-200/70 dark:bg-[#161822] border border-[#cfd5de] dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 text-xs flex items-center justify-between gap-3 shadow-xs shrink-0">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-neutral-500 shrink-0" />
             <span>
@@ -109,7 +311,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         </div>
       )}
 
-      <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
+      {/* 3. Horizontal Kanban Columns */}
+      <div className="flex-1 flex overflow-x-auto p-3 sm:p-5 md:p-6 pt-1">
+        <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
         {columns.map((column) => {
           const columnTasks = tasks.filter((t) => t.columnId === column.id);
           const isOver = dragOverColumnId === column.id;
@@ -213,6 +417,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -5,10 +5,7 @@ import {
   LogOut,
   Mail,
   Camera,
-  CheckCircle2,
-  Lock,
   Globe,
-  Check,
 } from 'lucide-react';
 import { ProjectRole, User as UserType } from '../types';
 import { AvatarPickerModal } from './AvatarPickerModal';
@@ -105,9 +102,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Body Content */}
-        <div className="p-6 space-y-4 text-xs">
+        <div className="p-5 sm:p-6 space-y-4 text-xs">
           {/* User Profile Card */}
-          <div className="p-4 rounded-xl border border-neutral-200/90 dark:border-[#272a35] bg-neutral-50/70 dark:bg-[#161822] space-y-3.5">
+          <div className="p-4 rounded-2xl border border-neutral-200/90 dark:border-[#272a35] bg-neutral-50/70 dark:bg-[#161822]">
             <div className="flex items-center gap-3.5">
               {/* Avatar with Camera badge */}
               <button
@@ -151,158 +148,59 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </p>
               </div>
             </div>
-
-            {/* Quick button to change avatar */}
-            <div className="pt-2 border-t border-neutral-200/60 dark:border-[#20232c] flex items-center justify-between">
-              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                {t('avatarPickerTitle')}
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsAvatarPickerOpen(true)}
-                className="text-[11px] font-semibold text-red-600 dark:text-red-400 hover:underline cursor-pointer"
-              >
-                {t('changeAvatar')}
-              </button>
-            </div>
           </div>
 
-          {/* Language Preference Card (Bahasa Indonesia Bawaan & English Opsional) */}
-          <div className="rounded-xl border border-neutral-200/80 dark:border-[#272a35] bg-white dark:bg-[#161822] p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Globe className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs text-neutral-900 dark:text-white">
-                    {t('appLanguage')}
-                  </h4>
-                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                    {t('appLanguageDesc')}
-                  </p>
-                </div>
-              </div>
+          {/* Compact Language Preference Row */}
+          <div className="flex items-center justify-between p-3 px-3.5 rounded-xl border border-neutral-200/80 dark:border-[#272a35] bg-white dark:bg-[#161822]">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                {t('appLanguage')}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              {/* Bahasa Indonesia Button */}
+            <div className="flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-[#20232c] text-xs">
               <button
                 type="button"
                 onClick={() => setLanguage('id')}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                   language === 'id'
-                    ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20 shadow-xs ring-1 ring-red-500/40'
-                    : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/40'
+                    ? 'bg-white dark:bg-[#2b2f3d] text-red-600 dark:text-red-400 shadow-xs'
+                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-base leading-none">🇮🇩</span>
-                  {language === 'id' && (
-                    <div className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="font-bold text-xs text-neutral-900 dark:text-white">
-                    {t('langIdLabel')}
-                  </p>
-                  <span className="inline-block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded mt-0.5">
-                    {t('defaultBadge')}
-                  </span>
-                </div>
+                <span>🇮🇩</span>
+                <span>ID</span>
               </button>
-
-              {/* English Button */}
               <button
                 type="button"
                 onClick={() => setLanguage('en')}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                   language === 'en'
-                    ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20 shadow-xs ring-1 ring-red-500/40'
-                    : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/40'
+                    ? 'bg-white dark:bg-[#2b2f3d] text-red-600 dark:text-red-400 shadow-xs'
+                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-base leading-none">🇬🇧</span>
-                  {language === 'en' && (
-                    <div className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="font-bold text-xs text-neutral-900 dark:text-white">
-                    {t('langEnLabel')}
-                  </p>
-                  <span className="inline-block text-[9px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-200 dark:bg-neutral-800 px-1.5 py-0.2 rounded mt-0.5">
-                    {t('optionalBadge')}
-                  </span>
-                </div>
+                <span>🇬🇧</span>
+                <span>EN</span>
               </button>
             </div>
           </div>
 
-          {/* Account Security Details */}
-          <div className="rounded-xl border border-neutral-200/80 dark:border-[#272a35] bg-white dark:bg-[#161822] p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-neutral-400" />
-                {t('accountEmail')}:
-              </span>
-              <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate max-w-[200px]">
-                {currentUser.email}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 dark:border-[#20232c]">
-              <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-neutral-400" />
-                {t('accountUsername')}:
-              </span>
-              <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                {currentUser.username ? `@${currentUser.username}` : '-'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 dark:border-[#20232c]">
-              <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                {t('authStatus')}:
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3 h-3" />
-                {t('authConnected')}
-              </span>
-            </div>
-          </div>
-
-          {/* Logout Action Box */}
-          <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 dark:bg-red-950/15 flex items-center justify-between gap-3">
-            <div>
-              <p className="font-semibold text-xs text-neutral-900 dark:text-white">
-                {t('logoutTitle')}
-              </p>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                {t('logoutDesc')}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              disabled={isLoggingOut}
-              className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>{t('logoutBtn')}</span>
-            </button>
-          </div>
+          {/* Clean Logout Button */}
+          <button
+            type="button"
+            onClick={handleLogoutClick}
+            disabled={isLoggingOut}
+            className="w-full h-10 rounded-xl border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 active:scale-98 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>{t('logoutBtn')}</span>
+          </button>
         </div>
 
         {/* Footer */}
-        <div className="p-3.5 px-6 border-t border-neutral-200 dark:border-[#20232c] bg-neutral-50/50 dark:bg-[#12141a] flex items-center justify-end">
+        <div className="p-3 px-6 border-t border-neutral-200 dark:border-[#20232c] bg-neutral-50/50 dark:bg-[#12141a] flex items-center justify-end">
           <button
             type="button"
             onClick={handleClose}
