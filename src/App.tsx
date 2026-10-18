@@ -176,11 +176,7 @@ export default function App() {
   const [quickAddColumnId, setQuickAddColumnId] = useState<ColumnId>('todo');
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(() => {
-    // If no users exist on startup, automatically open the registration modal
-    const saved = localStorage.getItem('vermilion_users');
-    return !saved || saved === '[]';
-  });
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
 
@@ -459,6 +455,7 @@ export default function App() {
     });
     setCurrentUserId(newUser.id);
     localStorage.setItem('vermilion_current_user', newUser.id);
+    setIsAuthOpen(false);
 
     // Persist automatically to Supabase
     saveCloudUser(newUser).catch((err) => {
@@ -537,6 +534,7 @@ export default function App() {
           onLogin={(user) => {
             setCurrentUserId(user.id);
             localStorage.setItem('vermilion_current_user', user.id);
+            setIsAuthOpen(false);
           }}
           onRegister={handleRegisterUser}
         />

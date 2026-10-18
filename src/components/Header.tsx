@@ -7,7 +7,6 @@ import {
   UserPlus,
   Menu,
   X,
-  UserCheck,
 } from 'lucide-react';
 import { Project, ProjectRole, ThemeMode, User } from '../types';
 import { UserAvatar } from './UserAvatar';
@@ -57,8 +56,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { t, language } = useLanguage();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-
-  const isMyTasksActive = selectedAssigneeId === currentUser.id;
 
   return (
     <header className="border-b border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#101116] shrink-0 transition-colors">
@@ -186,21 +183,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
           </div>
-
-          {/* Quick Filter: "Tugas Saya" */}
-          <button
-            type="button"
-            onClick={() => onSelectAssignee(isMyTasksActive ? null : currentUser.id)}
-            title={t('myTasks')}
-            className={`flex items-center justify-center gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-              isMyTasksActive
-                ? 'bg-red-600 text-white shadow-xs shadow-red-600/30'
-                : 'bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-600 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400'
-            }`}
-          >
-            <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden md:inline">{t('myTasks')}</span>
-          </button>
 
           {/* Theme Toggle Button */}
           <button
