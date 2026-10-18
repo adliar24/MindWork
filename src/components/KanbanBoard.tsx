@@ -140,10 +140,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       {/* 1. Facebook Fanpage-style Project Header (Cover + Profile Picture) */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
-          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative">
-            {/* Cover Banner */}
+          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
+            {/* Cover Banner - Inset framed with rounded-2xl, not edge-to-edge */}
             {!isBannerCollapsed && (
-              <div className="relative w-full h-28 sm:h-32 md:h-36 lg:h-40 rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
+              <div className="relative w-full h-28 sm:h-32 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
@@ -181,7 +181,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             )}
 
             {/* Profile Avatar & Details Section - in normal flow below cover banner to prevent text collision */}
-            <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-0">
+            <div className="px-1.5 sm:px-2.5 pb-1 sm:pb-2 pt-0">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 {/* Left: Avatar + Title + Description */}
                 <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
