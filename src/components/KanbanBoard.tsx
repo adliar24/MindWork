@@ -46,6 +46,15 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !project || !onUpdateProject) return;
+
+    // Validasi agar hanya berkas gambar yang diproses saat pengguna memilih lewat File Manager / Folder
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
+    if (!isImage) {
+      alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     try {
       setIsUploadingCover(true);
       const compressed = await compressCoverBannerFile(file, 1200, 400);
@@ -64,6 +73,15 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !project || !onUpdateProject) return;
+
+    // Validasi agar hanya berkas gambar yang diproses saat pengguna memilih lewat File Manager / Folder
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
+    if (!isImage) {
+      alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     try {
       setIsUploadingAvatar(true);
       const compressed = await compressImageFile(file, 240);
@@ -277,18 +295,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               </div>
             </div>
 
-            {/* Hidden file inputs */}
+            {/* Hidden file inputs - allow flexible browsing (Photos, Gallery & File Manager/Folder) */}
             <input
               ref={coverInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
               className="hidden"
               onChange={handleCoverFileChange}
             />
             <input
               ref={avatarInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
               className="hidden"
               onChange={handleAvatarFileChange}
             />

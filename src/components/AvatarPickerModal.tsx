@@ -111,6 +111,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
+    if (!isImage) {
+      alert('Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     try {
       setIsProcessing(true);
       const compressedDataUrl = await compressImageFile(file, 200, 0.82);
@@ -139,11 +148,11 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
         className="w-full max-w-md rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden flex flex-col text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hidden File Input */}
+        {/* Hidden File Input - allow flexible browsing (Photos, Gallery & File Manager/Folder) */}
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
           className="hidden"
           onChange={handleFileUpload}
         />

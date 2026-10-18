@@ -31,7 +31,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   onClose,
   onCreateProject,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [name, setName] = useState('');
   const [key, setKey] = useState('');
   const [description, setDescription] = useState('');
@@ -187,30 +187,56 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
               </div>
             </div>
 
-            {/* Hidden file inputs */}
+            {/* Hidden file inputs - allow flexible browsing (Photos, Gallery & File Manager/Folder) */}
             <input
               ref={modalCoverRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (file) {
+                if (!file) return;
+
+                const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
+                if (!isImage) {
+                  alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
+                  if (e.target) e.target.value = '';
+                  return;
+                }
+
+                try {
                   const compressed = await compressCoverBannerFile(file, 1200, 400);
                   setCoverImage(compressed);
+                } catch (err) {
+                  console.error('Gagal mengupload sampul:', err);
+                } finally {
+                  if (e.target) e.target.value = '';
                 }
               }}
             />
             <input
               ref={modalAvatarRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (file) {
+                if (!file) return;
+
+                const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
+                if (!isImage) {
+                  alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
+                  if (e.target) e.target.value = '';
+                  return;
+                }
+
+                try {
                   const compressed = await compressImageFile(file, 200);
                   setAvatar(compressed);
+                } catch (err) {
+                  console.error('Gagal mengupload avatar:', err);
+                } finally {
+                  if (e.target) e.target.value = '';
                 }
               }}
             />
