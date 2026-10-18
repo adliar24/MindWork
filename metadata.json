@@ -1,0 +1,6 @@
+{
+  "name": "Vermilion Kanban & Team Collaboration",
+  "description": "Aplikasi manajemen proyek dan kolaborasi tim interaktif bergaya Kanban dengan tema Gelap/Terang, manajemen lampiran berkas multi-format, dan diskusi tim real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

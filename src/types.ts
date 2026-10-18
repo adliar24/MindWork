@@ -1,0 +1,103 @@
+export type FileType = 'image' | 'document' | 'spreadsheet' | 'archive' | 'other';
+
+export interface Attachment {
+  id: string;
+  name: string;
+  size: string;
+  type: FileType;
+  uploadedAt: string;
+  url?: string;
+  isCover?: boolean;
+  extension: string;
+  dimensions?: string;
+  isCloudLink?: boolean;
+  cloudProvider?: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  role?: string;
+  color: string;
+  email: string;
+  username?: string;
+  isOnline: boolean;
+  password?: string;
+}
+
+export interface Comment {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  attachmentName?: string;
+}
+
+export interface Activity {
+  id: string;
+  authorId: string;
+  action: string;
+  timestamp: string;
+}
+
+export type Priority = 'Tinggi' | 'Sedang' | 'Rendah';
+
+export type ColumnId = 'todo' | 'in_progress' | 'in_review' | 'done';
+
+export interface Column {
+  id: ColumnId;
+  title: string;
+  description: string;
+  badgeColor: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export type LinkType = 'drive' | 'figma' | 'canva' | 'doc' | 'sheet' | 'link';
+
+export interface ExternalLink {
+  id: string;
+  title: string;
+  url: string;
+  type: LinkType;
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  columnId: ColumnId;
+  title: string;
+  description: string;
+  priority: Priority;
+  assigneeId: string;
+  dueDate: string;
+  tags: string[];
+  attachments: Attachment[];
+  comments: Comment[];
+  activities: Activity[];
+  checklist: ChecklistItem[];
+  externalLinks: ExternalLink[];
+  createdAt: string;
+}
+
+export type ProjectRole = 'leader' | 'member' | 'viewer';
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  key: string;
+  category: string;
+  leaderId: string;
+  memberIds: string[];
+  memberRoles: Record<string, ProjectRole>;
+  iconColor: string;
+}
+
+export type ThemeMode = 'dark' | 'light';
+export type Language = 'id' | 'en';
