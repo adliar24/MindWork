@@ -128,15 +128,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               {/* Name, Username, Email */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-neutral-900 dark:text-white truncate">
-                    {currentUser.name}
-                  </h4>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    {t('activeBadge')}
-                  </span>
-                </div>
+                <h4 className="font-bold text-sm text-neutral-900 dark:text-white truncate">
+                  {currentUser.name}
+                </h4>
 
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium truncate mt-0.5">
                   {currentUser.username ? `@${currentUser.username}` : '-'}

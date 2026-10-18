@@ -148,8 +148,11 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 )}
                 <button
                   type="button"
-                  onClick={() => modalCoverRef.current?.click()}
-                  className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    modalCoverRef.current?.click();
+                  }}
+                  className="absolute bottom-2 right-2 z-20 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-xs"
                 >
                   <Camera className="w-3 h-3" />
                   <span>{coverImage ? 'Ubah Sampul' : '+ Unggah Sampul'}</span>

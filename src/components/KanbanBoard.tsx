@@ -140,10 +140,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       {/* 1. Facebook Fanpage-style Project Header (Cover + Profile Picture) */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
-          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] overflow-hidden shadow-xs">
+          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative">
             {/* Cover Banner */}
             {!isBannerCollapsed && (
-              <div className="relative w-full h-32 sm:h-44 md:h-52 overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
+              <div className="relative w-full h-36 sm:h-48 md:h-56 rounded-t-3xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
@@ -158,16 +158,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   </div>
                 )}
 
-                {/* Cover Action Button */}
+                {/* Cover Action Button - with z-30 to guarantee it is always clickable */}
                 {!isViewer && onUpdateProject && (
                   <button
                     type="button"
-                    onClick={() => coverInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      coverInputRef.current?.click();
+                    }}
                     disabled={isUploadingCover}
-                    className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                    className="absolute bottom-3 right-3 z-30 px-3 py-1.5 rounded-xl bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
                   >
                     <Camera className="w-3.5 h-3.5" />
-                    <span className="hidden xs:inline">
+                    <span className="inline">
                       {isUploadingCover
                         ? (language === 'id' ? 'Memproses...' : 'Processing...')
                         : (language === 'id' ? 'Ubah Sampul' : 'Change Cover')}
@@ -177,95 +180,100 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               </div>
             )}
 
-            {/* Profile Avatar & Details Section */}
-            <div className={`px-4 sm:px-6 pb-4 sm:pb-5 ${!isBannerCollapsed ? '-mt-10 sm:-mt-14' : 'pt-4 sm:pt-5'} relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4`}>
-              {/* Left: Avatar + Title + Description */}
-              <div className="flex items-end gap-3.5 sm:gap-4.5 min-w-0">
-                {/* Project Profile Avatar */}
-                <div className="relative group shrink-0">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
-                    {project.avatar ? (
-                      <img
-                        src={project.avatar}
-                        alt={project.name}
-                        className="w-full h-full object-cover select-none"
-                      />
-                    ) : (
-                      <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-2xl sm:text-3xl select-none`}>
-                        {project.name.charAt(0).toUpperCase()}
-                      </div>
+            {/* Profile Avatar & Details Section - in normal flow below cover banner to prevent text collision */}
+            <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-0">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                {/* Left: Avatar + Title + Description */}
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
+                  {/* Project Profile Avatar - only the avatar overlaps into the banner */}
+                  <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-12 sm:-mt-16' : 'mt-4'} z-20`}>
+                    <div className="w-20 h-20 sm:w-26 sm:h-26 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
+                      {project.avatar ? (
+                        <img
+                          src={project.avatar}
+                          alt={project.name}
+                          className="w-full h-full object-cover select-none"
+                        />
+                      ) : (
+                        <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-2xl sm:text-3xl select-none`}>
+                          {project.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Change Profile Avatar Overlay Button */}
+                    {!isViewer && onUpdateProject && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          avatarInputRef.current?.click();
+                        }}
+                        disabled={isUploadingAvatar}
+                        className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity cursor-pointer border-4 border-transparent"
+                        title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
+                      >
+                        <Camera className="w-5 h-5 mb-0.5" />
+                        <span>
+                          {isUploadingAvatar ? '...' : (language === 'id' ? 'Ubah' : 'Edit')}
+                        </span>
+                      </button>
                     )}
                   </div>
 
-                  {/* Change Profile Avatar Overlay Button */}
-                  {!isViewer && onUpdateProject && (
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      disabled={isUploadingAvatar}
-                      className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity cursor-pointer border-4 border-transparent"
-                      title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
-                    >
-                      <Camera className="w-5 h-5 mb-0.5" />
-                      <span>
-                        {isUploadingAvatar ? '...' : (language === 'id' ? 'Ubah' : 'Edit')}
+                  {/* Project Titles & Category - Clean normal flow, never hits cover or photo */}
+                  <div className="pt-1 sm:pt-0 sm:pb-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
+                        {project.name}
+                      </h2>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                        {project.key}
                       </span>
-                    </button>
-                  )}
+                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                        {project.category}
+                      </span>
+                    </div>
+                    {project.description && (
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl line-clamp-2">
+                        {project.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Project Titles & Category */}
-                <div className="pb-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight truncate">
-                      {project.name}
-                    </h2>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-                      {project.key}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
-                      {project.category}
+                {/* Right: Stats & Collapse Toggle */}
+                <div className="flex items-center gap-2.5 shrink-0 self-start md:self-end pt-2 md:pt-0 pb-1 text-xs">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium">
+                    <span>{language === 'id' ? 'Progres' : 'Progress'}:</span>
+                    <span className="font-bold text-neutral-900 dark:text-white">
+                      {doneCount}/{totalCount} ({progressPercent}%)
                     </span>
                   </div>
-                  {project.description && (
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl line-clamp-1 sm:line-clamp-2">
-                      {project.description}
-                    </p>
+
+                  {!isViewer && onQuickAddTask && (
+                    <button
+                      onClick={() => onQuickAddTask('todo')}
+                      className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>{t('newTask')}</span>
+                    </button>
                   )}
-                </div>
-              </div>
 
-              {/* Right: Stats & Collapse Toggle */}
-              <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto pb-1 text-xs">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium">
-                  <span>{language === 'id' ? 'Progres' : 'Progress'}:</span>
-                  <span className="font-bold text-neutral-900 dark:text-white">
-                    {doneCount}/{totalCount} ({progressPercent}%)
-                  </span>
-                </div>
-
-                {!isViewer && onQuickAddTask && (
                   <button
-                    onClick={() => onQuickAddTask('todo')}
-                    className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
+                    type="button"
+                    onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
+                    title={isBannerCollapsed ? (language === 'id' ? 'Tampilkan Sampul' : 'Show Cover') : (language === 'id' ? 'Sembunyikan Sampul' : 'Hide Cover')}
+                    className="p-1.5 rounded-xl border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>{t('newTask')}</span>
+                    {isBannerCollapsed ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronUp className="w-4 h-4" />
+                    )}
                   </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
-                  title={isBannerCollapsed ? (language === 'id' ? 'Tampilkan Sampul' : 'Show Cover') : (language === 'id' ? 'Sembunyikan Sampul' : 'Hide Cover')}
-                  className="p-1.5 rounded-xl border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
-                >
-                  {isBannerCollapsed ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronUp className="w-4 h-4" />
-                  )}
-                </button>
+                </div>
               </div>
             </div>
 

@@ -164,21 +164,23 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   >
                     <div>
                       {/* Project Card Cover Banner */}
-                      <div className="relative w-[calc(100%+2.5rem)] h-24 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 -mx-5 -mt-5 mb-4 overflow-hidden">
-                        {project.coverImage ? (
-                          <img
-                            src={project.coverImage}
-                            alt={project.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 flex items-center justify-end pr-4 text-white/20 font-black text-2xl select-none">
-                            {project.key}
-                          </div>
-                        )}
+                      <div className="relative -mx-5 -mt-5 mb-5">
+                        <div className="w-full h-24 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 overflow-hidden">
+                          {project.coverImage ? (
+                            <img
+                              src={project.coverImage}
+                              alt={project.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 flex items-center justify-end pr-4 text-white/20 font-black text-2xl select-none">
+                              {project.key}
+                            </div>
+                          )}
+                        </div>
 
-                        {/* Avatar Overlapping Cover */}
-                        <div className="absolute -bottom-3 left-4 w-12 h-12 rounded-xl overflow-hidden border-2 border-white dark:border-[#12141a] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center">
+                        {/* Avatar Overlapping Cover - Placed outside banner overflow-hidden to prevent clipping */}
+                        <div className="absolute -bottom-3.5 left-4 w-12 h-12 rounded-xl overflow-hidden border-2 border-white dark:border-[#12141a] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center z-10">
                           {project.avatar ? (
                             <img
                               src={project.avatar}
@@ -194,7 +196,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                       </div>
 
                       {/* Key, Category & Role Badge */}
-                      <div className="flex items-center justify-between gap-2 mb-2 pt-1">
+                      <div className="flex items-center justify-between gap-2 mb-2 pt-1 pl-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60 shrink-0">
                             {project.key}
