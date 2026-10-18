@@ -140,10 +140,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       {/* 1. Facebook Fanpage-style Project Header (Cover + Profile Picture) */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
-          <div className="rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
-            {/* Cover Banner - Inset framed with rounded-2xl, not edge-to-edge */}
+          <div className="max-w-[860px] mx-auto rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
+            {/* Cover Banner - Fixed 3:1 Ratio, Max 860px Centered */}
             {!isBannerCollapsed && (
-              <div className="relative w-full h-28 sm:h-32 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
+              <div className="relative w-full aspect-[3/1] max-h-[260px] min-h-[110px] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
