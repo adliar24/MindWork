@@ -22,6 +22,22 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   onCreateTask,
 }) => {
   const { t } = useLanguage();
+
+  const getColumnTitle = (colId: ColumnId, defaultTitle: string) => {
+    switch (colId) {
+      case 'todo':
+        return t('colTodoTitle');
+      case 'in_progress':
+        return t('colInProgressTitle');
+      case 'in_review':
+        return t('colInReviewTitle');
+      case 'done':
+        return t('colDoneTitle');
+      default:
+        return defaultTitle;
+    }
+  };
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<ColumnId>(defaultColumnId);
@@ -256,7 +272,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               >
                 {columns.map((col) => (
                   <option key={col.id} value={col.id}>
-                    {col.title}
+                    {getColumnTitle(col.id, col.title)}
                   </option>
                 ))}
               </select>

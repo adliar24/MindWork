@@ -89,6 +89,13 @@ export const TRANSLATIONS = {
     sendComment: 'Kirim',
     activityLog: 'Aktivitas',
     noActivity: 'Belum ada aktivitas tercatat',
+    workResultsTitle: 'Hasil Kerja & Progres',
+    workResultsDesc: 'Unggah berkas atau tautan hasil pengerjaan tugas Anda',
+    uploadResultBtn: 'Unggah Hasil',
+    linkResultBtn: 'Tautan Link',
+    workResultBadge: 'Hasil Kerja',
+    noWorkResultsYet: 'Belum ada berkas atau tautan hasil kerja.',
+    submitWorkSuccess: 'Hasil kerja berhasil diunggah',
 
     // Modal Tambah Tugas
     newTaskModalTitle: 'Tugas Baru',
@@ -252,6 +259,13 @@ export const TRANSLATIONS = {
     sendComment: 'Send',
     activityLog: 'Activity Log',
     noActivity: 'No activity logged yet',
+    workResultsTitle: 'Work Results & Progress',
+    workResultsDesc: 'Upload deliverable files or progress links for this task',
+    uploadResultBtn: 'Upload Result',
+    linkResultBtn: 'Link URL',
+    workResultBadge: 'Work Result',
+    noWorkResultsYet: 'No work results or progress links uploaded yet.',
+    submitWorkSuccess: 'Work result successfully uploaded',
 
     // Modal Tambah Tugas
     newTaskModalTitle: 'New Task',

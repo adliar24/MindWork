@@ -12,6 +12,7 @@ export interface Attachment {
   dimensions?: string;
   isCloudLink?: boolean;
   cloudProvider?: string;
+  isWorkResult?: boolean;
 }
 
 export interface User {

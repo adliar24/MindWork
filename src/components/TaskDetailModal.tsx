@@ -86,6 +86,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   // Drag and drop state for files
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resultFileInputRef = useRef<HTMLInputElement>(null);
 
   // Full image preview modal state
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -346,7 +347,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   };
 
   // File upload handler (from drag-drop or file picker)
-  const processFiles = async (files: FileList | null) => {
+  const processFiles = async (files: FileList | null, isWorkResult: boolean = false) => {
     if (!files || files.length === 0) return;
     setFileWarning(null);
 
@@ -376,7 +377,8 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             uploadedAt: 'Hari ini',
             extension,
             url: compressed.dataUrl,
-            isCover: !hasCover,
+            isCover: !hasCover && !isWorkResult,
+            isWorkResult,
           });
         } catch {
           // Fallback to direct dataURL
@@ -391,6 +393,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 uploadedAt: 'Hari ini',
                 extension,
                 url: e.target?.result as string,
+                isWorkResult,
               });
               resolve();
             };
@@ -410,6 +413,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               uploadedAt: 'Hari ini',
               extension,
               url: e.target?.result as string,
+              isWorkResult,
             });
             resolve();
           };
@@ -421,6 +425,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               type,
               uploadedAt: 'Hari ini',
               extension,
+              isWorkResult,
             });
             resolve();
           };
@@ -430,12 +435,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     }
 
     if (newAttachments.length > 0) {
-      commitNewAttachments(newAttachments);
+      commitNewAttachments(newAttachments, isWorkResult);
     }
   };
 
-  const commitNewAttachments = (incoming: Attachment[]) => {
+  const commitNewAttachments = (incoming: Attachment[], isWorkResult: boolean = false) => {
     const actor = users.find((u) => u.id === selectedAuthorId) || currentUser;
+    const fileSummary = incoming.map((a) => a.name).join(', ');
     const updated: Task = {
       ...task,
       attachments: [...task.attachments, ...incoming],
@@ -443,7 +449,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         {
           id: `act-${Date.now()}`,
           authorId: actor.id,
-          action: `mengunggah ${incoming.length} berkas lampiran baru`,
+          action: isWorkResult
+            ? `mengunggah berkas hasil kerja: "${fileSummary}"`
+            : `mengunggah ${incoming.length} berkas lampiran baru`,
           timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
         },
         ...task.activities,
@@ -511,6 +519,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const totalChecklist = (task.checklist || []).length;
   const completedChecklist = (task.checklist || []).filter((c) => c.completed).length;
   const checklistPercent = totalChecklist > 0 ? Math.round((completedChecklist / totalChecklist) * 100) : 0;
+
+  const workResultAttachments = task.attachments.filter((a) => a.isWorkResult);
+  const regularAttachments = task.attachments.filter((a) => !a.isWorkResult);
 
   return (
     <div
@@ -640,54 +651,76 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             <div className="h-px bg-neutral-200/70 dark:bg-neutral-800/70" />
 
-            {/* A. TAUTAN & HASIL KERJA */}
+            {/* A. HASIL KERJA & PROGRES PENGERJAAN */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold text-neutral-900 dark:text-neutral-100">
-                  <Link2 className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Tautan & Hasil Kerja</span>
-                  {(task.externalLinks || []).length > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
-                      {(task.externalLinks || []).length}
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{t('workResultsTitle')}</span>
+                  {(workResultAttachments.length + (task.externalLinks || []).length) > 0 && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 font-bold">
+                      {workResultAttachments.length + (task.externalLinks || []).length}
                     </span>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsAddingLink(!isAddingLink)}
-                  className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isAddingLink ? 'Batal' : 'Tautan'}</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => resultFileInputRef.current?.click()}
+                    title={language === 'id' ? 'Unggah berkas hasil / progres kerja' : 'Upload result / progress file'}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5 stroke-[2.2]" />
+                    <span>{t('uploadResultBtn')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingLink(!isAddingLink)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-medium transition-all cursor-pointer"
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                    <span>{isAddingLink ? (language === 'id' ? 'Batal' : 'Cancel') : t('linkResultBtn')}</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Hidden Result File Input */}
+              <input
+                ref={resultFileInputRef}
+                type="file"
+                multiple
+                onChange={(e) => processFiles(e.target.files, true)}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.rar"
+              />
 
               {/* Add Link Form */}
               {isAddingLink && (
                 <form
                   onSubmit={handleAddLink}
-                  className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200 dark:border-neutral-800 space-y-2.5"
+                  className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200 dark:border-neutral-800 space-y-2.5 animate-in fade-in"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <input
                       type="text"
                       value={newLinkTitle}
                       onChange={(e) => setNewLinkTitle(e.target.value)}
-                      placeholder="Nama tautan (cth: Final Figma Design)"
+                      placeholder={language === 'id' ? 'Nama tautan hasil (cth: Final Figma Design)' : 'Link title (e.g. Final Design)'}
                       className="sm:col-span-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:border-red-500"
                     />
                     <select
                       value={newLinkType}
                       onChange={(e) => setNewLinkType(e.target.value as LinkType)}
-                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:border-red-500"
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:border-red-500 cursor-pointer"
                     >
                       <option value="drive">Google Drive</option>
                       <option value="figma">Figma</option>
                       <option value="canva">Canva</option>
                       <option value="doc">Docs</option>
                       <option value="sheet">Sheets</option>
-                      <option value="link">Website</option>
+                      <option value="link">Website / Live Demo</option>
                     </select>
                   </div>
 
@@ -703,66 +736,186 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsAddingLink(false)}
-                      className="px-3 py-1 text-xs text-neutral-500 hover:text-neutral-800"
+                      className="px-3 py-1 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer"
                     >
-                      Batal
+                      {t('cancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={!newLinkTitle.trim() || !newLinkUrl.trim()}
-                      className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-40"
+                      className="px-3.5 py-1 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 cursor-pointer transition-colors"
                     >
-                      Simpan
+                      {t('saveChanges')}
                     </button>
                   </div>
                 </form>
               )}
 
-              {/* Links List */}
-              {(task.externalLinks || []).length > 0 ? (
-                <div className="space-y-1.5">
-                  {(task.externalLinks || []).map((link) => (
-                    <div
-                      key={link.id}
-                      className="group flex items-center justify-between p-2 px-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#15161a] transition-all text-xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                        <Globe className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                        <span className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
-                          {link.title}
-                        </span>
-                        <span className="text-[10px] text-neutral-400 truncate max-w-xs font-mono">
-                          {link.url}
-                        </span>
-                      </div>
+              {/* Uploaded Result Files & External Result Links List */}
+              {(workResultAttachments.length > 0 || (task.externalLinks || []).length > 0) ? (
+                <div className="space-y-2">
+                  {/* Result Files */}
+                  {workResultAttachments.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {workResultAttachments.map((file) => {
+                        const isImg = file.type === 'image';
+                        return (
+                          <div
+                            key={file.id}
+                            className="group relative rounded-xl border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/20 dark:bg-emerald-950/10 hover:border-emerald-400 p-2.5 flex items-center justify-between gap-2.5 transition-all text-xs"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {isImg && file.url ? (
+                                <img
+                                  src={file.url}
+                                  alt={file.name}
+                                  onClick={() => setPreviewImage(file.url || null)}
+                                  className="w-10 h-10 rounded-lg object-cover border border-emerald-200 dark:border-emerald-800 cursor-pointer shrink-0"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                  <FileText className="w-5 h-5" />
+                                </div>
+                              )}
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Buka tautan"
-                          className="p-1 text-neutral-400 hover:text-blue-500 rounded"
-                        >
-                          <ExternalLinkIcon className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLink(link.id)}
-                          title="Hapus tautan"
-                          className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500 rounded transition-opacity"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[150px] sm:max-w-[180px]">
+                                    {file.name}
+                                  </span>
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-0.5 shrink-0">
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    {t('workResultBadge')}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-neutral-400 font-mono">
+                                  {file.size} • {file.uploadedAt}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {file.url && (
+                                <button
+                                  type="button"
+                                  onClick={() => triggerDownload(file.url!, file.name)}
+                                  title={language === 'id' ? 'Unduh berkas' : 'Download file'}
+                                  className="p-1 text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded cursor-pointer"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAttachment(file.id)}
+                                title={language === 'id' ? 'Hapus berkas' : 'Delete file'}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500 rounded transition-opacity cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
+                  )}
+
+                  {/* External Links */}
+                  {(task.externalLinks || []).length > 0 && (
+                    <div className="space-y-1.5">
+                      {(task.externalLinks || []).map((link) => (
+                        <div
+                          key={link.id}
+                          className="group flex items-center justify-between p-2 px-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#15161a] transition-all text-xs"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                            <Globe className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                            <span className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                              {link.title}
+                            </span>
+                            <span className="text-[10px] text-neutral-400 truncate max-w-xs font-mono">
+                              {link.url}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Buka tautan"
+                              className="p-1 text-neutral-400 hover:text-blue-500 rounded cursor-pointer"
+                            >
+                              <ExternalLinkIcon className="w-3.5 h-3.5" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLink(link.id)}
+                              title="Hapus tautan"
+                              className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500 rounded transition-opacity cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Workflow suggestion: Advance to review once results are submitted */}
+                  {(columnId === 'todo' || columnId === 'in_progress') && (
+                    <div className="p-2.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3 text-xs animate-in fade-in">
+                      <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                        <Check className="w-4 h-4 shrink-0 stroke-[2.5]" />
+                        <span className="font-medium">
+                          {language === 'id'
+                            ? 'Hasil kerja sudah diunggah. Mau ajukan untuk ditinjau ketua/tim?'
+                            : 'Work results uploaded. Advance status for review?'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange('in_review')}
+                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
+                      >
+                        {language === 'id' ? 'Ajukan ke Ditinjau' : 'Submit for Review'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 !isAddingLink && (
-                  <p className="text-xs text-neutral-400 italic">
-                    Belum ada tautan hasil kerja.
-                  </p>
+                  <div
+                    onClick={() => resultFileInputRef.current?.click()}
+                    className="p-3.5 rounded-xl border border-dashed border-red-300 dark:border-red-900/50 bg-red-50/20 dark:bg-red-950/10 hover:bg-red-50/40 dark:hover:bg-red-950/20 transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-neutral-100">
+                          {t('workResultsTitle')}
+                        </p>
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                          {t('workResultsDesc')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          resultFileInputRef.current?.click();
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>{t('uploadResultBtn')}</span>
+                      </button>
+                    </div>
+                  </div>
                 )
               )}
             </div>
@@ -1094,9 +1247,17 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         )}
 
                         <div className="min-w-0">
-                          <p title={file.name} className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate">
-                            {file.name}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p title={file.name} className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate max-w-[150px]">
+                              {file.name}
+                            </p>
+                            {file.isWorkResult && (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-0.5 shrink-0">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                {t('workResultBadge')}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 font-mono mt-0.5">
                             {isCloud ? (
                               <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
@@ -1286,6 +1447,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     ))}
                   </select>
                 </div>
+
+                {/* Quick Work Results Action */}
+                <button
+                  type="button"
+                  onClick={() => resultFileInputRef.current?.click()}
+                  className="w-full mt-2 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 font-semibold border border-red-500/20 transition-all cursor-pointer text-xs"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>{t('uploadResultBtn')}</span>
+                </button>
               </div>
 
               {/* Priority */}
