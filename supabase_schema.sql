@@ -41,15 +41,17 @@ CREATE TABLE IF NOT EXISTS public.projects (
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '';
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS cover_image TEXT DEFAULT '';
 
--- 3. TABEL PROJECT_MEMBERS (Relasi Anggota & Peran Proyek: Leader / Member / Viewer)
+-- 3. TABEL PROJECT_MEMBERS (Relasi Anggota & Peran Proyek: Leader / Member / Viewer / Custom Role)
 CREATE TABLE IF NOT EXISTS public.project_members (
   id BIGSERIAL PRIMARY KEY,
   project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
   user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('leader', 'member', 'viewer')),
+  role TEXT NOT NULL DEFAULT 'member',
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   UNIQUE(project_id, user_id)
 );
+
+ALTER TABLE public.project_members DROP CONSTRAINT IF EXISTS project_members_role_check;
 
 -- 4. TABEL TASKS (Kartu Tugas Kanban)
 CREATE TABLE IF NOT EXISTS public.tasks (

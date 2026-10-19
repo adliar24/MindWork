@@ -28,6 +28,11 @@ import {
   Eye,
   Cloud,
   HardDrive,
+  Bug,
+  Zap,
+  Palette,
+  Lightbulb,
+  Clock,
 } from 'lucide-react';
 import {
   Attachment,
@@ -38,6 +43,7 @@ import {
   LinkType,
   Priority,
   Task,
+  TaskType,
   User,
 } from '../types';
 import {
@@ -75,8 +81,33 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [assigneeId, setAssigneeId] = useState(task.assigneeId);
   const [dueDate, setDueDate] = useState(task.dueDate);
+  const [taskType, setTaskType] = useState<TaskType>(task.taskType || 'task');
+  const [cardColor, setCardColor] = useState<string>(task.cardColor || '');
+  const [isCompleted, setIsCompleted] = useState<boolean>(Boolean(task.isCompleted));
+  const [estimate, setEstimate] = useState<string>(task.estimate || '');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
+
+  const handleTaskTypeChange = (newType: TaskType) => {
+    setTaskType(newType);
+    onUpdateTask({ ...task, taskType: newType });
+  };
+
+  const handleCardColorChange = (newColor: string) => {
+    setCardColor(newColor);
+    onUpdateTask({ ...task, cardColor: newColor });
+  };
+
+  const handleToggleComplete = () => {
+    const nextVal = !isCompleted;
+    setIsCompleted(nextVal);
+    onUpdateTask({ ...task, isCompleted: nextVal });
+  };
+
+  const handleEstimateChange = (newEst: string) => {
+    setEstimate(newEst);
+    onUpdateTask({ ...task, estimate: newEst });
+  };
 
   // New Comment state
   const [commentText, setCommentText] = useState('');
@@ -536,6 +567,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           isClosing ? 'animate-modal-out' : 'animate-modal-in'
         }`}
       >
+        {/* Trello-style Card Color Top Banner */}
+        {cardColor && (
+          <div className="w-full h-3 shrink-0 transition-all duration-300" style={{ backgroundColor: cardColor }} />
+        )}
+
         {/* Top Header Bar */}
         <div className="h-14 px-5 border-b border-neutral-200 dark:border-neutral-800/80 flex items-center justify-between shrink-0 bg-white dark:bg-[#111215]">
           {/* Status selector & Task Key */}
@@ -1459,6 +1495,41 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </button>
               </div>
 
+              {/* Task Type (Trello / Linear style) */}
+              <div>
+                <span className="block text-[11px] text-neutral-400 mb-1">
+                  {language === 'id' ? 'Jenis Tugas' : 'Task Type'}
+                </span>
+                <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white dark:bg-[#15161a] border border-neutral-200/80 dark:border-neutral-800">
+                  {taskType === 'feature' ? (
+                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                  ) : taskType === 'bug' ? (
+                    <Bug className="w-4 h-4 text-rose-500 shrink-0" />
+                  ) : taskType === 'improvement' ? (
+                    <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                  ) : taskType === 'design' ? (
+                    <Palette className="w-4 h-4 text-purple-500 shrink-0" />
+                  ) : taskType === 'research' ? (
+                    <Lightbulb className="w-4 h-4 text-cyan-500 shrink-0" />
+                  ) : (
+                    <CheckSquare className="w-4 h-4 text-blue-500 shrink-0" />
+                  )}
+                  <select
+                    value={taskType}
+                    onChange={(e) => handleTaskTypeChange(e.target.value as TaskType)}
+                    aria-label="Jenis Tugas"
+                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="task" className="dark:bg-neutral-900">{language === 'id' ? 'Tugas Umum' : 'General Task'}</option>
+                    <option value="feature" className="dark:bg-neutral-900">{language === 'id' ? 'Fitur Baru' : 'Feature'}</option>
+                    <option value="bug" className="dark:bg-neutral-900">Bug / Issue</option>
+                    <option value="improvement" className="dark:bg-neutral-900">{language === 'id' ? 'Peningkatan' : 'Improvement'}</option>
+                    <option value="design" className="dark:bg-neutral-900">{language === 'id' ? 'Desain / UI-UX' : 'Design'}</option>
+                    <option value="research" className="dark:bg-neutral-900">{language === 'id' ? 'Riset / Eksplorasi' : 'Research'}</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Priority */}
               <div>
                 <span className="block text-[11px] text-neutral-400 mb-1">{t('priorityLabel')}</span>
@@ -1487,9 +1558,25 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Due Date */}
+              {/* Due Date & Completion Toggle */}
               <div>
-                <span className="block text-[11px] text-neutral-400 mb-1">{t('dueDateLabel')}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-neutral-400">{t('dueDateLabel')}</span>
+                  {dueDate && (
+                    <button
+                      type="button"
+                      onClick={handleToggleComplete}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 ${
+                        isCompleted
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                          : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      <Check className={`w-3 h-3 ${isCompleted ? 'stroke-[3]' : 'opacity-40'}`} />
+                      <span>{isCompleted ? (language === 'id' ? 'Selesai' : 'Completed') : (language === 'id' ? 'Tandai Selesai' : 'Mark Complete')}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white dark:bg-[#15161a] border border-neutral-200/80 dark:border-neutral-800">
                   <Calendar className="w-4 h-4 text-neutral-400 shrink-0" />
                   <input
@@ -1499,6 +1586,57 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     aria-label={t('dueDateLabel')}
                     className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
                   />
+                </div>
+              </div>
+
+              {/* Estimate (Estimasi Waktu) */}
+              <div>
+                <span className="block text-[11px] text-neutral-400 mb-1">
+                  {language === 'id' ? 'Estimasi Waktu' : 'Time Estimate'}
+                </span>
+                <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white dark:bg-[#15161a] border border-neutral-200/80 dark:border-neutral-800">
+                  <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <input
+                    type="text"
+                    value={estimate}
+                    onChange={(e) => handleEstimateChange(e.target.value)}
+                    placeholder={language === 'id' ? 'misal: 2 hari, 4 jam' : 'e.g. 2 days, 4 hours'}
+                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none text-xs placeholder:text-neutral-400"
+                  />
+                </div>
+              </div>
+
+              {/* Trello-style Card Cover Color Picker */}
+              <div>
+                <span className="block text-[11px] text-neutral-400 mb-1.5">
+                  {language === 'id' ? 'Warna Sampul Kartu (Cover)' : 'Card Cover Color'}
+                </span>
+                <div className="grid grid-cols-5 gap-1.5 p-1.5 rounded-lg bg-white dark:bg-[#15161a] border border-neutral-200/80 dark:border-neutral-800">
+                  {[
+                    { label: 'Polos', value: '', bg: 'bg-neutral-200 dark:bg-neutral-700' },
+                    { label: 'Emerald', value: '#10b981', bg: 'bg-emerald-500' },
+                    { label: 'Sky', value: '#0284c7', bg: 'bg-sky-500' },
+                    { label: 'Rose', value: '#e11d48', bg: 'bg-rose-500' },
+                    { label: 'Amber', value: '#d97706', bg: 'bg-amber-500' },
+                    { label: 'Purple', value: '#7c3aed', bg: 'bg-purple-500' },
+                    { label: 'Indigo', value: '#4f46e5', bg: 'bg-indigo-500' },
+                    { label: 'Pink', value: '#db2777', bg: 'bg-pink-500' },
+                    { label: 'Slate', value: '#475569', bg: 'bg-slate-600' },
+                  ].map((c) => (
+                    <button
+                      key={c.label}
+                      type="button"
+                      onClick={() => handleCardColorChange(c.value)}
+                      title={c.label}
+                      className={`h-6 rounded-md ${c.bg} transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${
+                        cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-neutral-900' : 'opacity-85 hover:opacity-100'
+                      }`}
+                    >
+                      {cardColor === c.value && (
+                        <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow" />
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

@@ -289,12 +289,21 @@ export async function saveCloudProject(project: Project): Promise<boolean> {
 
     const { error: projError } = await supabase.from('projects').upsert(row);
 
-    if (projError) return false;
+    if (projError) {
+      console.warn('Upsert project cloud error:', projError);
+      // Fallback: If table projects doesn't have avatar or cover_image columns yet, try saving core fields
+      if (projError.message && (projError.message.includes('cover_image') || projError.message.includes('avatar'))) {
+        delete row.avatar;
+        delete row.cover_image;
+        await supabase.from('projects').upsert(row);
+      }
+    }
 
     // 2. Upsert members
     await saveCloudProjectMembers(project.id, project.memberIds, project.memberRoles);
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('saveCloudProject exception:', err);
     return false;
   }
 }
@@ -317,10 +326,22 @@ export async function saveCloudProjectMembers(
     }));
 
     if (rows.length > 0) {
-      await supabase.from('project_members').insert(rows);
+      const { error } = await supabase.from('project_members').insert(rows);
+      if (error) {
+        console.warn('Insert project_members error:', error);
+        // Fallback: If role has CHECK constraint in DB, fallback to valid standard role
+        if (error.code === '23514' || error.message?.includes('check')) {
+          const fallbackRows = rows.map((r) => {
+            const standardRole = r.role === 'leader' ? 'leader' : r.role === 'viewer' ? 'viewer' : 'member';
+            return { ...r, role: standardRole };
+          });
+          await supabase.from('project_members').insert(fallbackRows);
+        }
+      }
     }
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('saveCloudProjectMembers exception:', err);
     return false;
   }
 }

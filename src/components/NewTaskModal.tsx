@@ -1,6 +1,25 @@
 import React, { useState, useRef } from 'react';
-import { X, Plus, UploadCloud, Calendar, Tag, User as UserIcon, Paperclip, Cloud, Globe, ExternalLink as ExternalLinkIcon } from 'lucide-react';
-import { Column, ColumnId, Priority, Task, User, Attachment } from '../types';
+import {
+  X,
+  Plus,
+  UploadCloud,
+  Calendar,
+  Tag,
+  User as UserIcon,
+  Paperclip,
+  Cloud,
+  Globe,
+  ExternalLink as ExternalLinkIcon,
+  Sparkles,
+  Bug,
+  Zap,
+  Palette,
+  Lightbulb,
+  CheckSquare,
+  Clock,
+  Check,
+} from 'lucide-react';
+import { Column, ColumnId, Priority, Task, TaskType, User, Attachment } from '../types';
 import { formatFileSize, getFileTypeFromExtension, compressImageFile, detectCloudService } from '../utils/fileHelpers';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -21,7 +40,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   onClose,
   onCreateTask,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const getColumnTitle = (colId: ColumnId, defaultTitle: string) => {
     switch (colId) {
@@ -42,6 +61,9 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<ColumnId>(defaultColumnId);
   const [priority, setPriority] = useState<Priority>('Sedang');
+  const [taskType, setTaskType] = useState<TaskType>('task');
+  const [cardColor, setCardColor] = useState<string>('');
+  const [estimate, setEstimate] = useState<string>('');
   const [assigneeId, setAssigneeId] = useState<string>(users[0]?.id || '');
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().split('T')[0]
@@ -175,6 +197,9 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
       title: title.trim(),
       description: description.trim(),
       priority,
+      taskType,
+      cardColor,
+      estimate: estimate.trim(),
       assigneeId,
       dueDate,
       tags,
@@ -210,6 +235,11 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           isClosing ? 'animate-modal-out' : 'animate-modal-in'
         }`}
       >
+        {/* Trello-like Top Color Banner */}
+        {cardColor && (
+          <div className="w-full h-2.5 shrink-0 transition-all duration-300" style={{ backgroundColor: cardColor }} />
+        )}
+
         {/* Header */}
         <div className="p-4 px-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
@@ -291,6 +321,77 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                 <option value="Sedang">{t('priorityMedium')}</option>
                 <option value="Rendah">{t('priorityLow')}</option>
               </select>
+            </div>
+          </div>
+
+          {/* Jenis Tugas & Estimasi Waktu (Trello style) */}
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                {language === 'id' ? 'Jenis Tugas' : 'Task Type'}
+              </label>
+              <select
+                value={taskType}
+                onChange={(e) => setTaskType(e.target.value as TaskType)}
+                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+              >
+                <option value="task">{language === 'id' ? '📋 Tugas Umum' : '📋 General Task'}</option>
+                <option value="feature">{language === 'id' ? '✨ Fitur Baru' : '✨ Feature'}</option>
+                <option value="bug">🐛 Bug / Issue</option>
+                <option value="improvement">{language === 'id' ? '⚡ Peningkatan' : '⚡ Improvement'}</option>
+                <option value="design">{language === 'id' ? '🎨 Desain / UI-UX' : '🎨 Design'}</option>
+                <option value="research">{language === 'id' ? '💡 Riset' : '💡 Research'}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                {language === 'id' ? 'Estimasi Waktu' : 'Time Estimate'}
+              </label>
+              <div className="relative">
+                <Clock className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={estimate}
+                  onChange={(e) => setEstimate(e.target.value)}
+                  placeholder={language === 'id' ? 'misal: 2 hari, 4 jam' : 'e.g. 2d, 4h'}
+                  className="w-full h-9 pl-8 pr-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white text-xs placeholder:text-neutral-400"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Warna Sampul Kartu (Trello Card Color) */}
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+              {language === 'id' ? 'Warna Sampul Kartu (Opsional)' : 'Card Cover Color (Optional)'}
+            </label>
+            <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5 p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+              {[
+                { label: 'Polos', value: '', bg: 'bg-neutral-300 dark:bg-neutral-600' },
+                { label: 'Emerald', value: '#10b981', bg: 'bg-emerald-500' },
+                { label: 'Sky', value: '#0284c7', bg: 'bg-sky-500' },
+                { label: 'Rose', value: '#e11d48', bg: 'bg-rose-500' },
+                { label: 'Amber', value: '#d97706', bg: 'bg-amber-500' },
+                { label: 'Purple', value: '#7c3aed', bg: 'bg-purple-500' },
+                { label: 'Indigo', value: '#4f46e5', bg: 'bg-indigo-500' },
+                { label: 'Pink', value: '#db2777', bg: 'bg-pink-500' },
+                { label: 'Slate', value: '#475569', bg: 'bg-slate-600' },
+              ].map((c) => (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => setCardColor(c.value)}
+                  title={c.label}
+                  className={`h-6 rounded-md ${c.bg} transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${
+                    cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-neutral-900' : 'opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {cardColor === c.value && (
+                    <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow" />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 

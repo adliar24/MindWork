@@ -102,9 +102,9 @@ export function captureAndCompressVideoFrame(
  */
 export async function compressCoverBannerFile(
   file: File | Blob,
-  targetWidth: number = 1200,
-  targetHeight: number = 400,
-  quality: number = 0.82
+  targetWidth: number = 960,
+  targetHeight: number = 320,
+  quality: number = 0.75
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

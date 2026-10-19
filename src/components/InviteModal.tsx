@@ -32,6 +32,20 @@ interface InviteModalProps {
   onRegisterUser?: (newUser: User) => void;
 }
 
+export const PRESET_ROLES = [
+  { value: 'member', label: 'Anggota (Member)' },
+  { value: 'leader', label: 'Ketua (Leader)' },
+  { value: 'viewer', label: 'Peninjau (Viewer)' },
+  { value: 'Project Manager', label: 'Project Manager' },
+  { value: 'UI/UX Designer', label: 'UI/UX Designer' },
+  { value: 'Frontend Developer', label: 'Frontend Developer' },
+  { value: 'Backend Developer', label: 'Backend Developer' },
+  { value: 'Fullstack Developer', label: 'Fullstack Developer' },
+  { value: 'QA Tester', label: 'QA Tester' },
+  { value: 'DevOps', label: 'DevOps' },
+  { value: 'Content Creator', label: 'Content Creator' },
+];
+
 export const InviteModal: React.FC<InviteModalProps> = ({
   project,
   allUsers,
@@ -44,7 +58,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const currentUserRole: ProjectRole =
     project.memberRoles?.[currentUser.id] ||
     (project.leaderId === currentUser.id ? 'leader' : 'viewer');
-  const isLeader = currentUserRole === 'leader';
+  
+  // Can manage if leader, project creator, or sole member
+  const isLeader =
+    currentUserRole === 'leader' ||
+    project.leaderId === currentUser.id ||
+    !project.leaderId ||
+    (project.memberIds?.length === 1);
 
   // Members and Roles state
   const [memberIds, setMemberIds] = useState<string[]>(project.memberIds || []);
@@ -60,9 +80,15 @@ export const InviteModal: React.FC<InviteModalProps> = ({
     }
   );
 
+  // Custom role editing per member
+  const [editingCustomRoleId, setEditingCustomRoleId] = useState<string | null>(null);
+  const [customRoleInput, setCustomRoleInput] = useState('');
+
   // Single unified invite search/input state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<ProjectRole>('member');
+  const [isCustomSelectedRole, setIsCustomSelectedRole] = useState(false);
+  const [customSelectedRoleText, setCustomSelectedRoleText] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | 'info';
@@ -86,40 +112,49 @@ export const InviteModal: React.FC<InviteModalProps> = ({
     }, 180);
   };
 
-  // Change a member's role
+  // Change a member's role and persist immediately
   const handleChangeRole = (userId: string, newRole: ProjectRole) => {
     if (!isLeader) return;
-    setMemberRoles((prev) => ({
-      ...prev,
+    const nextRoles = {
+      ...memberRoles,
       [userId]: newRole,
-    }));
+    };
+    setMemberRoles(nextRoles);
+    onUpdateProjectMembers(project.id, memberIds, nextRoles);
   };
 
-  // Remove member from project
+  // Remove member from project and persist immediately
   const handleRemoveMember = (userId: string) => {
     if (!isLeader) return;
     if (userId === project.leaderId) {
       alert(language === 'id' ? 'Ketua utama tidak dapat dikeluarkan dari proyek.' : 'Main leader cannot be removed from the project.');
       return;
     }
-    setMemberIds((prev) => prev.filter((id) => id !== userId));
-    setMemberRoles((prev) => {
-      const next = { ...prev };
-      delete next[userId];
-      return next;
-    });
+    const nextIds = memberIds.filter((id) => id !== userId);
+    const nextRoles = { ...memberRoles };
+    delete nextRoles[userId];
+    setMemberIds(nextIds);
+    setMemberRoles(nextRoles);
+    onUpdateProjectMembers(project.id, nextIds, nextRoles);
     setFeedback(null);
   };
 
-  // Directly invite a user from available accounts list
+  // Directly invite a user from available accounts list and persist immediately
   const handleDirectInvite = (userId: string, roleToAssign: ProjectRole = selectedRole) => {
     if (!isLeader) return;
     if (!memberIds.includes(userId)) {
-      setMemberIds((prev) => [...prev, userId]);
-      setMemberRoles((prev) => ({
-        ...prev,
-        [userId]: roleToAssign,
-      }));
+      const finalRole = isCustomSelectedRole && customSelectedRoleText.trim()
+        ? customSelectedRoleText.trim()
+        : roleToAssign;
+      const nextIds = [...memberIds, userId];
+      const nextRoles = {
+        ...memberRoles,
+        [userId]: finalRole,
+      };
+      setMemberIds(nextIds);
+      setMemberRoles(nextRoles);
+      onUpdateProjectMembers(project.id, nextIds, nextRoles);
+
       const u = allUsers.find((x) => x.id === userId);
       setFeedback({
         type: 'success',
@@ -336,15 +371,53 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                   />
                 </div>
 
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value as ProjectRole)}
-                  className="h-9 px-2.5 rounded-xl text-xs bg-neutral-50 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-red-500 cursor-pointer shrink-0"
-                >
-                  <option value="member">{t('roleMember')}</option>
-                  <option value="leader">{t('roleLeader')}</option>
-                  <option value="viewer">{t('roleViewer')}</option>
-                </select>
+                {isCustomSelectedRole ? (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <input
+                      type="text"
+                      value={customSelectedRoleText}
+                      onChange={(e) => setCustomSelectedRoleText(e.target.value)}
+                      placeholder={language === 'id' ? 'Nama peran kustom...' : 'Custom role title...'}
+                      className="h-9 px-3 rounded-xl text-xs bg-neutral-50 dark:bg-[#181a22] border border-red-500 text-neutral-900 dark:text-neutral-100 focus:outline-none w-36"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomSelectedRole(false);
+                        setSelectedRole('member');
+                      }}
+                      className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-xs px-1 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => {
+                      if (e.target.value === '__custom__') {
+                        setIsCustomSelectedRole(true);
+                        setCustomSelectedRoleText('');
+                      } else {
+                        setSelectedRole(e.target.value as ProjectRole);
+                      }
+                    }}
+                    className="h-9 px-2.5 rounded-xl text-xs bg-neutral-50 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-red-500 cursor-pointer shrink-0 max-w-[130px] sm:max-w-[160px] truncate"
+                  >
+                    <optgroup label={language === 'id' ? 'Hak Akses' : 'Access Level'}>
+                      <option value="member">{t('roleMember')}</option>
+                      <option value="leader">{t('roleLeader')}</option>
+                      <option value="viewer">{t('roleViewer')}</option>
+                    </optgroup>
+                    <optgroup label={language === 'id' ? 'Peran / Jabatan Tim' : 'Team Roles'}>
+                      {PRESET_ROLES.filter((r) => !['member', 'leader', 'viewer'].includes(r.value)).map((r) => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
+                    </optgroup>
+                    <option value="__custom__">{language === 'id' ? '+ Kustom Baru...' : '+ Custom Role...'}</option>
+                  </select>
+                )}
 
                 <button
                   type="submit"
@@ -537,35 +610,107 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     {/* Role selector & Delete button */}
                     <div className="flex items-center gap-2 shrink-0">
                       {isLeader && !isProjectCreator ? (
-                        <select
-                          value={role}
-                          onChange={(e) =>
-                            handleChangeRole(user.id, e.target.value as ProjectRole)
-                          }
-                          className="h-7 px-2 text-[11px] font-semibold rounded-lg bg-white dark:bg-[#20232c] border border-neutral-200 dark:border-[#313543] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-red-500 cursor-pointer"
-                        >
-                          <option value="leader">{t('roleLeader')}</option>
-                          <option value="member">{t('roleMember')}</option>
-                          <option value="viewer">{t('roleViewer')}</option>
-                        </select>
+                        editingCustomRoleId === user.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={customRoleInput}
+                              onChange={(e) => setCustomRoleInput(e.target.value)}
+                              placeholder={language === 'id' ? 'Nama peran...' : 'Role title...'}
+                              className="h-7 px-2 text-[11px] rounded-lg bg-white dark:bg-[#20232c] border border-red-500 focus:outline-none w-28 text-neutral-900 dark:text-neutral-100"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  if (customRoleInput.trim()) {
+                                    handleChangeRole(user.id, customRoleInput.trim());
+                                    setEditingCustomRoleId(null);
+                                  }
+                                } else if (e.key === 'Escape') {
+                                  setEditingCustomRoleId(null);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customRoleInput.trim()) {
+                                  handleChangeRole(user.id, customRoleInput.trim());
+                                  setEditingCustomRoleId(null);
+                                }
+                              }}
+                              className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                              title={language === 'id' ? 'Simpan Peran' : 'Save Role'}
+                            >
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCustomRoleId(null)}
+                              className="p-1 rounded text-neutral-400 hover:text-neutral-200 cursor-pointer"
+                              title={language === 'id' ? 'Batal' : 'Cancel'}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={role}
+                              onChange={(e) => {
+                                if (e.target.value === '__custom__') {
+                                  setEditingCustomRoleId(user.id);
+                                  setCustomRoleInput(PRESET_ROLES.some((r) => r.value === role) ? '' : role);
+                                } else {
+                                  handleChangeRole(user.id, e.target.value as ProjectRole);
+                                }
+                              }}
+                              className="h-7 px-2 text-[11px] font-semibold rounded-lg bg-white dark:bg-[#20232c] border border-neutral-200 dark:border-[#313543] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-red-500 cursor-pointer max-w-[130px] sm:max-w-[150px] truncate"
+                            >
+                              <optgroup label={language === 'id' ? 'Hak Akses' : 'Access Level'}>
+                                <option value="member">{t('roleMember')}</option>
+                                <option value="leader">{t('roleLeader')}</option>
+                                <option value="viewer">{t('roleViewer')}</option>
+                              </optgroup>
+                              <optgroup label={language === 'id' ? 'Peran / Jabatan Tim' : 'Team Roles'}>
+                                {PRESET_ROLES.filter((r) => !['member', 'leader', 'viewer'].includes(r.value)).map((r) => (
+                                  <option key={r.value} value={r.value}>{r.label}</option>
+                                ))}
+                              </optgroup>
+                              {!PRESET_ROLES.some((r) => r.value === role) && (
+                                <optgroup label={language === 'id' ? 'Peran Saat Ini' : 'Current Role'}>
+                                  <option value={role}>{role} (Kustom)</option>
+                                </optgroup>
+                              )}
+                              <option value="__custom__">{language === 'id' ? '+ Kustom Baru...' : '+ Custom Role...'}</option>
+                            </select>
+                          </div>
+                        )
                       ) : (
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                             role === 'leader'
                               ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-                              : role === 'member'
-                              ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
-                              : 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                              : role === 'viewer'
+                              ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                              : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
                           }`}
                         >
                           {role === 'leader' ? (
                             <Crown className="w-2.5 h-2.5" />
-                          ) : role === 'member' ? (
-                            <Briefcase className="w-2.5 h-2.5" />
-                          ) : (
+                          ) : role === 'viewer' ? (
                             <Eye className="w-2.5 h-2.5" />
+                          ) : (
+                            <Briefcase className="w-2.5 h-2.5" />
                           )}
-                          {isProjectCreator ? (language === 'id' ? 'Ketua Utama' : 'Main Leader') : (role === 'leader' ? t('roleLeader') : role === 'viewer' ? t('roleViewer') : t('roleMember'))}
+                          {isProjectCreator
+                            ? (language === 'id' ? 'Ketua Utama' : 'Main Leader')
+                            : (role === 'leader'
+                                ? t('roleLeader')
+                                : role === 'viewer'
+                                ? t('roleViewer')
+                                : role === 'member'
+                                ? t('roleMember')
+                                : role)}
                         </span>
                       )}
 

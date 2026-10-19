@@ -214,15 +214,44 @@ export default function App() {
         const cleanCloudProjects = cloudProjects.filter(
           (p) => p.id !== 'proj-1' && p.id !== 'proj-2' && p.id !== 'proj-3'
         );
-        setProjects(cleanCloudProjects);
-        localStorage.setItem('vermilion_projects', JSON.stringify(cleanCloudProjects));
+        // Smart merge: retain local coverImage, avatar, and custom member roles if cloud has empty string
+        setProjects((prevProjects) => {
+          const merged = cleanCloudProjects.map((cp) => {
+            const local = prevProjects.find((p) => p.id === cp.id);
+            if (!local) return cp;
+            return {
+              ...cp,
+              avatar: cp.avatar || local.avatar || '',
+              coverImage: cp.coverImage || local.coverImage || '',
+              memberRoles: {
+                ...(local.memberRoles || {}),
+                ...(cp.memberRoles || {}),
+              },
+            };
+          });
+
+          const missingLocals = prevProjects.filter(
+            (lp) => !cleanCloudProjects.some((cp) => cp.id === lp.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lp.id)
+          );
+          const finalProjects = [...merged, ...missingLocals];
+          try {
+            localStorage.setItem('vermilion_projects', JSON.stringify(finalProjects));
+          } catch (e) {
+            console.warn('LocalStorage quota warning:', e);
+          }
+          return finalProjects;
+        });
       }
       if (cloudTasks) {
         const cleanCloudTasks = cloudTasks.filter(
           (t) => t.projectId !== 'proj-1' && t.projectId !== 'proj-2' && t.projectId !== 'proj-3'
         );
         setTasks(cleanCloudTasks);
-        localStorage.setItem('vermilion_tasks', JSON.stringify(cleanCloudTasks));
+        try {
+          localStorage.setItem('vermilion_tasks', JSON.stringify(cleanCloudTasks));
+        } catch (e) {
+          console.warn('LocalStorage tasks quota warning:', e);
+        }
       }
     }
   };
@@ -241,7 +270,23 @@ export default function App() {
         if (updatedTasks) setTasks(updatedTasks);
       } else if (table === 'projects' || table === 'project_members') {
         const updatedProjects = await fetchCloudProjects();
-        if (updatedProjects) setProjects(updatedProjects);
+        if (updatedProjects) {
+          setProjects((prev) => {
+            return updatedProjects.map((up) => {
+              const local = prev.find((p) => p.id === up.id);
+              if (!local) return up;
+              return {
+                ...up,
+                avatar: up.avatar || local.avatar || '',
+                coverImage: up.coverImage || local.coverImage || '',
+                memberRoles: {
+                  ...(local.memberRoles || {}),
+                  ...(up.memberRoles || {}),
+                },
+              };
+            });
+          });
+        }
       } else if (table === 'profiles') {
         const updatedUsers = await fetchCloudUsers();
         if (updatedUsers) setUsers(updatedUsers);
@@ -255,15 +300,27 @@ export default function App() {
 
   // Persist state updates
   useEffect(() => {
-    localStorage.setItem('vermilion_tasks', JSON.stringify(tasks));
+    try {
+      localStorage.setItem('vermilion_tasks', JSON.stringify(tasks));
+    } catch (e) {
+      console.warn('LocalStorage tasks quota warning:', e);
+    }
   }, [tasks]);
 
   useEffect(() => {
-    localStorage.setItem('vermilion_projects', JSON.stringify(projects));
+    try {
+      localStorage.setItem('vermilion_projects', JSON.stringify(projects));
+    } catch (e) {
+      console.warn('LocalStorage projects quota warning:', e);
+    }
   }, [projects]);
 
   useEffect(() => {
-    localStorage.setItem('vermilion_users', JSON.stringify(users));
+    try {
+      localStorage.setItem('vermilion_users', JSON.stringify(users));
+    } catch (e) {
+      console.warn('LocalStorage users quota warning:', e);
+    }
   }, [users]);
 
   useEffect(() => {
@@ -447,7 +504,11 @@ export default function App() {
   const handleUpdateProject = (updatedProject: Project) => {
     setProjects((prev) => {
       const next = prev.map((p) => (p.id === updatedProject.id ? updatedProject : p));
-      localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      try {
+        localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      } catch (err) {
+        console.warn('LocalStorage save project error:', err);
+      }
       return next;
     });
     if (cloudStatus.tableReady) {
@@ -461,7 +522,11 @@ export default function App() {
         (u) => u.id !== newUser.id && u.email.toLowerCase() !== newUser.email.toLowerCase()
       );
       const updated = [...filtered, newUser];
-      localStorage.setItem('vermilion_users', JSON.stringify(updated));
+      try {
+        localStorage.setItem('vermilion_users', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('LocalStorage save user error:', e);
+      }
       return updated;
     });
     setCurrentUserId(newUser.id);
@@ -482,7 +547,11 @@ export default function App() {
   const handleUpdateUser = (updatedUser: User) => {
     setUsers((prev) => {
       const next = prev.map((u) => (u.id === updatedUser.id ? updatedUser : u));
-      localStorage.setItem('vermilion_users', JSON.stringify(next));
+      try {
+        localStorage.setItem('vermilion_users', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage save user error:', e);
+      }
       return next;
     });
     if (cloudStatus.tableReady) {
@@ -497,9 +566,15 @@ export default function App() {
     memberIds: string[],
     memberRoles: Record<string, ProjectRole>
   ) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projId ? { ...p, memberIds, memberRoles } : p))
-    );
+    setProjects((prev) => {
+      const next = prev.map((p) => (p.id === projId ? { ...p, memberIds, memberRoles } : p));
+      try {
+        localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage save project members error:', e);
+      }
+      return next;
+    });
     if (cloudStatus.tableReady) {
       saveCloudProjectMembers(projId, memberIds, memberRoles);
     }
@@ -682,6 +757,7 @@ export default function App() {
                   onTaskClick={(task) => setSelectedTaskId(task.id)}
                   onMoveTask={handleMoveTask}
                   onQuickAddTask={handleQuickAddTask}
+                  onUpdateTask={handleUpdateTask}
                 />
               </div>
             )}

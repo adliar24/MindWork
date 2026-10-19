@@ -68,6 +68,8 @@ export interface ExternalLink {
   type: LinkType;
 }
 
+export type TaskType = 'task' | 'feature' | 'bug' | 'improvement' | 'design' | 'research';
+
 export interface Task {
   id: string;
   projectId: string;
@@ -75,6 +77,10 @@ export interface Task {
   title: string;
   description: string;
   priority: Priority;
+  taskType?: TaskType;
+  cardColor?: string;
+  isCompleted?: boolean;
+  estimate?: string;
   assigneeId: string;
   dueDate: string;
   tags: string[];
@@ -86,7 +92,7 @@ export interface Task {
   createdAt: string;
 }
 
-export type ProjectRole = 'leader' | 'member' | 'viewer';
+export type ProjectRole = 'leader' | 'member' | 'viewer' | string;
 
 export interface Project {
   id: string;

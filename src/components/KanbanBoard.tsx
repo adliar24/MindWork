@@ -15,6 +15,7 @@ interface KanbanBoardProps {
   onTaskClick: (task: Task) => void;
   onMoveTask: (taskId: string, targetColumn: ColumnId) => void;
   onQuickAddTask: (columnId: ColumnId) => void;
+  onUpdateTask?: (updatedTask: Task) => void;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -27,6 +28,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onTaskClick,
   onMoveTask,
   onQuickAddTask,
+  onUpdateTask,
 }) => {
   const { language, t } = useLanguage();
   const isViewer = currentUserRole === 'viewer';
@@ -423,6 +425,21 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       isDragging={draggingTaskId === task.id}
                       onDragStart={handleDragStart}
                       isReadOnly={isViewer}
+                      onToggleChecklist={(taskId, itemId) => {
+                        if (!onUpdateTask) return;
+                        const tsk = tasks.find((t) => t.id === taskId);
+                        if (!tsk) return;
+                        const nextChecklist = (tsk.checklist || []).map((item) =>
+                          item.id === itemId ? { ...item, completed: !item.completed } : item
+                        );
+                        onUpdateTask({ ...tsk, checklist: nextChecklist });
+                      }}
+                      onToggleComplete={(taskId) => {
+                        if (!onUpdateTask) return;
+                        const tsk = tasks.find((t) => t.id === taskId);
+                        if (!tsk) return;
+                        onUpdateTask({ ...tsk, isCompleted: !tsk.isCompleted });
+                      }}
                     />
                   ))
                 )}
