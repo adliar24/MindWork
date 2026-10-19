@@ -259,6 +259,66 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         {project.description}
                       </p>
                     )}
+
+                    {/* Project Team Members with Visible Role Badges */}
+                    <div className="flex items-center gap-2 flex-wrap pt-2.5 mt-2 border-t border-neutral-100 dark:border-[#20232c]">
+                      <span className="text-[11px] font-semibold text-neutral-400 shrink-0">
+                        {language === 'id' ? 'Anggota Tim:' : 'Team Members:'}
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {project.memberIds?.map((memberId) => {
+                          const member = users.find((u) => u.id === memberId);
+                          if (!member) return null;
+                          const memberRole =
+                            project.memberRoles?.[member.id] ||
+                            member.role ||
+                            (project.leaderId === member.id ? 'leader' : 'member');
+                          const isLeaderRole =
+                            memberRole === 'leader' ||
+                            memberRole.toLowerCase() === 'ketua' ||
+                            memberRole.toLowerCase().includes('leader') ||
+                            project.leaderId === member.id;
+                          const isViewerRole =
+                            memberRole === 'viewer' || memberRole.toLowerCase().includes('peninjau');
+
+                          return (
+                            <div
+                              key={member.id}
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-[#1a1c24] border border-neutral-200/80 dark:border-[#2b2f3d] text-xs"
+                            >
+                              <UserAvatar
+                                avatar={member.avatar}
+                                name={member.name}
+                                color={member.color}
+                                className="w-4 h-4 text-[9px] shrink-0"
+                              />
+                              <span className="font-medium text-neutral-800 dark:text-neutral-200 text-[11px]">
+                                {member.name}
+                              </span>
+                              <span
+                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                  isLeaderRole
+                                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
+                                    : isViewerRole
+                                    ? 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400 border border-neutral-500/30'
+                                    : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
+                                }`}
+                              >
+                                {isLeaderRole
+                                  ? memberRole === 'leader'
+                                    ? t('roleLeader')
+                                    : memberRole
+                                  : memberRole === 'viewer'
+                                  ? t('roleViewer')
+                                  : memberRole === 'member'
+                                  ? t('roleMember')
+                                  : memberRole}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

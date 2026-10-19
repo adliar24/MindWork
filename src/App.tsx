@@ -575,6 +575,27 @@ export default function App() {
       }
       return next;
     });
+
+    // Also update role in users list for consistency across the entire app
+    setUsers((prevUsers) => {
+      let changed = false;
+      const updated = prevUsers.map((u) => {
+        if (memberRoles[u.id] && memberRoles[u.id] !== u.role) {
+          changed = true;
+          return { ...u, role: memberRoles[u.id] };
+        }
+        return u;
+      });
+      if (changed) {
+        try {
+          localStorage.setItem('vermilion_users', JSON.stringify(updated));
+        } catch (e) {
+          console.warn('LocalStorage save users error:', e);
+        }
+      }
+      return updated;
+    });
+
     if (cloudStatus.tableReady) {
       saveCloudProjectMembers(projId, memberIds, memberRoles);
     }

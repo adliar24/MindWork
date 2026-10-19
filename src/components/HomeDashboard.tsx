@@ -151,6 +151,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 const userRole: ProjectRole =
                   project.memberRoles?.[currentUser.id] ||
                   (project.leaderId === currentUser.id ? 'leader' : 'member');
+                const isUserLeader =
+                  userRole === 'leader' ||
+                  userRole.toLowerCase() === 'ketua' ||
+                  userRole.toLowerCase().includes('leader') ||
+                  project.leaderId === currentUser.id;
 
                 const projectMembers = users.filter((u) =>
                   project.memberIds?.includes(u.id)
@@ -206,12 +211,28 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                           </span>
                         </div>
 
-                        {userRole === 'leader' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
-                            <Crown className="w-2.5 h-2.5" />
-                            {t('roleLeader')}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
+                            isUserLeader
+                              ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                              : userRole === 'viewer' || userRole.toLowerCase().includes('peninjau')
+                              ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                              : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                          }`}
+                        >
+                          {isUserLeader && <Crown className="w-2.5 h-2.5" />}
+                          <span>
+                            {isUserLeader
+                              ? userRole === 'leader'
+                                ? t('roleLeader')
+                                : userRole
+                              : userRole === 'member'
+                              ? t('roleMember')
+                              : userRole === 'viewer'
+                              ? t('roleViewer')
+                              : userRole}
                           </span>
-                        )}
+                        </span>
                       </div>
 
                       {/* Project Name */}

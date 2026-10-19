@@ -224,8 +224,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     const isFiltered = selectedAssigneeId === user.id;
                     const userTaskCount = projectTasks.filter((t) => t.assigneeId === user.id).length;
                     const activeProject = projects.find((p) => p.id === activeProjectId);
-                    const isUserLeader = activeProject?.leaderId === user.id || activeProject?.memberRoles?.[user.id] === 'leader';
-                    const isUserViewer = activeProject?.memberRoles?.[user.id] === 'viewer';
+                    const memberRole =
+                      activeProject?.memberRoles?.[user.id] ||
+                      user.role ||
+                      (activeProject?.leaderId === user.id ? 'leader' : 'member');
+                    const isUserLeader =
+                      memberRole === 'leader' ||
+                      memberRole.toLowerCase() === 'ketua' ||
+                      memberRole.toLowerCase().includes('leader') ||
+                      activeProject?.leaderId === user.id;
+                    const isUserViewer =
+                      memberRole === 'viewer' || memberRole.toLowerCase().includes('peninjau');
 
                     return (
                       <button
@@ -234,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onSelectAssignee(isFiltered ? null : user.id);
                           onCloseMobile();
                         }}
-                        title={isFiltered ? 'Klik untuk reset' : user.name}
+                        title={isFiltered ? 'Klik untuk reset' : `${user.name} • ${memberRole}`}
                         className={`w-full text-left px-2.5 py-2.5 rounded-xl transition-all flex items-start justify-between text-xs cursor-pointer ${
                           isFiltered
                             ? 'bg-red-600/10 text-red-600 dark:text-red-400 border border-red-500/40 shadow-xs'
@@ -260,16 +269,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-[12px] leading-snug break-words">
                                 {user.name}
                               </span>
-                              {isUserLeader && (
-                                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0 leading-none">
-                                  {t('roleLeader')}
-                                </span>
-                              )}
-                              {isUserViewer && (
-                                <span className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20 shrink-0 leading-none">
-                                  {t('roleViewer')}
-                                </span>
-                              )}
+                              <span
+                                className={`text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 leading-none ${
+                                  isUserLeader
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                                    : isUserViewer
+                                    ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                                }`}
+                              >
+                                {isUserLeader
+                                  ? memberRole === 'leader'
+                                    ? t('roleLeader')
+                                    : memberRole
+                                  : memberRole === 'viewer'
+                                  ? t('roleViewer')
+                                  : memberRole === 'member'
+                                  ? t('roleMember')
+                                  : memberRole}
+                              </span>
                             </div>
                             <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
                               {user.username ? `@${user.username}` : user.email}
