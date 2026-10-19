@@ -151,6 +151,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     ).length;
   }, [tasks]);
 
+  const doneCount = completedTasksCount;
   const totalCount = tasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedTasksCount / totalCount) * 100) : 0;
 
@@ -448,7 +449,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
                   {!isViewer && onQuickAddTask && (
                     <button
-                      onClick={() => onQuickAddTask('todo')}
+                      onClick={() => onQuickAddTask(columns[0]?.id || 'todo')}
                       className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
