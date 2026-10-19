@@ -57,6 +57,7 @@ import {
 } from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
+import { ConfirmModal } from './ConfirmModal';
 
 interface TaskDetailModalProps {
   task: Task;
@@ -126,6 +127,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   // Lightbox preview modal for images
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isClosing, setIsClosing] = useState(false);
+
+  // Custom Confirm Modals
+  const [isDeleteTaskConfirmOpen, setIsDeleteTaskConfirmOpen] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null);
+  const [linkToDelete, setLinkToDelete] = useState<ExternalLink | null>(null);
 
   // Sync state if task prop changes externally
   useEffect(() => {
@@ -602,12 +608,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  if (confirm(t('deleteTaskConfirm'))) {
-                    onDeleteTask(task.id);
-                    handleClose();
-                  }
-                }}
+                onClick={() => setIsDeleteTaskConfirmOpen(true)}
                 title={t('deleteTask')}
                 className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
               >
@@ -1327,7 +1328,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           </a>
                           <button
                             type="button"
-                            onClick={() => handleDeleteLink(link.id)}
+                            onClick={() => setLinkToDelete(link)}
                             className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
                             title="Hapus"
                           >
@@ -1404,7 +1405,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                             )}
                             <button
                               type="button"
-                              onClick={() => handleDeleteAttachment(file.id)}
+                              onClick={() => setAttachmentToDelete(file)}
                               className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
                               title="Hapus berkas"
                             >
@@ -1599,6 +1600,62 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Delete Card Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteTaskConfirmOpen}
+        onClose={() => setIsDeleteTaskConfirmOpen(false)}
+        onConfirm={() => {
+          onDeleteTask(task.id);
+          handleClose();
+        }}
+        title={language === 'id' ? 'Hapus Kartu Ini?' : 'Delete This Card?'}
+        message={
+          language === 'id'
+            ? 'Kartu ini beserta seluruh lampiran berkas, tautan referensi, checklist, dan diskusinya akan dihapus secara permanen.'
+            : 'This card along with all file attachments, links, checklists, and comments will be permanently deleted.'
+        }
+        itemName={`Kartu: ${task.title}`}
+        confirmText={language === 'id' ? 'Hapus Kartu' : 'Delete Card'}
+      />
+
+      {/* Delete Attachment Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(attachmentToDelete)}
+        onClose={() => setAttachmentToDelete(null)}
+        onConfirm={() => {
+          if (attachmentToDelete) {
+            handleDeleteAttachment(attachmentToDelete.id);
+          }
+        }}
+        title={language === 'id' ? 'Hapus Berkas Lampiran?' : 'Delete Attachment?'}
+        message={
+          language === 'id'
+            ? 'Berkas ini akan dihapus dari kartu secara permanen.'
+            : 'This file attachment will be permanently removed from the card.'
+        }
+        itemName={attachmentToDelete ? `Berkas: ${attachmentToDelete.name}` : undefined}
+        confirmText={language === 'id' ? 'Hapus Berkas' : 'Delete File'}
+      />
+
+      {/* Delete External Link Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(linkToDelete)}
+        onClose={() => setLinkToDelete(null)}
+        onConfirm={() => {
+          if (linkToDelete) {
+            handleDeleteLink(linkToDelete.id);
+          }
+        }}
+        title={language === 'id' ? 'Hapus Tautan Referensi?' : 'Delete Reference Link?'}
+        message={
+          language === 'id'
+            ? 'Tautan ini akan dihapus dari kartu.'
+            : 'This reference link will be removed from the card.'
+        }
+        itemName={linkToDelete ? `Tautan: ${linkToDelete.title}` : undefined}
+        confirmText={language === 'id' ? 'Hapus Tautan' : 'Delete Link'}
+      />
     </>
   );
 };

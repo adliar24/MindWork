@@ -17,6 +17,7 @@ import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
 import { compressCoverBannerFile, compressImageFile } from '../utils/imageCompressor';
+import { ConfirmModal } from './ConfirmModal';
 
 interface KanbanBoardProps {
   project?: Project | null;
@@ -71,6 +72,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // Dynamic Trello-style Inline Card Composer State
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardTitle, setNewCardTitle] = useState('');
+
+  // Delete List Confirm Dialog State
+  const [deleteColumnConfirm, setDeleteColumnConfirm] = useState<{
+    isOpen: boolean;
+    colId: string;
+    title: string;
+    taskCount: number;
+  }>({
+    isOpen: false,
+    colId: '',
+    title: '',
+    taskCount: 0,
+  });
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -250,15 +264,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const handleDeleteColumn = (colId: string) => {
     if (!onDeleteList) return;
-    const confirmed = window.confirm(
-      language === 'id'
-        ? 'Apakah Anda yakin ingin menghapus daftar ini beserta seluruh kartunya?'
-        : 'Are you sure you want to delete this list and all its cards?'
-    );
-    if (confirmed) {
-      onDeleteList(colId);
-      setOpenMenuColumnId(null);
-    }
+    const col = boardLists.find((c) => c.id === colId);
+    const title = col ? getColumnTitle(col.id, col.title) : colId;
+    const taskCount = tasks.filter((t) => t.columnId === colId).length;
+    setDeleteColumnConfirm({
+      isOpen: true,
+      colId,
+      title,
+      taskCount,
+    });
+    setOpenMenuColumnId(null);
   };
 
   const getColumnTitle = (colId: string, defaultTitle: string) => {
@@ -949,6 +964,29 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Delete List Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={deleteColumnConfirm.isOpen}
+        onClose={() => setDeleteColumnConfirm((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={() => {
+          if (deleteColumnConfirm.colId && onDeleteList) {
+            onDeleteList(deleteColumnConfirm.colId);
+          }
+        }}
+        title={language === 'id' ? 'Hapus Daftar?' : 'Delete List?'}
+        message={
+          language === 'id'
+            ? deleteColumnConfirm.taskCount > 0
+              ? `Daftar ini berisi ${deleteColumnConfirm.taskCount} kartu. Seluruh kartu di dalamnya akan dihapus secara permanen.`
+              : 'Daftar ini akan dihapus dari papan proyek.'
+            : deleteColumnConfirm.taskCount > 0
+            ? `This list contains ${deleteColumnConfirm.taskCount} cards. All cards in it will be permanently deleted.`
+            : 'This list will be removed from the project board.'
+        }
+        itemName={`Daftar: ${deleteColumnConfirm.title}`}
+        confirmText={language === 'id' ? 'Hapus Daftar' : 'Delete List'}
+      />
     </div>
   );
 };

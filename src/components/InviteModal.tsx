@@ -18,6 +18,7 @@ import { Project, ProjectRole, User } from '../types';
 import { UserAvatar } from './UserAvatar';
 import { findCloudUserByIdentifier } from '../lib/supabaseService';
 import { useLanguage } from '../context/LanguageContext';
+import { ConfirmModal } from './ConfirmModal';
 
 interface InviteModalProps {
   project: Project;
@@ -128,13 +129,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
     onUpdateProjectMembers(project.id, memberIds, nextRoles);
   };
 
+  // Member removal confirmation state
+  const [memberToRemove, setMemberToRemove] = useState<User | null>(null);
+
   // Remove member from project and persist immediately
-  const handleRemoveMember = (userId: string) => {
+  const executeRemoveMember = (userId: string) => {
     if (!isLeader) return;
-    if (userId === project.leaderId) {
-      alert(language === 'id' ? 'Ketua utama tidak dapat dikeluarkan dari proyek.' : 'Main leader cannot be removed from the project.');
-      return;
-    }
+    if (userId === project.leaderId) return;
     const nextIds = memberIds.filter((id) => id !== userId);
     const nextRoles = { ...memberRoles };
     delete nextRoles[userId];
@@ -727,7 +728,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 
                       {isLeader && !isProjectCreator && (
                         <button
-                          onClick={() => handleRemoveMember(user.id)}
+                          type="button"
+                          onClick={() => setMemberToRemove(user)}
                           title={language === 'id' ? 'Keluarkan dari proyek' : 'Remove from project'}
                           className="p-1 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                         >
@@ -768,6 +770,25 @@ export const InviteModal: React.FC<InviteModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Remove Member Confirm Dialog */}
+      <ConfirmModal
+        isOpen={Boolean(memberToRemove)}
+        onClose={() => setMemberToRemove(null)}
+        onConfirm={() => {
+          if (memberToRemove) {
+            executeRemoveMember(memberToRemove.id);
+          }
+        }}
+        title={language === 'id' ? 'Keluarkan Anggota?' : 'Remove Member?'}
+        message={
+          language === 'id'
+            ? 'Anggota ini tidak lagi memiliki akses ke papan dan tugas di dalam proyek ini.'
+            : 'This member will no longer have access to the board and tasks in this project.'
+        }
+        itemName={memberToRemove ? `Anggota: ${memberToRemove.name}` : undefined}
+        confirmText={language === 'id' ? 'Keluarkan' : 'Remove'}
+      />
     </div>
   );
 };
