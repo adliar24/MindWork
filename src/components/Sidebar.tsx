@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity cursor-pointer"
+          className="fixed inset-0 z-40 bg-black/70 lg:hidden transition-opacity cursor-pointer"
         />
       )}
 

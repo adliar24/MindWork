@@ -449,7 +449,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       {previewImage && (
         <div
           onClick={() => setPreviewImage(null)}
-          className="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in"
+          className="fixed inset-0 z-60 bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -474,7 +474,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       {/* Main Task Detail Modal Backdrop */}
       <div
         onClick={handleClose}
-        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto cursor-pointer ${
+        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/70 overflow-y-auto cursor-pointer ${
           isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
         }`}
       >

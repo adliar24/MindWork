@@ -74,13 +74,8 @@ export default function App() {
     }
   });
 
-  const [activeProjectId, setActiveProjectId] = useState<string>(() => {
-    const saved = localStorage.getItem('vermilion_active_proj');
-    if (saved && saved !== 'proj-1' && saved !== 'proj-2' && saved !== 'proj-3') {
-      return saved;
-    }
-    return '';
-  });
+  // Always start on Home (Beranda) upon initial entry/reload
+  const [activeProjectId, setActiveProjectId] = useState<string>('');
 
   const [tasks, setTasks] = useState<Task[]>(() => {
     const saved = localStorage.getItem('vermilion_tasks');

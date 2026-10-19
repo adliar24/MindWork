@@ -141,7 +141,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 animate-in fade-in"
       onClick={handleClose}
     >
       <div

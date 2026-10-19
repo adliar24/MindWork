@@ -68,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs overflow-y-auto cursor-pointer ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 overflow-y-auto cursor-pointer ${
         isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
       }`}
     >

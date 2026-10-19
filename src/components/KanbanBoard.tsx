@@ -303,7 +303,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       coverInputRef.current?.click();
                     }}
                     disabled={isUploadingCover}
-                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span className="inline">
