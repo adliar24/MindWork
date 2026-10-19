@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { Plus, Eye, Camera, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
@@ -40,8 +40,56 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const dragPreviewRef = useRef<HTMLDivElement>(null);
+  const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const doneCount = tasks.filter((t) => t.columnId === 'done').length;
+  const draggedTask = useMemo(() => {
+    return tasks.find((t) => t.id === draggingTaskId) || null;
+  }, [tasks, draggingTaskId]);
+
+  const userMap = useMemo(() => {
+    const map = new Map<string, User>();
+    for (const u of users) {
+      map.set(u.id, u);
+    }
+    return map;
+  }, [users]);
+
+  const handleToggleChecklist = useCallback((taskId: string, itemId: string) => {
+    if (!onUpdateTask) return;
+    const tsk = tasks.find((t) => t.id === taskId);
+    if (!tsk) return;
+    const nextChecklist = (tsk.checklist || []).map((item) =>
+      item.id === itemId ? { ...item, completed: !item.completed } : item
+    );
+    onUpdateTask({ ...tsk, checklist: nextChecklist });
+  }, [tasks, onUpdateTask]);
+
+  const handleToggleComplete = useCallback((taskId: string) => {
+    if (!onUpdateTask) return;
+    const tsk = tasks.find((t) => t.id === taskId);
+    if (!tsk) return;
+    onUpdateTask({ ...tsk, isCompleted: !tsk.isCompleted });
+  }, [tasks, onUpdateTask]);
+
+  const tasksByColumn = useMemo(() => {
+    const map: Record<ColumnId, Task[]> = {
+      todo: [],
+      in_progress: [],
+      in_review: [],
+      done: [],
+    };
+    tasks.forEach((t) => {
+      if (map[t.columnId]) {
+        map[t.columnId].push(t);
+      } else {
+        map.todo.push(t);
+      }
+    });
+    return map;
+  }, [tasks]);
+
+  const doneCount = tasksByColumn.done.length;
   const totalCount = tasks.length;
   const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
@@ -114,10 +162,33 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     }
   };
 
+  const updateDragPreviewPos = (e: React.DragEvent) => {
+    if (dragPreviewRef.current && e.clientX && e.clientY) {
+      const x = e.clientX - dragOffsetRef.current.x;
+      const y = e.clientY - dragOffsetRef.current.y;
+      dragPreviewRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(1.5deg)`;
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
     if (isViewer) return;
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    dragOffsetRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
     e.dataTransfer.setData('text/plain', taskId);
     e.dataTransfer.effectAllowed = 'move';
+
+    // Suppress browser default semi-transparent drag preview
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    try {
+      e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    } catch {}
+
     setDraggingTaskId(taskId);
   };
 
@@ -125,6 +196,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     if (isViewer) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    updateDragPreviewPos(e);
     if (dragOverColumnId !== columnId) {
       setDragOverColumnId(columnId);
     }
@@ -152,11 +224,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     setDragOverColumnId(null);
   };
 
-  // Helper to get assignee user
-  const getUser = (id: string) => users.find((u) => u.id === id);
-
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto bg-[#f0f2f5] dark:bg-[#090a0d] transition-colors scroll-smooth">
+    <div
+      onDragOver={updateDragPreviewPos}
+      className="flex-1 flex flex-col overflow-y-auto bg-[#f0f2f5] dark:bg-[#090a0d] transition-colors scroll-smooth relative"
+    >
       {/* 1. Facebook Fanpage-style Project Header (Cover + Profile Picture) */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
@@ -343,7 +415,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       <div className="flex-1 flex overflow-x-auto p-3 sm:p-5 md:p-6 pt-1">
         <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
         {columns.map((column) => {
-          const columnTasks = tasks.filter((t) => t.columnId === column.id);
+          const columnTasks = tasksByColumn[column.id] || [];
           const isOver = dragOverColumnId === column.id;
           const displayTitle = getColumnTitle(column.id, column.title);
 
@@ -419,27 +491,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     <KanbanCard
                       key={task.id}
                       task={task}
-                      assignee={getUser(task.assigneeId)}
+                      assignee={userMap.get(task.assigneeId)}
                       onClick={() => onTaskClick(task)}
                       onMoveColumn={onMoveTask}
                       isDragging={draggingTaskId === task.id}
                       onDragStart={handleDragStart}
                       isReadOnly={isViewer}
-                      onToggleChecklist={(taskId, itemId) => {
-                        if (!onUpdateTask) return;
-                        const tsk = tasks.find((t) => t.id === taskId);
-                        if (!tsk) return;
-                        const nextChecklist = (tsk.checklist || []).map((item) =>
-                          item.id === itemId ? { ...item, completed: !item.completed } : item
-                        );
-                        onUpdateTask({ ...tsk, checklist: nextChecklist });
-                      }}
-                      onToggleComplete={(taskId) => {
-                        if (!onUpdateTask) return;
-                        const tsk = tasks.find((t) => t.id === taskId);
-                        if (!tsk) return;
-                        onUpdateTask({ ...tsk, isCompleted: !tsk.isCompleted });
-                      }}
+                      onToggleChecklist={handleToggleChecklist}
+                      onToggleComplete={handleToggleComplete}
                     />
                   ))
                 )}
@@ -462,6 +521,37 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         })}
         </div>
       </div>
+
+      {/* 100% Solid Floating Drag Preview (Zero Transparency) */}
+      {draggedTask && (
+        <div
+          ref={dragPreviewRef}
+          className="fixed top-0 left-0 pointer-events-none z-[9999] opacity-100 will-change-transform"
+          style={{
+            width: 310,
+            transform: 'translate3d(-9999px, -9999px, 0)',
+          }}
+        >
+          <div className="rounded-xl border-2 border-red-500 ring-4 ring-red-500/25 bg-white dark:bg-[#20232c] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.55)] overflow-hidden opacity-100 select-none">
+            {draggedTask.cardColor && (
+              <div
+                className="w-full h-8 opacity-100"
+                style={{ backgroundColor: draggedTask.cardColor }}
+              />
+            )}
+            <div className="p-3.5 space-y-2 bg-white dark:bg-[#20232c] opacity-100">
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white line-clamp-2 leading-snug">
+                {draggedTask.title}
+              </h3>
+              {draggedTask.description && (
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">
+                  {draggedTask.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

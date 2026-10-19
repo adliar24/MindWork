@@ -35,7 +35,7 @@ interface KanbanCardProps {
   onToggleComplete?: (taskId: string) => void;
 }
 
-export const KanbanCard: React.FC<KanbanCardProps> = ({
+export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   task,
   assignee,
   onClick,
@@ -148,7 +148,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       } select-none overflow-hidden transition-all duration-200
         ${
           isDragging
-            ? 'opacity-100 scale-[1.02] border-red-500 ring-2 ring-red-500/30 shadow-2xl z-20 cursor-grabbing bg-white dark:bg-[#242732]'
+            ? 'opacity-100 border-2 border-dashed border-red-500/70 bg-red-500/10 dark:bg-red-950/30 shadow-none'
             : 'hover:border-neutral-400 dark:hover:border-[#464c5e] hover:shadow-md dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)] dark:hover:bg-[#242732]'
         }
         bg-white dark:bg-[#20232c] border-[#d6dae2] dark:border-[#313543] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)]`}
@@ -447,4 +447,4 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       </div>
     </div>
   );
-};
+});

@@ -89,6 +89,19 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
 
+  useEffect(() => {
+    setTitle(task.title);
+    setDescription(task.description);
+    setColumnId(task.columnId);
+    setPriority(task.priority);
+    setAssigneeId(task.assigneeId);
+    setDueDate(task.dueDate);
+    setTaskType(task.taskType || 'task');
+    setCardColor(task.cardColor || '');
+    setIsCompleted(Boolean(task.isCompleted));
+    setEstimate(task.estimate || '');
+  }, [task.id]);
+
   const handleTaskTypeChange = (newType: TaskType) => {
     setTaskType(newType);
     onUpdateTask({ ...task, taskType: newType });

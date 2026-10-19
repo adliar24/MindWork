@@ -360,28 +360,64 @@ export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error || !data) return null;
 
-    return data.map((t: any) => ({
-      id: t.id,
-      projectId: t.project_id,
-      columnId: t.column_id,
-      title: t.title,
-      description: t.description || '',
-      priority: t.priority,
-      taskType: t.task_type || 'task',
-      cardColor: t.card_color || '',
-      estimate: t.estimate || '',
-      isCompleted: Boolean(t.is_completed),
-      creatorId: t.creator_id || '',
-      assigneeId: t.assignee_id,
-      dueDate: t.due_date || '',
-      tags: Array.isArray(t.tags) ? t.tags : [],
-      attachments: Array.isArray(t.attachments) ? t.attachments : [],
-      comments: Array.isArray(t.comments) ? t.comments : [],
-      activities: Array.isArray(t.activities) ? t.activities : [],
-      checklist: Array.isArray(t.checklist) ? t.checklist : [],
-      externalLinks: Array.isArray(t.external_links) ? t.external_links : [],
-      createdAt: t.created_at,
-    }));
+    return data.map((t: any) => {
+      const rawTags: string[] = Array.isArray(t.tags) ? t.tags : [];
+      const cleanTags = rawTags.filter(
+        (tag) => typeof tag === 'string' && !tag.startsWith('__meta_')
+      );
+
+      const colorTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_color:')
+      );
+      let cardColor = t.card_color || '';
+      if (colorTag) {
+        const val = colorTag.replace('__meta_color:', '');
+        cardColor = val === 'none' ? '' : val;
+      }
+
+      const typeTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_type:')
+      );
+      const taskType = t.task_type || (typeTag ? typeTag.replace('__meta_type:', '') : 'task');
+
+      const estTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_est:')
+      );
+      const estimate = t.estimate || (estTag ? estTag.replace('__meta_est:', '') : '');
+
+      const doneTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_done:')
+      );
+      const isCompleted = Boolean(t.is_completed || doneTag);
+
+      const creatorTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_creator:')
+      );
+      const creatorId = t.creator_id || (creatorTag ? creatorTag.replace('__meta_creator:', '') : '');
+
+      return {
+        id: t.id,
+        projectId: t.project_id,
+        columnId: t.column_id,
+        title: t.title,
+        description: t.description || '',
+        priority: t.priority,
+        taskType: (taskType as TaskType) || 'task',
+        cardColor,
+        estimate,
+        isCompleted,
+        creatorId,
+        assigneeId: t.assignee_id,
+        dueDate: t.due_date || '',
+        tags: cleanTags,
+        attachments: Array.isArray(t.attachments) ? t.attachments : [],
+        comments: Array.isArray(t.comments) ? t.comments : [],
+        activities: Array.isArray(t.activities) ? t.activities : [],
+        checklist: Array.isArray(t.checklist) ? t.checklist : [],
+        externalLinks: Array.isArray(t.external_links) ? t.external_links : [],
+        createdAt: t.created_at,
+      };
+    });
   } catch {
     return null;
   }
@@ -390,6 +426,21 @@ export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null
 export async function saveCloudTask(task: Task): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
+    // Clean any previous meta tags
+    const cleanTags = (task.tags || []).filter(
+      (t) => typeof t === 'string' && !t.startsWith('__meta_')
+    );
+    const enrichedTags = [...cleanTags];
+    if (task.cardColor) {
+      enrichedTags.push(`__meta_color:${task.cardColor}`);
+    } else {
+      enrichedTags.push(`__meta_color:none`);
+    }
+    if (task.taskType && task.taskType !== 'task') enrichedTags.push(`__meta_type:${task.taskType}`);
+    if (task.estimate) enrichedTags.push(`__meta_est:${task.estimate}`);
+    if (task.isCompleted) enrichedTags.push(`__meta_done:true`);
+    if (task.creatorId) enrichedTags.push(`__meta_creator:${task.creatorId}`);
+
     const fullPayload: any = {
       id: task.id,
       project_id: task.projectId,
@@ -399,7 +450,7 @@ export async function saveCloudTask(task: Task): Promise<boolean> {
       priority: task.priority,
       assignee_id: task.assigneeId || null,
       due_date: task.dueDate || '',
-      tags: task.tags || [],
+      tags: enrichedTags,
       attachments: task.attachments || [],
       comments: task.comments || [],
       activities: task.activities || [],
@@ -417,6 +468,7 @@ export async function saveCloudTask(task: Task): Promise<boolean> {
 
     // Resilient fallback if schema hasn't run migrations for new columns yet
     const { card_color, task_type, is_completed, estimate, creator_id, ...fallbackPayload } = fullPayload;
+    fallbackPayload.tags = enrichedTags;
     const { error: fallbackError } = await supabase.from('tasks').upsert(fallbackPayload);
     return !fallbackError;
   } catch {

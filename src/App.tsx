@@ -258,12 +258,16 @@ export default function App() {
               creatorId: ct.creatorId || lt?.creatorId || '',
             };
           });
+          const missingLocals = prevTasks.filter(
+            (lt) => !cleanCloudTasks.some((ct) => ct.id === lt.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lt.projectId)
+          );
+          const finalTasks = [...merged, ...missingLocals];
           try {
-            localStorage.setItem('vermilion_tasks', JSON.stringify(merged));
+            localStorage.setItem('vermilion_tasks', JSON.stringify(finalTasks));
           } catch (e) {
             console.warn('LocalStorage tasks quota warning:', e);
           }
-          return merged;
+          return finalTasks;
         });
       }
     }
@@ -280,7 +284,34 @@ export default function App() {
     const unsubscribe = subscribeToCloudChanges(async ({ table }) => {
       if (table === 'tasks') {
         const updatedTasks = await fetchCloudTasks();
-        if (updatedTasks) setTasks(updatedTasks);
+        if (updatedTasks) {
+          const clean = updatedTasks.filter(
+            (t) => t.projectId !== 'proj-1' && t.projectId !== 'proj-2' && t.projectId !== 'proj-3'
+          );
+          setTasks((prevTasks) => {
+            const merged = clean.map((ct) => {
+              const lt = prevTasks.find((x) => x.id === ct.id);
+              return {
+                ...ct,
+                cardColor: ct.cardColor || lt?.cardColor || '',
+                taskType: ct.taskType || lt?.taskType || 'task',
+                estimate: ct.estimate || lt?.estimate || '',
+                isCompleted: ct.isCompleted ?? lt?.isCompleted ?? false,
+                creatorId: ct.creatorId || lt?.creatorId || '',
+              };
+            });
+            const missingLocals = prevTasks.filter(
+              (lt) => !clean.some((ct) => ct.id === lt.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lt.projectId)
+            );
+            const finalTasks = [...merged, ...missingLocals];
+            try {
+              localStorage.setItem('vermilion_tasks', JSON.stringify(finalTasks));
+            } catch (e) {
+              console.warn('LocalStorage quota warning:', e);
+            }
+            return finalTasks;
+          });
+        }
       } else if (table === 'projects' || table === 'project_members') {
         const updatedProjects = await fetchCloudProjects();
         if (updatedProjects) {
