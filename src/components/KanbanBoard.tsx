@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Plus, Eye, Camera, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
+import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
 import { compressCoverBannerFile, compressImageFile } from '../utils/imageCompressor';
 
@@ -269,17 +270,21 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         {project.memberIds?.map((memberId) => {
                           const member = users.find((u) => u.id === memberId);
                           if (!member) return null;
-                          const memberRole =
+                          const memberRole = String(
                             project.memberRoles?.[member.id] ||
                             member.role ||
-                            (project.leaderId === member.id ? 'leader' : 'member');
+                            (project.leaderId === member.id ? 'leader' : 'member') ||
+                            ''
+                          );
+                          const roleLower = memberRole.toLowerCase();
                           const isLeaderRole =
-                            memberRole === 'leader' ||
-                            memberRole.toLowerCase() === 'ketua' ||
-                            memberRole.toLowerCase().includes('leader') ||
+                            roleLower === 'leader' ||
+                            roleLower === 'ketua' ||
+                            roleLower.includes('leader') ||
+                            roleLower.includes('ketua') ||
                             project.leaderId === member.id;
                           const isViewerRole =
-                            memberRole === 'viewer' || memberRole.toLowerCase().includes('peninjau');
+                            roleLower === 'viewer' || roleLower.includes('peninjau');
 
                           return (
                             <div

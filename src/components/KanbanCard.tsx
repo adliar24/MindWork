@@ -148,7 +148,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       } select-none overflow-hidden transition-all duration-200
         ${
           isDragging
-            ? 'opacity-40 scale-95 border-red-500 shadow-md'
+            ? 'opacity-100 scale-[1.02] border-red-500 ring-2 ring-red-500/30 shadow-2xl z-20 cursor-grabbing bg-white dark:bg-[#242732]'
             : 'hover:border-neutral-400 dark:hover:border-[#464c5e] hover:shadow-md dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)] dark:hover:bg-[#242732]'
         }
         bg-white dark:bg-[#20232c] border-[#d6dae2] dark:border-[#313543] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)]`}
