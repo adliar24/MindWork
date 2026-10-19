@@ -276,11 +276,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     setOpenMenuColumnId(null);
   };
 
-  const getColumnTitle = (colId: string, defaultTitle: string) => {
-    if (colId === 'todo' && defaultTitle === 'To Do') return t('colTodoTitle');
-    if (colId === 'in_progress' && defaultTitle === 'In Progress') return t('colInProgressTitle');
-    if (colId === 'in_review' && defaultTitle === 'In Review') return t('colInReviewTitle');
-    if (colId === 'done' && defaultTitle === 'Done') return t('colDoneTitle');
+  const getColumnTitle = (_colId: string, defaultTitle: string) => {
     return defaultTitle;
   };
 
@@ -709,7 +705,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           <h2
                             onClick={() => !isViewer && startEditColumn(column)}
                             title={!isViewer ? 'Klik untuk ubah nama' : undefined}
-                            className={`text-xs font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide truncate ${
+                            className={`text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate ${
                               !isViewer ? 'cursor-pointer hover:text-red-600 transition-colors' : ''
                             }`}
                           >
