@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import {
   Plus,
   Eye,
-  Camera,
+  ZoomIn,
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
@@ -16,7 +16,6 @@ import {
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
-import { compressCoverBannerFile, compressImageFile } from '../utils/imageCompressor';
 import { ConfirmModal } from './ConfirmModal';
 
 interface KanbanBoardProps {
@@ -59,10 +58,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<ColumnId | null>(null);
   const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [mobileActiveColumn, setMobileActiveColumn] = useState<ColumnId | 'all'>('all');
   const [dragPreviewWidth, setDragPreviewWidth] = useState<number>(310);
+
+  // Lightbox / Image Zoom State for Cover and Avatar
+  const [imageZoom, setImageZoom] = useState<{
+    isOpen: boolean;
+    src: string;
+    title: string;
+    subtitle?: string;
+  } | null>(null);
 
   // Dynamic Trello-style List Creation & Renaming State
   const [isAddingList, setIsAddingList] = useState(false);
@@ -88,8 +93,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     taskCount: 0,
   });
 
-  const coverInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   const dragPreviewRef = useRef<HTMLDivElement>(null);
   const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -177,59 +180,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const totalCount = tasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedTasksCount / totalCount) * 100) : 0;
 
-  const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !project || !onUpdateProject) return;
-
-    // Validasi agar hanya berkas gambar yang diproses saat pengguna memilih lewat File Manager / Folder
-    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
-    if (!isImage) {
-      alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
-      if (e.target) e.target.value = '';
-      return;
-    }
-
-    try {
-      setIsUploadingCover(true);
-      const compressed = await compressCoverBannerFile(file, 960, 320);
-      onUpdateProject({
-        ...project,
-        coverImage: compressed,
-      });
-    } catch (err) {
-      console.error('Gagal mengupload sampul proyek:', err);
-    } finally {
-      setIsUploadingCover(false);
-      if (e.target) e.target.value = '';
-    }
-  };
-
-  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !project || !onUpdateProject) return;
-
-    // Validasi agar hanya berkas gambar yang diproses saat pengguna memilih lewat File Manager / Folder
-    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|svg|heic|heif)$/i.test(file.name);
-    if (!isImage) {
-      alert(language === 'id' ? 'Silakan pilih berkas gambar (JPG, PNG, WebP, dsb).' : 'Please select an image file (JPG, PNG, WebP, etc).');
-      if (e.target) e.target.value = '';
-      return;
-    }
-
-    try {
-      setIsUploadingAvatar(true);
-      const compressed = await compressImageFile(file, 240);
-      onUpdateProject({
-        ...project,
-        avatar: compressed,
-      });
-    } catch (err) {
-      console.error('Gagal mengupload avatar proyek:', err);
-    } finally {
-      setIsUploadingAvatar(false);
-      if (e.target) e.target.value = '';
-    }
-  };
+  // Handle escape key to close image zoom lightbox
+  useEffect(() => {
+    if (!imageZoom?.isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setImageZoom(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [imageZoom]);
 
   const submitCreateList = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -368,39 +329,41 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           <div className="max-w-[860px] mx-auto sm:mx-0 rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
             {/* Cover Banner - Strict 3:1 Aspect Ratio on All Devices */}
             {!isBannerCollapsed && (
-              <div className="relative w-full aspect-[3/1] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
+              <div
+                onClick={() => {
+                  if (project.coverImage) {
+                    setImageZoom({
+                      isOpen: true,
+                      src: project.coverImage,
+                      title: language === 'id' ? 'Sampul Proyek' : 'Project Cover Banner',
+                      subtitle: project.name,
+                    });
+                  }
+                }}
+                className={`relative w-full aspect-[3/1] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs ${
+                  project.coverImage ? 'cursor-zoom-in' : ''
+                }`}
+                title={project.coverImage ? (language === 'id' ? 'Klik untuk memperbesar sampul' : 'Click to zoom cover') : undefined}
+              >
                 {project.coverImage ? (
-                  <img
-                    src={project.coverImage}
-                    alt="Sampul Proyek"
-                    className="w-full h-full object-cover object-center select-none"
-                  />
+                  <>
+                    <img
+                      src={project.coverImage}
+                      alt="Sampul Proyek"
+                      className="w-full h-full object-cover object-center select-none transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    {/* Zoom Indicator on Hover */}
+                    <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 px-2.5 py-1 rounded-xl bg-black/75 text-white text-xs font-medium flex items-center gap-1.5 shadow-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <ZoomIn className="w-3.5 h-3.5" />
+                      <span>{language === 'id' ? 'Perbesar' : 'Zoom'}</span>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/35">
                     <span className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-widest select-none">
                       {project.name}
                     </span>
                   </div>
-                )}
-
-                {/* Cover Action Button - with z-30 to guarantee it is always clickable */}
-                {!isViewer && onUpdateProject && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      coverInputRef.current?.click();
-                    }}
-                    disabled={isUploadingCover}
-                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span className="inline">
-                      {isUploadingCover
-                        ? (language === 'id' ? 'Memproses...' : 'Processing...')
-                        : (language === 'id' ? 'Ubah Sampul' : 'Change Cover')}
-                    </span>
-                  </button>
                 )}
               </div>
             )}
@@ -412,38 +375,40 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
                   {/* Project Profile Avatar - only the avatar overlaps into the banner */}
                   <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-9 sm:-mt-11 md:-mt-12' : 'mt-3.5'} z-20`}>
-                    <div className="w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
+                    <div
+                      onClick={() => {
+                        if (project.avatar) {
+                          setImageZoom({
+                            isOpen: true,
+                            src: project.avatar,
+                            title: language === 'id' ? 'Foto Profil Proyek' : 'Project Profile Photo',
+                            subtitle: project.name,
+                          });
+                        }
+                      }}
+                      className={`w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center relative ${
+                        project.avatar ? 'cursor-zoom-in' : ''
+                      }`}
+                      title={project.avatar ? (language === 'id' ? 'Klik untuk memperbesar foto profil' : 'Click to zoom profile photo') : undefined}
+                    >
                       {project.avatar ? (
-                        <img
-                          src={project.avatar}
-                          alt={project.name}
-                          className="w-full h-full object-cover select-none"
-                        />
+                        <>
+                          <img
+                            src={project.avatar}
+                            alt={project.name}
+                            className="w-full h-full object-cover select-none transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {/* Zoom Indicator on Hover */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                            <ZoomIn className="w-5 h-5 text-white drop-shadow" />
+                          </div>
+                        </>
                       ) : (
                         <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-xl sm:text-2xl md:text-3xl select-none`}>
                           {project.name.charAt(0).toUpperCase()}
                         </div>
                       )}
                     </div>
-
-                    {/* Change Profile Avatar Overlay Button */}
-                    {!isViewer && onUpdateProject && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          avatarInputRef.current?.click();
-                        }}
-                        disabled={isUploadingAvatar}
-                        className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity cursor-pointer border-4 border-transparent"
-                        title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
-                      >
-                        <Camera className="w-5 h-5 mb-0.5" />
-                        <span>
-                          {isUploadingAvatar ? '...' : (language === 'id' ? 'Ubah' : 'Edit')}
-                        </span>
-                      </button>
-                    )}
                   </div>
 
                   {/* Project Titles & Category - Clean normal flow, never hits cover or photo */}
@@ -509,22 +474,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Hidden file inputs */}
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
-              className="hidden"
-              onChange={handleCoverFileChange}
-            />
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.heic,*/*"
-              className="hidden"
-              onChange={handleAvatarFileChange}
-            />
           </div>
         </div>
       )}
@@ -993,6 +942,55 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         itemName={`Daftar: ${deleteColumnConfirm.title}`}
         confirmText={language === 'id' ? 'Hapus Daftar' : 'Delete List'}
       />
+
+      {/* 4. Lightbox Modal Zoom Gambar (Sampul & Foto Profil) */}
+      {imageZoom && imageZoom.isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 transition-opacity animate-in fade-in duration-200"
+          onClick={() => setImageZoom(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl w-full max-h-[92vh] flex flex-col items-center bg-[#111217] rounded-3xl border border-neutral-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          >
+            {/* Header Modal Zoom */}
+            <div className="w-full px-5 py-3.5 flex items-center justify-between border-b border-neutral-800 bg-[#16181f]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-white truncate">
+                    {imageZoom.title}
+                  </h3>
+                  {imageZoom.subtitle && (
+                    <p className="text-xs text-neutral-400 truncate">
+                      {imageZoom.subtitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setImageZoom(null)}
+                className="p-1.5 rounded-xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                title={language === 'id' ? 'Tutup (Esc)' : 'Close (Esc)'}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tampilan Gambar Zoom */}
+            <div className="p-3 sm:p-5 flex items-center justify-center w-full max-h-[calc(92vh-70px)] overflow-auto bg-black/40">
+              <img
+                src={imageZoom.src}
+                alt={imageZoom.title}
+                className="max-h-[75vh] w-auto max-w-full object-contain rounded-xl shadow-lg select-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
