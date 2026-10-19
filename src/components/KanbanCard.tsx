@@ -12,6 +12,8 @@ import {
   Palette,
   Lightbulb,
   Clock,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
 import { formatDateLocale } from '../utils/fileHelpers';
@@ -37,6 +39,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   isDragging,
   onDragStart,
   isReadOnly = false,
+  onToggleComplete,
 }) => {
   const { language } = useLanguage();
 
@@ -213,16 +216,35 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           </div>
         </div>
 
-        {/* Task Title */}
-        <h3
-          className={`text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 ${
-            task.isCompleted || task.columnId === 'done'
-              ? 'line-through text-neutral-400 dark:text-neutral-500'
-              : 'text-neutral-900 dark:text-white'
-          }`}
-        >
-          {task.title}
-        </h3>
+        {/* Task Title with Trello-style Check-off button */}
+        <div className="flex items-start gap-2">
+          {!isReadOnly && onToggleComplete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleComplete(task.id);
+              }}
+              title={task.isCompleted ? 'Tandai belum selesai' : 'Tandai selesai'}
+              className="mt-0.5 shrink-0 text-neutral-400 hover:text-emerald-500 transition-colors cursor-pointer"
+            >
+              {task.isCompleted ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <Circle className="w-4 h-4 text-neutral-400 hover:text-emerald-500" />
+              )}
+            </button>
+          )}
+          <h3
+            className={`text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 flex-1 ${
+              task.isCompleted
+                ? 'line-through text-neutral-400 dark:text-neutral-500'
+                : 'text-neutral-900 dark:text-white'
+            }`}
+          >
+            {task.title}
+          </h3>
+        </div>
 
         {/* Description excerpt (Desktop only - hidden on mobile for clean scannability) */}
         {task.description && (

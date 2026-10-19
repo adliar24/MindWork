@@ -32,10 +32,12 @@ import {
   Lightbulb,
   Clock,
   CheckCircle2,
+  Circle,
 } from 'lucide-react';
 import {
   Attachment,
   ChecklistItem,
+  Column,
   ColumnId,
   Comment,
   ExternalLink,
@@ -60,18 +62,22 @@ interface TaskDetailModalProps {
   task: Task;
   users: User[];
   currentUser: User;
+  columns?: Column[];
   onClose: () => void;
   onUpdateTask: (updatedTask: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  onMoveTask?: (taskId: string, targetColumn: ColumnId) => void;
 }
 
 export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   task,
   users,
   currentUser,
+  columns = [],
   onClose,
   onUpdateTask,
   onDeleteTask,
+  onMoveTask,
 }) => {
   const { language, t } = useLanguage();
 
@@ -101,6 +107,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const resultFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Quick Action refs
+  const checklistInputRef = useRef<HTMLInputElement | null>(null);
+  const checklistSectionRef = useRef<HTMLDivElement | null>(null);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
+  const assigneeSelectRef = useRef<HTMLSelectElement | null>(null);
+  const prioritySelectRef = useRef<HTMLSelectElement | null>(null);
 
   // Discussion & Comments state
   const [commentText, setCommentText] = useState('');
@@ -179,6 +192,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleStatusChange = (newCol: ColumnId) => {
     setColumnId(newCol);
+    if (onMoveTask) {
+      onMoveTask(task.id, newCol);
+    }
     const completedNow = newCol === 'done';
     setIsCompleted(completedNow);
     persistChanges({ columnId: newCol, isCompleted: completedNow });
@@ -212,9 +228,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const handleToggleComplete = () => {
     const nextVal = !isCompleted;
     setIsCompleted(nextVal);
-    const nextCol: ColumnId = nextVal ? 'done' : columnId === 'done' ? 'todo' : columnId;
-    setColumnId(nextCol);
-    persistChanges({ isCompleted: nextVal, columnId: nextCol });
+    persistChanges({ isCompleted: nextVal });
   };
 
   const handleEstimateChange = (newEst: string) => {
@@ -414,15 +428,29 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     }
   };
 
-  // Status configuration details
-  const statusOptions: { id: ColumnId; label: string; dot: string; color: string }[] = [
+  // Dynamic List / Status configuration details based on active project's columns
+  const defaultListOptions: { id: ColumnId; label: string; dot: string; color: string }[] = [
     { id: 'todo', label: t('colTodoTitle'), dot: 'bg-neutral-400 dark:bg-neutral-500', color: 'text-neutral-700 dark:text-neutral-300' },
     { id: 'in_progress', label: t('colInProgressTitle'), dot: 'bg-red-500 shadow-xs shadow-red-500/50', color: 'text-red-600 dark:text-red-400' },
     { id: 'in_review', label: t('colInReviewTitle'), dot: 'bg-amber-500 shadow-xs shadow-amber-500/50', color: 'text-amber-600 dark:text-amber-400' },
     { id: 'done', label: t('colDoneTitle'), dot: 'bg-emerald-500 shadow-xs shadow-emerald-500/50', color: 'text-emerald-600 dark:text-emerald-400' },
   ];
 
-  const currentStatusConfig = statusOptions.find((s) => s.id === columnId) || statusOptions[0];
+  const listOptions = columns.length > 0
+    ? columns.map((col) => ({
+        id: col.id,
+        label: col.title,
+        dot: col.badgeColor || (col.id === 'done' ? 'bg-emerald-500' : 'bg-red-500'),
+        color: 'text-neutral-800 dark:text-neutral-200',
+      }))
+    : defaultListOptions;
+
+  const currentStatusConfig = listOptions.find((s) => s.id === columnId) || {
+    id: columnId,
+    label: columnId,
+    dot: 'bg-neutral-400',
+    color: 'text-neutral-700 dark:text-neutral-300',
+  };
 
   // Checklist statistics
   const totalChecklist = (task.checklist || []).length;
@@ -491,17 +519,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Clean Executive Header */}
           <div className="h-14 px-5 sm:px-6 border-b border-neutral-200/80 dark:border-[#222532] flex items-center justify-between shrink-0 bg-white dark:bg-[#12141a]">
-            {/* Status Dropdown Pill & Task Type */}
+            {/* List Switcher Pill & Task Type */}
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-neutral-100/80 dark:bg-[#1a1d27] border border-neutral-200/60 dark:border-[#292d3b]">
+                <span className="text-[11px] text-neutral-400 font-medium hidden sm:inline">
+                  {language === 'id' ? 'dalam daftar' : 'in list'}
+                </span>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${currentStatusConfig.dot}`} />
                 <select
                   value={columnId}
                   onChange={(e) => handleStatusChange(e.target.value as ColumnId)}
-                  aria-label="Status Tugas"
+                  aria-label="Pilih Daftar"
                   className={`text-xs font-semibold bg-transparent focus:outline-none cursor-pointer pr-1 ${currentStatusConfig.color}`}
                 >
-                  {statusOptions.map((opt) => (
+                  {listOptions.map((opt) => (
                     <option key={opt.id} value={opt.id} className="dark:bg-[#161822] text-neutral-900 dark:text-white">
                       {opt.label}
                     </option>
@@ -577,17 +608,94 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
             {/* LEFT COLUMN: Main Task Body (Title, Description, Checklist, Attachments, Comments) */}
             <div className="flex-1 md:overflow-y-auto p-5 sm:p-7 space-y-6">
-              {/* Task Title (Seamless Inline Edit) */}
-              <div>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={handleTitleBlur}
-                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                  placeholder="Judul Tugas..."
-                  className="w-full text-lg sm:text-xl font-bold bg-transparent text-neutral-950 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-lg px-2 py-1 -ml-2 transition-all leading-snug"
-                />
+              {/* Task Title (Seamless Inline Edit) with Trello Check-off Circle */}
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={handleToggleComplete}
+                    title={isCompleted ? (language === 'id' ? 'Tandai belum selesai' : 'Mark incomplete') : (language === 'id' ? 'Tandai selesai' : 'Mark complete')}
+                    className="mt-1 text-neutral-400 hover:text-emerald-500 transition-colors shrink-0 cursor-pointer"
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-neutral-400 hover:text-emerald-500" />
+                    )}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onBlur={handleTitleBlur}
+                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                      placeholder="Judul Tugas..."
+                      className={`w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-lg px-2 py-0.5 -ml-2 transition-all leading-snug ${
+                        isCompleted
+                          ? 'line-through text-neutral-400 dark:text-neutral-500'
+                          : 'text-neutral-950 dark:text-white'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Trello-style Quick Action Toolstrip */}
+                <div className="flex items-center gap-1.5 flex-wrap pl-8">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      checklistSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      setTimeout(() => checklistInputRef.current?.focus(), 200);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                  >
+                    <CheckSquare className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Checklist</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (dateInputRef.current && 'showPicker' in dateInputRef.current) {
+                        (dateInputRef.current as any).showPicker();
+                      } else {
+                        dateInputRef.current?.focus();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>{language === 'id' ? 'Tanggal' : 'Due Date'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                  >
+                    <Paperclip className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>{language === 'id' ? 'Lampiran' : 'Attachment'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => assigneeSelectRef.current?.focus()}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                  >
+                    <UserIcon className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>{language === 'id' ? 'Anggota' : 'Assignee'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => prioritySelectRef.current?.focus()}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>{language === 'id' ? 'Prioritas' : 'Priority'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Task Description */}
@@ -606,7 +714,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
 
               {/* Sub-tasks / Checklist Section */}
-              <div className="space-y-3 pt-1">
+              <div ref={checklistSectionRef} className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-neutral-400" />
@@ -674,6 +782,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   {/* Add New Checklist Item Input */}
                   <form onSubmit={handleAddChecklist} className="flex items-center gap-2 pt-1">
                     <input
+                      ref={checklistInputRef}
                       type="text"
                       value={newChecklistText}
                       onChange={(e) => setNewChecklistText(e.target.value)}
@@ -1102,6 +1211,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     className="w-6 h-6 text-[10px] shrink-0"
                   />
                   <select
+                    ref={assigneeSelectRef}
                     value={assigneeId}
                     onChange={(e) => handleAssigneeChange(e.target.value)}
                     className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer truncate text-xs"
@@ -1131,6 +1241,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     }`}
                   />
                   <select
+                    ref={prioritySelectRef}
                     value={priority}
                     onChange={(e) => handlePriorityChange(e.target.value as Priority)}
                     className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
@@ -1184,6 +1295,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
                   <Calendar className="w-4 h-4 text-neutral-400 shrink-0" />
                   <input
+                    ref={dateInputRef}
                     type="date"
                     value={dueDate}
                     onChange={(e) => handleDueDateChange(e.target.value)}

@@ -1,5 +1,18 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { Plus, Eye, Camera, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
+import {
+  Plus,
+  Eye,
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon,
+  MoreHorizontal,
+  Edit2,
+  Trash2,
+  X,
+  Check,
+  FolderKanban,
+} from 'lucide-react';
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,6 +29,9 @@ interface KanbanBoardProps {
   onMoveTask: (taskId: string, targetColumn: ColumnId) => void;
   onQuickAddTask: (columnId: ColumnId) => void;
   onUpdateTask?: (updatedTask: Task) => void;
+  onCreateList?: (title: string) => void;
+  onUpdateList?: (updatedList: Column) => void;
+  onDeleteList?: (listId: string) => void;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -29,6 +45,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onMoveTask,
   onQuickAddTask,
   onUpdateTask,
+  onCreateList,
+  onUpdateList,
+  onDeleteList,
 }) => {
   const { language, t } = useLanguage();
   const isViewer = currentUserRole === 'viewer';
@@ -39,6 +58,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [mobileActiveColumn, setMobileActiveColumn] = useState<ColumnId | 'all'>('all');
   const [dragPreviewWidth, setDragPreviewWidth] = useState<number>(310);
+
+  // Dynamic Trello-style List Creation & Renaming State
+  const [isAddingList, setIsAddingList] = useState(false);
+  const [newListTitle, setNewListTitle] = useState('');
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [editingColumnTitle, setEditingColumnTitle] = useState('');
+  const [openMenuColumnId, setOpenMenuColumnId] = useState<string | null>(null);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -104,25 +130,29 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }, [tasks, onUpdateTask]);
 
   const tasksByColumn = useMemo(() => {
-    const map: Record<ColumnId, Task[]> = {
-      todo: [],
-      in_progress: [],
-      in_review: [],
-      done: [],
-    };
+    const map: Record<string, Task[]> = {};
+    columns.forEach((col) => {
+      map[col.id] = [];
+    });
     tasks.forEach((t) => {
       if (map[t.columnId]) {
         map[t.columnId].push(t);
-      } else {
-        map.todo.push(t);
+      } else if (columns.length > 0) {
+        map[columns[0].id]?.push(t);
       }
     });
     return map;
+  }, [tasks, columns]);
+
+  // Trello-style completion: card checked off or all checklist items completed
+  const completedTasksCount = useMemo(() => {
+    return tasks.filter(
+      (t) => t.isCompleted || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
+    ).length;
   }, [tasks]);
 
-  const doneCount = tasksByColumn.done.length;
   const totalCount = tasks.length;
-  const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+  const progressPercent = totalCount > 0 ? Math.round((completedTasksCount / totalCount) * 100) : 0;
 
   const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -178,19 +208,48 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     }
   };
 
-  const getColumnTitle = (colId: ColumnId, defaultTitle: string) => {
-    switch (colId) {
-      case 'todo':
-        return t('colTodoTitle');
-      case 'in_progress':
-        return t('colInProgressTitle');
-      case 'in_review':
-        return t('colInReviewTitle');
-      case 'done':
-        return t('colDoneTitle');
-      default:
-        return defaultTitle;
+  const submitCreateList = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newListTitle.trim() || !onCreateList) return;
+    onCreateList(newListTitle.trim());
+    setNewListTitle('');
+    setIsAddingList(false);
+  };
+
+  const startEditColumn = (col: Column) => {
+    setEditingColumnId(col.id);
+    setEditingColumnTitle(col.title);
+    setOpenMenuColumnId(null);
+  };
+
+  const submitEditColumn = (col: Column) => {
+    if (!editingColumnTitle.trim() || !onUpdateList) {
+      setEditingColumnId(null);
+      return;
     }
+    onUpdateList({ ...col, title: editingColumnTitle.trim() });
+    setEditingColumnId(null);
+  };
+
+  const handleDeleteColumn = (colId: string) => {
+    if (!onDeleteList) return;
+    const confirmed = window.confirm(
+      language === 'id'
+        ? 'Apakah Anda yakin ingin menghapus daftar ini beserta seluruh kartunya?'
+        : 'Are you sure you want to delete this list and all its cards?'
+    );
+    if (confirmed) {
+      onDeleteList(colId);
+      setOpenMenuColumnId(null);
+    }
+  };
+
+  const getColumnTitle = (colId: string, defaultTitle: string) => {
+    if (colId === 'todo' && defaultTitle === 'To Do') return t('colTodoTitle');
+    if (colId === 'in_progress' && defaultTitle === 'In Progress') return t('colInProgressTitle');
+    if (colId === 'in_review' && defaultTitle === 'In Review') return t('colInReviewTitle');
+    if (colId === 'done' && defaultTitle === 'Done') return t('colDoneTitle');
+    return defaultTitle;
   };
 
   const updateDragPreviewPos = (e: React.DragEvent) => {
@@ -448,6 +507,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       )}
 
       {/* Mobile Column Navigation Switcher */}
+      {/* Mobile Column Navigation Switcher */}
       <div className="sm:hidden px-3 pt-1 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
         <button
           type="button"
@@ -478,121 +538,309 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             </button>
           );
         })}
+        {!isViewer && onCreateList && (
+          <button
+            type="button"
+            onClick={() => setIsAddingList(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{language === 'id' ? 'Daftar' : 'List'}</span>
+          </button>
+        )}
       </div>
 
-      {/* 3. Horizontal Kanban Columns */}
+      {/* 3. Horizontal Kanban Board Lists */}
       <div className="flex-1 flex overflow-x-auto p-3 sm:p-5 md:p-6 pt-1">
-        <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
-        {columns
-          .filter((col) => mobileActiveColumn === 'all' || mobileActiveColumn === col.id)
-          .map((column) => {
-          const columnTasks = tasksByColumn[column.id] || [];
-          const isOver = dragOverColumnId === column.id;
-          const displayTitle = getColumnTitle(column.id, column.title);
-
-          return (
-            <div
-              key={column.id}
-              onDragOver={(e) => handleDragOver(e, column.id)}
-              onDragLeave={() => handleDragLeave(column.id)}
-              onDrop={(e) => handleDrop(e, column.id)}
-              onDragEnd={handleDragEnd}
-              className={`${
-                mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
-              } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-200 select-none shadow-xs animate-card-enter
-                ${
-                  isOver
-                    ? 'border-red-500 bg-red-500/8 dark:bg-red-950/20 shadow-md scale-[1.01]'
-                    : 'border-neutral-200/90 dark:border-[#222533] bg-neutral-100/75 dark:bg-[#12141d]'
-                }`}
-            >
-              {/* Column Header */}
-              <div className="p-3 pb-2.5 flex items-center justify-between border-b border-neutral-200/80 dark:border-[#222533]">
-                <div className="flex items-center gap-2">
-                  {/* Status Indicator */}
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      column.id === 'todo'
-                        ? 'bg-neutral-400 dark:bg-neutral-500'
-                        : column.id === 'in_progress'
-                        ? 'bg-red-600 dark:bg-red-500 shadow-xs shadow-red-500/50'
-                        : column.id === 'in_review'
-                        ? 'bg-amber-500 shadow-xs shadow-amber-500/50'
-                        : 'bg-emerald-500 shadow-xs shadow-emerald-500/50'
-                    }`}
-                  />
-                  <h2 className="text-xs font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">
-                    {displayTitle}
-                  </h2>
-                  <span className="text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full bg-white dark:bg-[#1c1f2b] text-neutral-600 dark:text-neutral-300 font-semibold border border-neutral-200/60 dark:border-neutral-800 shadow-xs">
-                    {columnTasks.length}
-                  </span>
-                </div>
-
-                {/* Quick Add Button */}
-                {!isViewer && (
-                  <button
-                    onClick={() => onQuickAddTask(column.id)}
-                    title={`+ ${displayTitle}`}
-                    className="p-1 rounded-md text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200/70 dark:hover:bg-[#1e212d] transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4 stroke-[2]" />
-                  </button>
-                )}
-              </div>
-
-              {/* Cards Container with smooth vertical scroll */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[140px] max-h-[calc(100vh-175px)]">
-                {columnTasks.length === 0 ? (
-                  <div
-                    onClick={() => !isViewer && onQuickAddTask(column.id)}
-                    className={`h-24 rounded-xl border border-dashed border-neutral-300 dark:border-[#2c3040] bg-white/50 dark:bg-[#161822]/60 flex flex-col items-center justify-center p-3 text-center transition-all text-neutral-400 dark:text-neutral-500 group ${
-                      isViewer
-                        ? 'cursor-default'
-                        : 'cursor-pointer hover:border-red-500 hover:bg-red-500/5'
-                    }`}
-                  >
-                    {!isViewer && (
-                      <Plus className="w-4 h-4 mb-1 group-hover:text-red-500 transition-colors text-neutral-400" />
-                    )}
-                    <span className="text-xs font-medium group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                      {language === 'id' ? 'Kosong' : 'Empty'}
-                    </span>
-                  </div>
-                ) : (
-                  columnTasks.map((task) => (
-                    <KanbanCard
-                      key={task.id}
-                      task={task}
-                      assignee={userMap.get(task.assigneeId)}
-                      onClick={() => onTaskClick(task)}
-                      onMoveColumn={onMoveTask}
-                      isDragging={draggingTaskId === task.id}
-                      onDragStart={handleDragStart}
-                      isReadOnly={isViewer}
-                      onToggleChecklist={handleToggleChecklist}
-                      onToggleComplete={handleToggleComplete}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Column Footer Quick Add */}
-              {!isViewer && (
-                <div className="p-2 border-t border-neutral-200/80 dark:border-[#222533]">
-                  <button
-                    onClick={() => onQuickAddTask(column.id)}
-                    className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-[#1e212d] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{t('addTaskInColumn')}</span>
-                  </button>
-                </div>
-              )}
+        {columns.length === 0 ? (
+          /* Empty Board State when no lists exist yet */
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[360px] animate-in fade-in">
+            <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-[#161822] border border-neutral-200 dark:border-[#272a38] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
+              <FolderKanban className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
             </div>
-          );
-        })}
-        </div>
+            <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white mb-1.5">
+              {language === 'id' ? 'Papan ini belum memiliki daftar' : 'This board has no lists yet'}
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-md mb-6 leading-relaxed">
+              {language === 'id'
+                ? 'Mulai atur alur kerja proyek Anda dengan menambahkan daftar kustom seperti Konsep, Referensi, Aset, atau To-Do.'
+                : 'Start organizing your workflow by adding custom lists like Concepts, References, Assets, or To-Do.'}
+            </p>
+            {!isViewer && onCreateList && (
+              <div className="w-full max-w-xs">
+                {isAddingList ? (
+                  <form
+                    onSubmit={submitCreateList}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#151722] border border-neutral-200 dark:border-[#282b3a] shadow-lg space-y-2.5"
+                  >
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder={language === 'id' ? 'Nama daftar (mis. Konsep)...' : 'List name...'}
+                      value={newListTitle}
+                      onChange={(e) => setNewListTitle(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#1d202d] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        disabled={!newListTitle.trim()}
+                        className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
+                      >
+                        {language === 'id' ? 'Tambah Daftar' : 'Add List'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingList(false);
+                          setNewListTitle('');
+                        }}
+                        className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingList(true)}
+                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-red-600/25 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                    <span>{language === 'id' ? 'Tambah Daftar Pertama' : 'Add First List'}</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
+            {columns
+              .filter((col) => mobileActiveColumn === 'all' || mobileActiveColumn === col.id)
+              .map((column) => {
+                const columnTasks = tasksByColumn[column.id] || [];
+                const isOver = dragOverColumnId === column.id;
+                const displayTitle = getColumnTitle(column.id, column.title);
+                const isEditing = editingColumnId === column.id;
+                const isMenuOpen = openMenuColumnId === column.id;
+
+                return (
+                  <div
+                    key={column.id}
+                    onDragOver={(e) => handleDragOver(e, column.id)}
+                    onDragLeave={() => handleDragLeave(column.id)}
+                    onDrop={(e) => handleDrop(e, column.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`${
+                      mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
+                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-200 select-none shadow-xs animate-card-enter relative
+                      ${
+                        isOver
+                          ? 'border-red-500 bg-red-500/8 dark:bg-red-950/20 shadow-md scale-[1.01]'
+                          : 'border-neutral-200/90 dark:border-[#222533] bg-neutral-100/75 dark:bg-[#12141d]'
+                      }`}
+                  >
+                    {/* Column Header */}
+                    <div className="p-3 pb-2.5 flex items-center justify-between border-b border-neutral-200/80 dark:border-[#222533]">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0 mr-2">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={editingColumnTitle}
+                            onChange={(e) => setEditingColumnTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') submitEditColumn(column);
+                              if (e.key === 'Escape') setEditingColumnId(null);
+                            }}
+                            className="flex-1 px-2 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-[#1e212d] border border-red-500 text-neutral-900 dark:text-white focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => submitEditColumn(column)}
+                            className="p-1 rounded-md text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingColumnId(null)}
+                            className="p-1 rounded-md text-neutral-400 hover:bg-neutral-200 cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-red-600 dark:bg-red-500 shrink-0" />
+                          <h2
+                            onClick={() => !isViewer && startEditColumn(column)}
+                            title={!isViewer ? 'Klik untuk ubah nama' : undefined}
+                            className={`text-xs font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide truncate ${
+                              !isViewer ? 'cursor-pointer hover:text-red-600 transition-colors' : ''
+                            }`}
+                          >
+                            {displayTitle}
+                          </h2>
+                          <span className="text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full bg-white dark:bg-[#1c1f2b] text-neutral-600 dark:text-neutral-300 font-semibold border border-neutral-200/60 dark:border-neutral-800 shadow-xs">
+                            {columnTasks.length}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Header Actions */}
+                      {!isViewer && !isEditing && (
+                        <div className="flex items-center gap-0.5 relative">
+                          <button
+                            onClick={() => onQuickAddTask(column.id)}
+                            title={`+ ${displayTitle}`}
+                            className="p-1 rounded-md text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200/70 dark:hover:bg-[#1e212d] transition-colors cursor-pointer"
+                          >
+                            <Plus className="w-4 h-4 stroke-[2]" />
+                          </button>
+
+                          {/* List Menu (...) */}
+                          <button
+                            onClick={() => setOpenMenuColumnId(isMenuOpen ? null : column.id)}
+                            title="Opsi daftar"
+                            className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#1e212d] transition-colors cursor-pointer"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+
+                          {/* Column Popover Menu */}
+                          {isMenuOpen && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 top-8 z-30 w-44 rounded-xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f3f] shadow-xl py-1 text-xs animate-in zoom-in-95 duration-100"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => startEditColumn(column)}
+                                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                              >
+                                <Edit2 className="w-3.5 h-3.5 text-neutral-400" />
+                                <span>{language === 'id' ? 'Ubah Nama' : 'Rename List'}</span>
+                              </button>
+                              {onDeleteList && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteColumn(column.id)}
+                                  className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>{language === 'id' ? 'Hapus Daftar' : 'Delete List'}</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cards Container with smooth vertical scroll */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[140px] max-h-[calc(100vh-175px)]">
+                      {columnTasks.length === 0 ? (
+                        <div
+                          onClick={() => !isViewer && onQuickAddTask(column.id)}
+                          className={`h-24 rounded-xl border border-dashed border-neutral-300 dark:border-[#2c3040] bg-white/50 dark:bg-[#161822]/60 flex flex-col items-center justify-center p-3 text-center transition-all text-neutral-400 dark:text-neutral-500 group ${
+                            isViewer
+                              ? 'cursor-default'
+                              : 'cursor-pointer hover:border-red-500 hover:bg-red-500/5'
+                          }`}
+                        >
+                          {!isViewer && (
+                            <Plus className="w-4 h-4 mb-1 group-hover:text-red-500 transition-colors text-neutral-400" />
+                          )}
+                          <span className="text-xs font-medium group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                            {language === 'id' ? 'Kosong' : 'Empty'}
+                          </span>
+                        </div>
+                      ) : (
+                        columnTasks.map((task) => (
+                          <KanbanCard
+                            key={task.id}
+                            task={task}
+                            assignee={userMap.get(task.assigneeId)}
+                            onClick={() => onTaskClick(task)}
+                            onMoveColumn={onMoveTask}
+                            isDragging={draggingTaskId === task.id}
+                            onDragStart={handleDragStart}
+                            isReadOnly={isViewer}
+                            onToggleChecklist={handleToggleChecklist}
+                            onToggleComplete={handleToggleComplete}
+                          />
+                        ))
+                      )}
+                    </div>
+
+                    {/* Column Footer Quick Add */}
+                    {!isViewer && (
+                      <div className="p-2 border-t border-neutral-200/80 dark:border-[#222533]">
+                        <button
+                          onClick={() => onQuickAddTask(column.id)}
+                          className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-[#1e212d] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>{language === 'id' ? 'Tambah kartu' : 'Add a card'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+            {/* Add another list button / form (Trello-style) */}
+            {!isViewer && onCreateList && (
+              <div className="w-72 sm:w-80 shrink-0">
+                {isAddingList ? (
+                  <form
+                    onSubmit={submitCreateList}
+                    className="p-3 rounded-2xl bg-white dark:bg-[#161822] border border-neutral-200 dark:border-[#262a38] shadow-md space-y-2.5 animate-in fade-in"
+                  >
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder={language === 'id' ? 'Judul daftar (mis. Konsep, Aset)...' : 'List title...'}
+                      value={newListTitle}
+                      onChange={(e) => setNewListTitle(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        disabled={!newListTitle.trim()}
+                        className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
+                      >
+                        {language === 'id' ? 'Tambah Daftar' : 'Add List'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingList(false);
+                          setNewListTitle('');
+                        }}
+                        className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingList(true)}
+                    className="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-neutral-300 dark:border-[#272a38] hover:border-red-500/60 dark:hover:border-red-500/60 bg-neutral-100/60 dark:bg-[#12141d]/60 hover:bg-red-500/5 text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{language === 'id' ? '+ Tambah daftar lain' : '+ Add another list'}</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 100% Solid Floating Drag Preview (Zero Transparency, Centered Under Pointer) */}

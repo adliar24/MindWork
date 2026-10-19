@@ -16,10 +16,13 @@ import {
   fetchCloudProjects,
   fetchCloudTasks,
   fetchCloudUsers,
+  fetchCloudLists,
   saveCloudProject,
   saveCloudProjectMembers,
   saveCloudTask,
   deleteCloudTask,
+  saveCloudList,
+  deleteCloudList,
   saveCloudUser,
   deleteDemoUsers,
   subscribeToCloudChanges,
@@ -31,7 +34,7 @@ import {
   INITIAL_TASKS,
   INITIAL_USERS,
 } from './mockData';
-import { ColumnId, Project, ProjectRole, Task, ThemeMode, User } from './types';
+import { Column, ColumnId, Project, ProjectRole, Task, ThemeMode, User } from './types';
 
 export default function App() {
   // Theme state: Dark mode default (Dominant Hitam dan Merah)
@@ -89,6 +92,17 @@ export default function App() {
         localStorage.setItem('vermilion_tasks', JSON.stringify(clean));
       }
       return clean;
+    } catch {
+      return [];
+    }
+  });
+
+  // Trello-style dynamic board lists per project
+  const [boardLists, setBoardLists] = useState<Column[]>(() => {
+    const saved = localStorage.getItem('vermilion_board_lists');
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved);
     } catch {
       return [];
     }
@@ -188,10 +202,11 @@ export default function App() {
     if (status.tableReady) {
       deleteDemoUsers().catch(() => {});
 
-      const [cloudUsers, cloudProjects, cloudTasks] = await Promise.all([
+      const [cloudUsers, cloudProjects, cloudTasks, cloudLists] = await Promise.all([
         fetchCloudUsers(),
         fetchCloudProjects(),
         fetchCloudTasks(),
+        fetchCloudLists(),
       ]);
 
       if (cloudUsers) {
@@ -312,6 +327,23 @@ export default function App() {
           return finalTasks;
         });
       }
+      if (cloudLists) {
+        setBoardLists((prev) => {
+          const merged = cloudLists.map((cl) => {
+            const local = prev.find((l) => l.id === cl.id);
+            return local ? { ...cl, ...local, title: cl.title || local.title } : cl;
+          });
+          const missingLocals = prev.filter((pl) => !cloudLists.some((cl) => cl.id === pl.id));
+          missingLocals.forEach((ml) => saveCloudList(ml).catch(() => {}));
+          const finalLists = [...merged, ...missingLocals];
+          try {
+            localStorage.setItem('vermilion_board_lists', JSON.stringify(finalLists));
+          } catch (e) {
+            console.warn('LocalStorage board lists warning:', e);
+          }
+          return finalLists;
+        });
+      }
     }
   };
 
@@ -376,6 +408,14 @@ export default function App() {
       } else if (table === 'profiles') {
         const updatedUsers = await fetchCloudUsers();
         if (updatedUsers) setUsers(updatedUsers);
+      } else if (table === 'board_lists') {
+        const updatedLists = await fetchCloudLists();
+        if (updatedLists) {
+          setBoardLists(updatedLists);
+          try {
+            localStorage.setItem('vermilion_board_lists', JSON.stringify(updatedLists));
+          } catch {}
+        }
       }
     });
 
@@ -503,10 +543,72 @@ export default function App() {
     });
   }, [tasks, activeProject?.id, selectedAssigneeId, searchQuery, users]);
 
+  // Dynamic lists/columns for current active project
+  const activeProjectColumns = useMemo<Column[]>(() => {
+    if (!activeProject) return [];
+    return boardLists
+      .filter((col) => col.projectId === activeProject.id)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [boardLists, activeProject]);
+
+  // Backward compatibility: automatically migrate legacy tasks (todo, in_progress, etc.) to project lists if empty
+  useEffect(() => {
+    if (!activeProject) return;
+    const projectLists = boardLists.filter((l) => l.projectId === activeProject.id);
+    if (projectLists.length === 0) {
+      const projectTasks = tasks.filter((t) => t.projectId === activeProject.id);
+      const hasLegacyTasks = projectTasks.some((t) =>
+        ['todo', 'in_progress', 'in_review', 'done'].includes(t.columnId)
+      );
+      if (hasLegacyTasks) {
+        const defaultCols: Column[] = [
+          { id: 'todo', projectId: activeProject.id, title: 'To Do', order: 0 },
+          { id: 'in_progress', projectId: activeProject.id, title: 'In Progress', order: 1 },
+          { id: 'in_review', projectId: activeProject.id, title: 'In Review', order: 2 },
+          { id: 'done', projectId: activeProject.id, title: 'Done', order: 3 },
+        ];
+        setBoardLists((prev) => [...prev, ...defaultCols]);
+        defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
+      }
+    }
+  }, [activeProject?.id, tasks, boardLists]);
+
   // Task detail modal data
   const selectedTask = useMemo(() => {
     return tasks.find((t) => t.id === selectedTaskId) || null;
   }, [tasks, selectedTaskId]);
+
+  // List Management Handlers (Trello-style)
+  const handleCreateList = (title: string) => {
+    if (!activeProject || !title.trim()) return;
+    const currentLists = boardLists.filter((l) => l.projectId === activeProject.id);
+    const newList: Column = {
+      id: `list-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      projectId: activeProject.id,
+      title: title.trim(),
+      order: currentLists.length,
+      badgeColor: '',
+    };
+    setBoardLists((prev) => [...prev, newList]);
+    if (cloudStatus.tableReady) {
+      saveCloudList(newList);
+    }
+  };
+
+  const handleUpdateList = (updatedList: Column) => {
+    setBoardLists((prev) => prev.map((l) => (l.id === updatedList.id ? updatedList : l)));
+    if (cloudStatus.tableReady) {
+      saveCloudList(updatedList);
+    }
+  };
+
+  const handleDeleteList = (listId: string) => {
+    setBoardLists((prev) => prev.filter((l) => l.id !== listId));
+    setTasks((prev) => prev.filter((t) => t.columnId !== listId));
+    if (cloudStatus.tableReady) {
+      deleteCloudList(listId);
+    }
+  };
 
   // Task Handlers with Optimistic Local Update & Background Cloud Sync
   const handleMoveTask = (taskId: string, targetColumn: ColumnId) => {
@@ -514,16 +616,12 @@ export default function App() {
     setTasks((prev) => {
       const next = prev.map((t) => {
         if (t.id === taskId && t.columnId !== targetColumn) {
-          const colTitles: Record<ColumnId, string> = {
-            todo: 'To Do',
-            in_progress: 'In Progress',
-            in_review: 'In Review',
-            done: 'Done',
-          };
+          const targetCol = boardLists.find((l) => l.id === targetColumn);
+          const colTitle = targetCol ? targetCol.title : targetColumn;
           const newActivity = {
             id: `act-${Date.now()}`,
             authorId: currentUser.id,
-            action: `memindahkan tugas ke ${colTitles[targetColumn]}`,
+            action: `memindahkan tugas ke "${colTitle}"`,
             timestamp: 'Baru saja',
           };
           movedTask = {
@@ -895,7 +993,7 @@ export default function App() {
                 <KanbanBoard
                   project={activeProject}
                   onUpdateProject={handleUpdateProject}
-                  columns={INITIAL_COLUMNS}
+                  columns={activeProjectColumns}
                   tasks={filteredTasks}
                   users={users}
                   currentUserRole={currentUserRole}
@@ -903,6 +1001,9 @@ export default function App() {
                   onMoveTask={handleMoveTask}
                   onQuickAddTask={handleQuickAddTask}
                   onUpdateTask={handleUpdateTask}
+                  onCreateList={handleCreateList}
+                  onUpdateList={handleUpdateList}
+                  onDeleteList={handleDeleteList}
                 />
               </div>
             )}
@@ -914,18 +1015,20 @@ export default function App() {
       {selectedTask && (
         <TaskDetailModal
           task={selectedTask}
+          columns={activeProjectColumns}
           users={users}
           currentUser={currentUser}
           onClose={() => setSelectedTaskId(null)}
           onUpdateTask={handleUpdateTask}
           onDeleteTask={handleDeleteTask}
+          onMoveTask={handleMoveTask}
         />
       )}
 
       {/* 5. Modal Buat Tugas Baru */}
       {isNewTaskOpen && activeProject && (
         <NewTaskModal
-          columns={INITIAL_COLUMNS}
+          columns={activeProjectColumns.length > 0 ? activeProjectColumns : [{ id: 'general', title: 'Tugas' }]}
           users={users}
           currentUser={currentUser}
           defaultColumnId={quickAddColumnId}

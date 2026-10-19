@@ -77,6 +77,17 @@ ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS task_type TEXT DEFAULT 'task';
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS estimate TEXT DEFAULT '';
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS creator_id TEXT DEFAULT '';
+ALTER TABLE public.tasks DROP CONSTRAINT IF EXISTS tasks_column_id_check;
+
+-- 5. TABEL BOARD_LISTS (Daftar / Kolom Dinamis Trello-Style per Proyek)
+CREATE TABLE IF NOT EXISTS public.board_lists (
+  id TEXT PRIMARY KEY,
+  project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  color TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -87,6 +98,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.board_lists ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: Allow full access
 DROP POLICY IF EXISTS "Public access profiles" ON public.profiles;
@@ -104,6 +116,10 @@ CREATE POLICY "Public access project_members" ON public.project_members FOR ALL 
 DROP POLICY IF EXISTS "Public access tasks" ON public.tasks;
 CREATE POLICY "Public access tasks" ON public.tasks FOR ALL USING (true) WITH CHECK (true);
 
+-- Board Lists: Allow full access
+DROP POLICY IF EXISTS "Public access board_lists" ON public.board_lists;
+CREATE POLICY "Public access board_lists" ON public.board_lists FOR ALL USING (true) WITH CHECK (true);
+
 -- ==============================================================================
 -- REALTIME REPLICATION
 -- Aktifkan Realtime Channel agar perubahan kartu / proyek live sync ke semua anggota
@@ -120,7 +136,8 @@ BEGIN
       public.profiles, 
       public.projects, 
       public.project_members, 
-      public.tasks;
+      public.tasks,
+      public.board_lists;
   EXCEPTION
     WHEN duplicate_object THEN
       NULL; -- Tabel sudah terdaftar di publikasi

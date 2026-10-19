@@ -44,13 +44,15 @@ export interface Activity {
 
 export type Priority = 'Tinggi' | 'Sedang' | 'Rendah';
 
-export type ColumnId = 'todo' | 'in_progress' | 'in_review' | 'done';
+export type ColumnId = string;
 
 export interface Column {
   id: ColumnId;
+  projectId?: string;
   title: string;
-  description: string;
-  badgeColor: string;
+  description?: string;
+  badgeColor?: string;
+  order?: number;
 }
 
 export interface ChecklistItem {

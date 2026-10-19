@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import { Project, ProjectRole, Task, User } from '../types';
+import { Project, ProjectRole, Task, User, Column } from '../types';
 
 export interface CloudStatus {
   connected: boolean;
@@ -487,6 +487,59 @@ export async function deleteCloudTask(taskId: string): Promise<boolean> {
 }
 
 // ----------------------------------------------------------------------
+// BOARD LISTS (Trello-style Dynamic Lists)
+// ----------------------------------------------------------------------
+
+export async function fetchCloudLists(projectId?: string): Promise<Column[] | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    let query = supabase.from('board_lists').select('*').order('position', { ascending: true });
+    if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+    const { data, error } = await query;
+    if (error || !data) return null;
+
+    return data.map((row: any) => ({
+      id: row.id,
+      projectId: row.project_id,
+      title: row.title,
+      order: row.position ?? 0,
+      badgeColor: row.color || '',
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function saveCloudList(list: Column): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    const payload = {
+      id: list.id,
+      project_id: list.projectId,
+      title: list.title,
+      position: list.order ?? 0,
+      color: list.badgeColor || '',
+    };
+    const { error } = await supabase.from('board_lists').upsert(payload);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteCloudList(listId: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    const { error } = await supabase.from('board_lists').delete().eq('id', listId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// ----------------------------------------------------------------------
 // REALTIME SUBSCRIPTION
 // ----------------------------------------------------------------------
 
@@ -516,6 +569,11 @@ export function subscribeToCloudChanges(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'profiles' },
       (payload) => onUpdate({ table: 'profiles', eventType: payload.eventType })
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'board_lists' },
+      (payload) => onUpdate({ table: 'board_lists', eventType: payload.eventType })
     )
     .subscribe();
 
