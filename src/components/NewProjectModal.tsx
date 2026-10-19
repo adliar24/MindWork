@@ -195,7 +195,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 }
 
                 try {
-                  const compressed = await compressCoverBannerFile(file, 1200, 400);
+                  const compressed = await compressCoverBannerFile(file, 960, 320);
                   setCoverImage(compressed);
                 } catch (err) {
                   console.error('Gagal mengupload sampul:', err);

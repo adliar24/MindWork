@@ -149,21 +149,21 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
         ${
           isDragging
             ? 'opacity-100 border-2 border-dashed border-red-500/70 bg-red-500/10 dark:bg-red-950/30 shadow-none'
-            : 'hover:border-neutral-400 dark:hover:border-[#464c5e] hover:shadow-md dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)] dark:hover:bg-[#242732]'
+            : 'hover:border-neutral-300 dark:hover:border-[#383c4e] hover:shadow-md dark:hover:bg-[#1a1c27]'
         }
-        bg-white dark:bg-[#20232c] border-[#d6dae2] dark:border-[#313543] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)]`}
+        bg-white dark:bg-[#161822] border-neutral-200/90 dark:border-[#262937] shadow-xs`}
     >
-      {/* 1. Trello-style Solid Color Header Cover */}
+      {/* 1. Subtle Color Header Cover */}
       {task.cardColor && !coverAttachment && (
         <div
-          className="w-full h-8 transition-opacity duration-200"
+          className="w-full h-2 transition-opacity duration-200"
           style={{ backgroundColor: task.cardColor }}
         />
       )}
 
       {/* 2. Cover / Thumbnail image if exists */}
       {coverAttachment && coverAttachment.url && (
-        <div className="relative w-full h-28 bg-neutral-100 dark:bg-[#181a20] overflow-hidden border-b border-[#d6dae2] dark:border-[#313543]">
+        <div className="relative w-full h-28 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
           <img
             src={coverAttachment.url}
             alt={coverAttachment.name}
@@ -202,7 +202,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               </span>
             )}
 
-            {/* Trello-like Task Type Badge */}
+            {/* Task Type Badge */}
             {typeBadge && (
               <span
                 className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${typeBadge.style}`}
@@ -216,7 +216,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {task.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] px-2 py-0.5 rounded font-medium bg-[#f0f2f5] dark:bg-[#2a2e3a] text-neutral-700 dark:text-neutral-300 border border-[#dee2e8] dark:border-[#3a3f50]"
+                className="text-[10px] px-2 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
               >
                 {tag}
               </span>
@@ -227,7 +227,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           {!isReadOnly && onMoveColumn && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-neutral-100 dark:bg-[#2a2e3a] p-0.5 rounded border border-neutral-200 dark:border-[#3a3f50]"
+              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-neutral-100 dark:bg-[#202330] p-0.5 rounded border border-neutral-200/80 dark:border-[#2b2f3e]"
             >
               {prevCol && (
                 <button

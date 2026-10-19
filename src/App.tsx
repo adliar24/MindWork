@@ -207,8 +207,39 @@ export default function App() {
             !u.username?.toLowerCase().includes('demo') &&
             !u.email?.toLowerCase().includes('demo')
         );
-        setUsers(cleanCloudUsers);
-        localStorage.setItem('vermilion_users', JSON.stringify(cleanCloudUsers));
+
+        setUsers((prevUsers) => {
+          const mergedUsers = cleanCloudUsers.map((cu) => {
+            const local = prevUsers.find((u) => u.id === cu.id);
+            if (!local) return cu;
+            const isLocalCustom = local.avatar && (local.avatar.startsWith('data:image/') || local.avatar.startsWith('http'));
+            const isCloudCustom = cu.avatar && (cu.avatar.startsWith('data:image/') || cu.avatar.startsWith('http'));
+            const finalAvatar = isLocalCustom && !isCloudCustom ? local.avatar : (cu.avatar || local.avatar);
+            if (isLocalCustom && !isCloudCustom) {
+              saveCloudUser({ ...cu, avatar: finalAvatar }).catch(() => {});
+            }
+            return {
+              ...cu,
+              avatar: finalAvatar,
+              role: cu.role || local.role || '',
+            };
+          });
+
+          const missingLocals = prevUsers.filter(
+            (lu) => !cleanCloudUsers.some((cu) => cu.id === lu.id) && lu.id !== 'user-1'
+          );
+          missingLocals.forEach((lu) => {
+            saveCloudUser(lu).catch(() => {});
+          });
+
+          const finalUsers = [...mergedUsers, ...missingLocals];
+          try {
+            localStorage.setItem('vermilion_users', JSON.stringify(finalUsers));
+          } catch (e) {
+            console.warn('LocalStorage users quota warning:', e);
+          }
+          return finalUsers;
+        });
       }
       if (cloudProjects) {
         const cleanCloudProjects = cloudProjects.filter(
@@ -219,10 +250,22 @@ export default function App() {
           const merged = cleanCloudProjects.map((cp) => {
             const local = prevProjects.find((p) => p.id === cp.id);
             if (!local) return cp;
+            const finalCover = cp.coverImage || local.coverImage || '';
+            const finalAvatar = cp.avatar || local.avatar || '';
+
+            // If local had coverImage or avatar that cloud didn't have, auto-sync back up to Supabase so all devices see it!
+            if ((!cp.coverImage && local.coverImage) || (!cp.avatar && local.avatar)) {
+              saveCloudProject({
+                ...cp,
+                coverImage: finalCover,
+                avatar: finalAvatar,
+              }).catch(() => {});
+            }
+
             return {
               ...cp,
-              avatar: cp.avatar || local.avatar || '',
-              coverImage: cp.coverImage || local.coverImage || '',
+              avatar: finalAvatar,
+              coverImage: finalCover,
               memberRoles: {
                 ...(local.memberRoles || {}),
                 ...(cp.memberRoles || {}),
@@ -233,6 +276,10 @@ export default function App() {
           const missingLocals = prevProjects.filter(
             (lp) => !cleanCloudProjects.some((cp) => cp.id === lp.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lp.id)
           );
+          missingLocals.forEach((lp) => {
+            saveCloudProject(lp).catch(() => {});
+          });
+
           const finalProjects = [...merged, ...missingLocals];
           try {
             localStorage.setItem('vermilion_projects', JSON.stringify(finalProjects));
@@ -565,13 +612,21 @@ export default function App() {
       memberIds: currentUser.id ? [currentUser.id] : [],
       memberRoles: currentUser.id ? { [currentUser.id]: 'leader' as const } : {},
     };
-    setProjects((prev) => [...prev, projectWithCreator]);
-    setActiveProjectId(projectWithCreator.id);
-    if (cloudStatus.tableReady) {
-      saveCloudProject(projectWithCreator);
-      if (currentUser.id) {
-        saveCloudProjectMembers(projectWithCreator.id, [currentUser.id], { [currentUser.id]: 'leader' });
+    setProjects((prev) => {
+      const next = [...prev, projectWithCreator];
+      try {
+        localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      } catch (err) {
+        console.warn('LocalStorage save project error:', err);
       }
+      return next;
+    });
+    setActiveProjectId(projectWithCreator.id);
+    saveCloudProject(projectWithCreator).catch((err) => {
+      console.warn('Save project to Supabase error:', err);
+    });
+    if (currentUser.id) {
+      saveCloudProjectMembers(projectWithCreator.id, [currentUser.id], { [currentUser.id]: 'leader' }).catch(() => {});
     }
   };
 
@@ -585,9 +640,10 @@ export default function App() {
       }
       return next;
     });
-    if (cloudStatus.tableReady) {
-      saveCloudProject(updatedProject);
-    }
+    // Unconditionally sync to Supabase so covers & avatars are immediately persistent
+    saveCloudProject(updatedProject).catch((err) => {
+      console.warn('Update project to Supabase error:', err);
+    });
   };
 
   const handleRegisterUser = (newUser: User) => {
@@ -628,11 +684,10 @@ export default function App() {
       }
       return next;
     });
-    if (cloudStatus.tableReady) {
-      saveCloudUser(updatedUser).catch((err) => {
-        console.warn('Update user to Supabase error:', err);
-      });
-    }
+    // Unconditionally sync to Supabase so profile photo changes replicate to all devices
+    saveCloudUser(updatedUser).catch((err) => {
+      console.warn('Update user to Supabase error:', err);
+    });
   };
 
   const handleUpdateProjectMembers = (
