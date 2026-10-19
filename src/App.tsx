@@ -551,27 +551,20 @@ export default function App() {
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [boardLists, activeProject]);
 
-  // Backward compatibility: automatically migrate legacy tasks (todo, in_progress, etc.) to project lists if empty
+  // Dynamic lists/columns for current active project: automatically ensure default starter lists (To Do, Doing, Done)
   useEffect(() => {
     if (!activeProject) return;
     const projectLists = boardLists.filter((l) => l.projectId === activeProject.id);
     if (projectLists.length === 0) {
-      const projectTasks = tasks.filter((t) => t.projectId === activeProject.id);
-      const hasLegacyTasks = projectTasks.some((t) =>
-        ['todo', 'in_progress', 'in_review', 'done'].includes(t.columnId)
-      );
-      if (hasLegacyTasks) {
-        const defaultCols: Column[] = [
-          { id: 'todo', projectId: activeProject.id, title: 'To Do', order: 0 },
-          { id: 'in_progress', projectId: activeProject.id, title: 'In Progress', order: 1 },
-          { id: 'in_review', projectId: activeProject.id, title: 'In Review', order: 2 },
-          { id: 'done', projectId: activeProject.id, title: 'Done', order: 3 },
-        ];
-        setBoardLists((prev) => [...prev, ...defaultCols]);
-        defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
-      }
+      const defaultCols: Column[] = [
+        { id: `list-${activeProject.id}-todo`, projectId: activeProject.id, title: 'To Do', order: 0 },
+        { id: `list-${activeProject.id}-doing`, projectId: activeProject.id, title: 'Doing', order: 1 },
+        { id: `list-${activeProject.id}-done`, projectId: activeProject.id, title: 'Done', order: 2 },
+      ];
+      setBoardLists((prev) => [...prev, ...defaultCols]);
+      defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
     }
-  }, [activeProject?.id, tasks, boardLists]);
+  }, [activeProject?.id, boardLists]);
 
   // Task detail modal data
   const selectedTask = useMemo(() => {
@@ -697,6 +690,40 @@ export default function App() {
     setIsNewTaskOpen(true);
   };
 
+  const handleInlineCreateCard = (columnId: ColumnId, title: string) => {
+    if (!activeProject || !title.trim()) return;
+    const projectTaskCount = tasks.filter((t) => t.projectId === activeProject.id).length;
+    const targetCol = boardLists.find((l) => l.id === columnId);
+    const colName = targetCol ? targetCol.title : 'daftar';
+
+    const newTask: Task = {
+      id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      key: `${activeProject.key}-${projectTaskCount + 1}`,
+      title: title.trim(),
+      description: '',
+      columnId,
+      projectId: activeProject.id,
+      priority: 'Sedang',
+      assigneeId: currentUser.id || '',
+      creatorId: currentUser.id || '',
+      dueDate: '',
+      tags: [],
+      attachments: [],
+      comments: [],
+      activities: [
+        {
+          id: `act-${Date.now()}`,
+          authorId: currentUser.id || 'user',
+          action: `menambahkan kartu ini ke ${colName}`,
+          timestamp: 'Baru saja',
+        },
+      ],
+      checklist: [],
+      isCompleted: false,
+    };
+    handleCreateTask(newTask);
+  };
+
   const handleCreateProject = (newProject: Project) => {
     // Current user is the leader of this newly created project
     const projectWithCreator: Project = {
@@ -714,6 +741,16 @@ export default function App() {
       }
       return next;
     });
+
+    // Automatically create default starter lists: To Do, Doing, Done (matching Trello)
+    const defaultStarterLists: Column[] = [
+      { id: `list-${projectWithCreator.id}-todo`, projectId: projectWithCreator.id, title: 'To Do', order: 0 },
+      { id: `list-${projectWithCreator.id}-doing`, projectId: projectWithCreator.id, title: 'Doing', order: 1 },
+      { id: `list-${projectWithCreator.id}-done`, projectId: projectWithCreator.id, title: 'Done', order: 2 },
+    ];
+    setBoardLists((prev) => [...prev, ...defaultStarterLists]);
+    defaultStarterLists.forEach((c) => saveCloudList(c).catch(() => {}));
+
     setActiveProjectId(projectWithCreator.id);
     saveCloudProject(projectWithCreator).catch((err) => {
       console.warn('Save project to Supabase error:', err);
@@ -1000,6 +1037,7 @@ export default function App() {
                   onTaskClick={(task) => setSelectedTaskId(task.id)}
                   onMoveTask={handleMoveTask}
                   onQuickAddTask={handleQuickAddTask}
+                  onInlineCreateCard={handleInlineCreateCard}
                   onUpdateTask={handleUpdateTask}
                   onCreateList={handleCreateList}
                   onUpdateList={handleUpdateList}

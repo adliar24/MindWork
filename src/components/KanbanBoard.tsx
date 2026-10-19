@@ -28,6 +28,7 @@ interface KanbanBoardProps {
   onTaskClick: (task: Task) => void;
   onMoveTask: (taskId: string, targetColumn: ColumnId) => void;
   onQuickAddTask: (columnId: ColumnId) => void;
+  onInlineCreateCard?: (columnId: ColumnId, title: string) => void;
   onUpdateTask?: (updatedTask: Task) => void;
   onCreateList?: (title: string) => void;
   onUpdateList?: (updatedList: Column) => void;
@@ -44,6 +45,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onTaskClick,
   onMoveTask,
   onQuickAddTask,
+  onInlineCreateCard,
   onUpdateTask,
   onCreateList,
   onUpdateList,
@@ -65,6 +67,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingColumnTitle, setEditingColumnTitle] = useState('');
   const [openMenuColumnId, setOpenMenuColumnId] = useState<string | null>(null);
+
+  // Dynamic Trello-style Inline Card Composer State
+  const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
+  const [newCardTitle, setNewCardTitle] = useState('');
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -215,6 +221,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     onCreateList(newListTitle.trim());
     setNewListTitle('');
     setIsAddingList(false);
+  };
+
+  const submitCreateCard = (columnId: string) => {
+    if (!newCardTitle.trim()) return;
+    if (onInlineCreateCard) {
+      onInlineCreateCard(columnId, newCardTitle.trim());
+    } else {
+      onQuickAddTask(columnId);
+    }
+    setNewCardTitle('');
   };
 
   const startEditColumn = (col: Column) => {
@@ -741,47 +757,99 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     </div>
 
                     {/* Cards Container with smooth vertical scroll */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[140px] max-h-[calc(100vh-175px)]">
-                      {columnTasks.length === 0 ? (
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[140px] max-h-[calc(100vh-175px)]">
+                      {columnTasks.length === 0 && addingCardColumnId !== column.id && (
                         <div
-                          onClick={() => !isViewer && onQuickAddTask(column.id)}
-                          className={`h-24 rounded-xl border border-dashed border-neutral-300 dark:border-[#2c3040] bg-white/50 dark:bg-[#161822]/60 flex flex-col items-center justify-center p-3 text-center transition-all text-neutral-400 dark:text-neutral-500 group ${
+                          onClick={() => {
+                            if (!isViewer) {
+                              setAddingCardColumnId(column.id);
+                              setNewCardTitle('');
+                            }
+                          }}
+                          className={`h-20 rounded-xl border border-dashed border-neutral-300 dark:border-[#2c3040] bg-white/50 dark:bg-[#161822]/60 flex flex-col items-center justify-center p-3 text-center transition-all text-neutral-400 dark:text-neutral-500 group ${
                             isViewer
                               ? 'cursor-default'
                               : 'cursor-pointer hover:border-red-500 hover:bg-red-500/5'
                           }`}
                         >
                           {!isViewer && (
-                            <Plus className="w-4 h-4 mb-1 group-hover:text-red-500 transition-colors text-neutral-400" />
+                            <Plus className="w-4 h-4 mb-0.5 group-hover:text-red-500 transition-colors text-neutral-400" />
                           )}
                           <span className="text-xs font-medium group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                            {language === 'id' ? 'Kosong' : 'Empty'}
+                            {language === 'id' ? '+ Tambah kartu' : '+ Add a card'}
                           </span>
                         </div>
-                      ) : (
-                        columnTasks.map((task) => (
-                          <KanbanCard
-                            key={task.id}
-                            task={task}
-                            assignee={userMap.get(task.assigneeId)}
-                            onClick={() => onTaskClick(task)}
-                            onMoveColumn={onMoveTask}
-                            isDragging={draggingTaskId === task.id}
-                            onDragStart={handleDragStart}
-                            isReadOnly={isViewer}
-                            onToggleChecklist={handleToggleChecklist}
-                            onToggleComplete={handleToggleComplete}
+                      )}
+
+                      {columnTasks.map((task) => (
+                        <KanbanCard
+                          key={task.id}
+                          task={task}
+                          assignee={userMap.get(task.assigneeId)}
+                          onClick={() => onTaskClick(task)}
+                          onMoveColumn={onMoveTask}
+                          isDragging={draggingTaskId === task.id}
+                          onDragStart={handleDragStart}
+                          isReadOnly={isViewer}
+                          onToggleChecklist={handleToggleChecklist}
+                          onToggleComplete={handleToggleComplete}
+                        />
+                      ))}
+
+                      {/* Inline Card Composer (Trello style) */}
+                      {addingCardColumnId === column.id && (
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#161822] border border-red-500 shadow-md space-y-2 animate-in fade-in">
+                          <textarea
+                            autoFocus
+                            rows={2}
+                            value={newCardTitle}
+                            onChange={(e) => setNewCardTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                submitCreateCard(column.id);
+                              }
+                              if (e.key === 'Escape') {
+                                setAddingCardColumnId(null);
+                                setNewCardTitle('');
+                              }
+                            }}
+                            placeholder={language === 'id' ? 'Masukkan judul kartu (Enter untuk simpan)...' : 'Enter card title (Press Enter to add)...'}
+                            className="w-full text-xs sm:text-[13px] bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none resize-none font-medium leading-snug"
                           />
-                        ))
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => submitCreateCard(column.id)}
+                              disabled={!newCardTitle.trim()}
+                              className="py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+                            >
+                              {language === 'id' ? 'Tambah kartu' : 'Add card'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddingCardColumnId(null);
+                                setNewCardTitle('');
+                              }}
+                              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    {/* Column Footer Quick Add */}
-                    {!isViewer && (
+                    {/* Column Footer: + Add a card */}
+                    {!isViewer && addingCardColumnId !== column.id && (
                       <div className="p-2 border-t border-neutral-200/80 dark:border-[#222533]">
                         <button
-                          onClick={() => onQuickAddTask(column.id)}
-                          className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-[#1e212d] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          onClick={() => {
+                            setAddingCardColumnId(column.id);
+                            setNewCardTitle('');
+                          }}
+                          className="w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-[#1e212d] transition-colors flex items-center justify-start gap-1.5 cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>{language === 'id' ? 'Tambah kartu' : 'Add a card'}</span>

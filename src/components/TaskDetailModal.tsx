@@ -95,6 +95,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   // Sub-tasks / Checklist state
   const [newChecklistText, setNewChecklistText] = useState('');
+  const [activePopover, setActivePopover] = useState<'checklist' | 'members' | 'labels' | 'dates' | 'add' | null>(null);
+  const [checklistTitleInput, setChecklistTitleInput] = useState('Checklist');
+  const [showDetails, setShowDetails] = useState(true);
+  const [isCommentFocused, setIsCommentFocused] = useState(false);
 
   // Attachments filter tab
   const [attachmentTab, setAttachmentTab] = useState<'all' | 'work' | 'docs'>('all');
@@ -259,6 +263,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       checklist: [...(task.checklist || []), newItem],
     });
     setNewChecklistText('');
+  };
+
+  const handleAddChecklistFromPopover = (e: React.FormEvent) => {
+    e.preventDefault();
+    const titleToAdd = checklistTitleInput.trim() || 'Checklist';
+    const newItem: ChecklistItem = {
+      id: `check-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: titleToAdd,
+      completed: false,
+    };
+    const updatedChecklist = [...(task.checklist || []), newItem];
+    onUpdateTask({ ...task, checklist: updatedChecklist });
+    setChecklistTitleInput('Checklist');
+    setActivePopover(null);
+    setTimeout(() => {
+      checklistSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleDeleteChecklist = (itemId: string) => {
@@ -641,74 +662,383 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
 
                 {/* Trello-style Quick Action Toolstrip */}
-                <div className="flex items-center gap-1.5 flex-wrap pl-8">
+                <div className="relative flex items-center gap-1.5 flex-wrap pl-8">
+                  {/* + Add button */}
                   <button
                     type="button"
-                    onClick={() => {
-                      checklistSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-                      setTimeout(() => checklistInputRef.current?.focus(), 200);
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                    onClick={() => setActivePopover(activePopover === 'add' ? null : 'add')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      activePopover === 'add'
+                        ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
+                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Add</span>
+                  </button>
+
+                  {/* Labels button */}
+                  <button
+                    type="button"
+                    onClick={() => setActivePopover(activePopover === 'labels' ? null : 'labels')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      activePopover === 'labels'
+                        ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
+                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
+                    }`}
+                  >
+                    <Tag className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Labels</span>
+                  </button>
+
+                  {/* Dates button */}
+                  <button
+                    type="button"
+                    onClick={() => setActivePopover(activePopover === 'dates' ? null : 'dates')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      activePopover === 'dates'
+                        ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
+                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Dates</span>
+                  </button>
+
+                  {/* Checklist button */}
+                  <button
+                    type="button"
+                    onClick={() => setActivePopover(activePopover === 'checklist' ? null : 'checklist')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      activePopover === 'checklist'
+                        ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
+                    }`}
                   >
                     <CheckSquare className="w-3.5 h-3.5 text-neutral-500" />
                     <span>Checklist</span>
                   </button>
 
+                  {/* Members button */}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (dateInputRef.current && 'showPicker' in dateInputRef.current) {
-                        (dateInputRef.current as any).showPicker();
-                      } else {
-                        dateInputRef.current?.focus();
-                      }
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>{language === 'id' ? 'Tanggal' : 'Due Date'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
-                  >
-                    <Paperclip className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>{language === 'id' ? 'Lampiran' : 'Attachment'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => assigneeSelectRef.current?.focus()}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
+                    onClick={() => setActivePopover(activePopover === 'members' ? null : 'members')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                      activePopover === 'members'
+                        ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
+                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
+                    }`}
                   >
                     <UserIcon className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>{language === 'id' ? 'Anggota' : 'Assignee'}</span>
+                    <span>Members</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => prioritySelectRef.current?.focus()}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-[#282c3c]"
-                  >
-                    <Tag className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>{language === 'id' ? 'Prioritas' : 'Priority'}</span>
-                  </button>
+                  {/* Add Checklist Popover (Exact match to Screenshot 2) */}
+                  {activePopover === 'checklist' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-9 left-28 z-40 w-72 p-3.5 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="flex items-center justify-between pb-1.5 border-b border-neutral-200/70 dark:border-[#26293a]">
+                        <span className="font-bold text-neutral-900 dark:text-white">Add checklist</span>
+                        <button
+                          type="button"
+                          onClick={() => setActivePopover(null)}
+                          className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <form onSubmit={handleAddChecklistFromPopover} className="space-y-2.5">
+                        <div>
+                          <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            autoFocus
+                            value={checklistTitleInput}
+                            onChange={(e) => setChecklistTitleInput(e.target.value)}
+                            placeholder="Checklist"
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#292d3f] text-neutral-900 dark:text-white font-medium focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={!checklistTitleInput.trim()}
+                          className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+                        >
+                          Add
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Members Popover */}
+                  {activePopover === 'members' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-9 left-48 z-40 w-64 p-3 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f42] shadow-2xl text-xs space-y-2 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="flex items-center justify-between pb-1.5 border-b border-neutral-200/70 dark:border-[#26293a]">
+                        <span className="font-bold text-neutral-900 dark:text-white">Members</span>
+                        <button
+                          type="button"
+                          onClick={() => setActivePopover(null)}
+                          className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {users.map((u) => {
+                          const isSelected = assigneeId === u.id;
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                handleAssigneeChange(isSelected ? '' : u.id);
+                                setActivePopover(null);
+                              }}
+                              className="w-full p-1.5 px-2 rounded-xl flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-[#202330] cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <UserAvatar avatar={u.avatar} name={u.name} color={u.color} className="w-6 h-6 text-[10px]" />
+                                <span className="font-medium text-neutral-800 dark:text-neutral-200 truncate">{u.name}</span>
+                              </div>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-red-500 stroke-[3]" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Labels & Priority Popover */}
+                  {activePopover === 'labels' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-9 left-16 z-40 w-72 p-3.5 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="flex items-center justify-between pb-1.5 border-b border-neutral-200/70 dark:border-[#26293a]">
+                        <span className="font-bold text-neutral-900 dark:text-white">Labels & Priority</span>
+                        <button
+                          type="button"
+                          onClick={() => setActivePopover(null)}
+                          className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-neutral-400 block mb-1.5">Priority</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {(['Tinggi', 'Sedang', 'Rendah'] as Priority[]).map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => handlePriorityChange(p)}
+                              className={`py-1 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                priority === p
+                                  ? p === 'Tinggi' ? 'bg-red-500 text-white border-red-500' : p === 'Sedang' ? 'bg-amber-500 text-white border-amber-500' : 'bg-neutral-600 text-white border-neutral-600'
+                                  : 'bg-neutral-100 dark:bg-[#161822] text-neutral-700 dark:text-neutral-300 border-neutral-200/70 dark:border-[#272a38]'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-neutral-400 block mb-1.5">Card Color</label>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Polos', value: '', color: 'bg-neutral-200 dark:bg-neutral-700' },
+                            { label: 'Red', value: '#ef4444', color: 'bg-red-500' },
+                            { label: 'Emerald', value: '#10b981', color: 'bg-emerald-500' },
+                            { label: 'Sky', value: '#0284c7', color: 'bg-sky-500' },
+                            { label: 'Amber', value: '#d97706', color: 'bg-amber-500' },
+                            { label: 'Purple', value: '#7c3aed', color: 'bg-purple-500' },
+                          ].map((c) => (
+                            <button
+                              key={c.label}
+                              type="button"
+                              onClick={() => handleCardColorChange(c.value)}
+                              className={`w-6 h-6 rounded-full ${c.color} transition-all flex items-center justify-center cursor-pointer ${
+                                cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-[#181a24]' : 'opacity-80'
+                              }`}
+                            >
+                              {cardColor === c.value && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dates Popover */}
+                  {activePopover === 'dates' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-9 left-20 z-40 w-72 p-3.5 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="flex items-center justify-between pb-1.5 border-b border-neutral-200/70 dark:border-[#26293a]">
+                        <span className="font-bold text-neutral-900 dark:text-white">Dates & Estimate</span>
+                        <button
+                          type="button"
+                          onClick={() => setActivePopover(null)}
+                          className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="text-[11px] font-semibold text-neutral-400 block mb-1">Due Date</label>
+                          <input
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => handleDueDateChange(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#292d3f] text-neutral-900 dark:text-white font-medium focus:outline-none focus:border-blue-500 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold text-neutral-400 block mb-1">Estimate</label>
+                          <input
+                            type="text"
+                            value={estimate}
+                            onChange={(e) => handleEstimateChange(e.target.value)}
+                            placeholder="e.g. 2 days, 4 hours"
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#292d3f] text-neutral-900 dark:text-white font-medium focus:outline-none focus:border-blue-500 text-xs"
+                          />
+                        </div>
+                        {dueDate && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleDueDateChange('');
+                              handleEstimateChange('');
+                            }}
+                            className="w-full py-1 text-center text-xs text-red-500 hover:text-red-600 cursor-pointer pt-1"
+                          >
+                            Hapus tanggal
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* + Add Quick Popover */}
+                  {activePopover === 'add' && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-9 left-2 z-40 w-48 p-2 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f42] shadow-2xl text-xs space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setActivePopover('checklist')}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Checklist</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActivePopover('members')}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                      >
+                        <UserIcon className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Members</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActivePopover('labels')}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                      >
+                        <Tag className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Labels</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActivePopover('dates')}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Dates</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActivePopover(null);
+                          fileInputRef.current?.click();
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                      >
+                        <Paperclip className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>Attachment</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Active Metadata Chips (Members, Labels, Due Date) */}
+                {(assignedUser || dueDate || priority || (taskType && taskType !== 'task')) && (
+                  <div className="flex items-center gap-2 flex-wrap pt-1 text-xs">
+                    {assignedUser && (
+                      <div
+                        onClick={() => setActivePopover('members')}
+                        className="flex items-center gap-1.5 p-1 px-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] border border-neutral-200/70 dark:border-[#282c3c] cursor-pointer"
+                        title="Ubah member"
+                      >
+                        <span className="text-[10px] text-neutral-400 uppercase font-semibold">Member:</span>
+                        <UserAvatar avatar={assignedUser.avatar} name={assignedUser.name} color={assignedUser.color} className="w-4 h-4 text-[9px]" />
+                        <span className="font-medium text-neutral-800 dark:text-neutral-200">{assignedUser.name}</span>
+                      </div>
+                    )}
+                    {dueDate && (
+                      <div
+                        onClick={() => setActivePopover('dates')}
+                        className="flex items-center gap-1.5 p-1 px-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] border border-neutral-200/70 dark:border-[#282c3c] cursor-pointer"
+                        title="Ubah batas waktu"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                        <span className="font-medium text-neutral-800 dark:text-neutral-200">{dueDate}</span>
+                        {estimate && <span className="text-[10px] text-neutral-400 font-mono">({estimate})</span>}
+                      </div>
+                    )}
+                    <div
+                      onClick={() => setActivePopover('labels')}
+                      className="flex items-center gap-1.5 p-1 px-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] border border-neutral-200/70 dark:border-[#282c3c] cursor-pointer"
+                      title="Ubah label"
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          priority === 'Tinggi' ? 'bg-red-500' : priority === 'Sedang' ? 'bg-amber-500' : 'bg-neutral-400'
+                        }`}
+                      />
+                      <span className="font-semibold text-neutral-800 dark:text-neutral-200 capitalize">
+                        {priority} {taskType && taskType !== 'task' ? `• ${taskType}` : ''}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Task Description */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
-                  {language === 'id' ? 'Deskripsi Tugas' : 'Description'}
-                </label>
+              {/* Task Description (Trello style with ≡ icon) */}
+              <div className="space-y-1.5 pt-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                  <FileText className="w-4 h-4 text-neutral-400" />
+                  <span>{language === 'id' ? 'Deskripsi' : 'Description'}</span>
+                </div>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={handleDescBlur}
                   rows={3}
-                  placeholder={language === 'id' ? 'Tulis detail tugas, instruksi, atau catatan pengerjaan di sini...' : 'Add detailed description or notes here...'}
+                  placeholder={language === 'id' ? 'Tambahkan deskripsi atau catatan yang lebih rinci...' : 'Add a more detailed description...'}
                   className="w-full p-3 text-xs sm:text-sm rounded-xl bg-neutral-50/70 dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a37] text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 resize-none transition-all leading-relaxed"
                 />
               </div>
@@ -1099,282 +1429,172 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   )
                 )}
               </div>
+            </div>
 
-              {/* Discussion & Comments Stream */}
-              <div className="space-y-3 pt-3 border-t border-neutral-200/70 dark:border-[#222532]">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-neutral-400" />
-                  <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
-                    {language === 'id' ? 'Diskusi & Catatan Tim' : 'Discussion & Notes'}
-                  </span>
-                  {task.comments.length > 0 && (
-                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#1a1d27] text-neutral-500 dark:text-neutral-400">
-                      {task.comments.length}
+            {/* RIGHT COLUMN: Comments and activity (Matching Screenshot 2) */}
+            <div className="w-full md:w-[380px] md:border-l border-t md:border-t-0 border-neutral-200/80 dark:border-[#222532] bg-neutral-50/40 dark:bg-[#0f1015] p-5 space-y-4 shrink-0 md:overflow-y-auto text-xs flex flex-col justify-between">
+              <div className="space-y-4">
+                {/* Header: Comments and activity + Show details button */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-neutral-400" />
+                    <span className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                      {language === 'id' ? 'Komentar dan aktivitas' : 'Comments and activity'}
                     </span>
-                  )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-neutral-200/70 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer"
+                  >
+                    {showDetails ? (language === 'id' ? 'Sembunyikan detail' : 'Hide details') : (language === 'id' ? 'Tampilkan detail' : 'Show details')}
+                  </button>
                 </div>
 
-                {/* Comment Input Box */}
+                {/* Comment Input Box (Screenshot 2: Write a comment...) */}
                 <form
                   onSubmit={handleAddComment}
-                  className="p-3 rounded-xl border border-neutral-200/80 dark:border-[#262936] bg-neutral-50/60 dark:bg-[#161822] space-y-2"
+                  className="rounded-xl border border-neutral-200/80 dark:border-[#262936] bg-white dark:bg-[#161822] shadow-xs overflow-hidden transition-all focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20"
                 >
                   <textarea
                     value={commentText}
+                    onFocus={() => setIsCommentFocused(true)}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={handleCommentKeyDown}
-                    rows={2}
-                    placeholder={language === 'id' ? 'Tulis komentar atau update progres... (Ctrl+Enter untuk kirim)' : 'Write a comment or status update... (Ctrl+Enter to send)'}
-                    className="w-full p-2 text-xs sm:text-sm rounded-lg bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#262937] text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-red-500 resize-none leading-relaxed"
+                    rows={isCommentFocused || commentText ? 3 : 1}
+                    placeholder={language === 'id' ? 'Tulis komentar...' : 'Write a comment...'}
+                    className="w-full p-3 text-xs sm:text-sm bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none resize-none leading-relaxed"
                   />
 
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-neutral-400">Sebagai:</span>
-                      <select
-                        value={selectedAuthorId}
-                        onChange={(e) => setSelectedAuthorId(e.target.value)}
-                        className="bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
-                      >
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id} className="dark:bg-[#161822]">
-                            {u.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {(isCommentFocused || commentText.trim()) && (
+                    <div className="flex items-center justify-between p-2 px-3 bg-neutral-50 dark:bg-[#12141a] border-t border-neutral-100 dark:border-[#222532] text-xs animate-in fade-in">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-neutral-400">Sebagai:</span>
+                        <select
+                          value={selectedAuthorId}
+                          onChange={(e) => setSelectedAuthorId(e.target.value)}
+                          className="bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
+                        >
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id} className="dark:bg-[#161822]">
+                              {u.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                    <button
-                      type="submit"
-                      disabled={!commentText.trim()}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer"
-                    >
-                      <Send className="w-3 h-3" />
-                      <span>{t('sendComment')}</span>
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCommentText('');
+                            setIsCommentFocused(false);
+                          }}
+                          className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!commentText.trim()}
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                        >
+                          <Send className="w-3 h-3" />
+                          <span>Simpan</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </form>
 
-                {/* Comment List */}
-                {task.comments.length > 0 && (
-                  <div className="space-y-2.5 pt-1">
-                    {task.comments.map((comm) => {
-                      const author = users.find((u) => u.id === comm.authorId);
-                      return (
-                        <div
-                          key={comm.id}
-                          className="flex items-start gap-2.5 p-3 rounded-xl border border-neutral-200/60 dark:border-[#222532] bg-white dark:bg-[#161822] text-xs"
-                        >
-                          <UserAvatar
-                            avatar={author?.avatar}
-                            name={author?.name || 'User'}
-                            color={author?.color}
-                            className="w-7 h-7 text-[10px] shrink-0 mt-0.5"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <span className="font-semibold text-neutral-900 dark:text-white">
-                                {author?.name || 'Anggota Tim'}
-                              </span>
-                              <span className="text-[10px] text-neutral-400 font-mono">
-                                {comm.createdAt}
+                {/* Unified Activity & Comment Stream (Screenshot 2) */}
+                <div className="space-y-3 pt-1">
+                  {/* System activities (e.g. "Muhammad Adli Abdurrahim added this card to To Do - just now") */}
+                  {showDetails && task.activities.length > 0 && (
+                    <div className="space-y-2.5">
+                      {task.activities.map((act) => {
+                        const actUser = users.find((u) => u.id === act.authorId);
+                        return (
+                          <div key={act.id} className="flex items-start gap-2.5 text-xs text-neutral-600 dark:text-neutral-400">
+                            <UserAvatar
+                              avatar={actUser?.avatar}
+                              name={actUser?.name || 'User'}
+                              color={actUser?.color}
+                              className="w-7 h-7 text-[10px] shrink-0 mt-0.5"
+                            />
+                            <div className="min-w-0 flex-1 leading-snug">
+                              <p className="text-neutral-800 dark:text-neutral-200">
+                                <span className="font-semibold text-neutral-900 dark:text-white">{actUser?.name || 'User'}</span>{' '}
+                                <span>{act.action}</span>
+                              </p>
+                              <span className="text-[10px] text-blue-500 font-medium cursor-pointer hover:underline">
+                                {act.timestamp || 'just now'}
                               </span>
                             </div>
-                            <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
-                              {comm.content}
-                            </p>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN: Metadata Properties Sidebar (Linear-style properties) */}
-            <div className="w-full md:w-72 md:border-l border-t md:border-t-0 border-neutral-200/80 dark:border-[#222532] bg-neutral-50/50 dark:bg-[#0f1015] p-5 space-y-4 shrink-0 md:overflow-y-auto text-xs">
-              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
-                {language === 'id' ? 'Properti Tugas' : 'Task Properties'}
-              </span>
-
-              {/* Penerima Tugas (Assignee) */}
-              <div className="space-y-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  {t('assigneeLabel')}
-                </label>
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
-                  <UserAvatar
-                    avatar={assignedUser?.avatar}
-                    name={assignedUser?.name || 'Tamu'}
-                    color={assignedUser?.color}
-                    className="w-6 h-6 text-[10px] shrink-0"
-                  />
-                  <select
-                    ref={assigneeSelectRef}
-                    value={assigneeId}
-                    onChange={(e) => handleAssigneeChange(e.target.value)}
-                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer truncate text-xs"
-                  >
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id} className="dark:bg-[#161822]">
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Prioritas (Priority) */}
-              <div className="space-y-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  {t('priorityLabel')}
-                </label>
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                      priority === 'Tinggi'
-                        ? 'bg-red-500'
-                        : priority === 'Sedang'
-                        ? 'bg-amber-500'
-                        : 'bg-neutral-400'
-                    }`}
-                  />
-                  <select
-                    ref={prioritySelectRef}
-                    value={priority}
-                    onChange={(e) => handlePriorityChange(e.target.value as Priority)}
-                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="Tinggi" className="dark:bg-[#161822] text-red-500">{t('priorityHigh')}</option>
-                    <option value="Sedang" className="dark:bg-[#161822] text-amber-500">{t('priorityMedium')}</option>
-                    <option value="Rendah" className="dark:bg-[#161822] text-neutral-400">{t('priorityLow')}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Jenis Tugas (Task Type) */}
-              <div className="space-y-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  {language === 'id' ? 'Jenis Tugas' : 'Task Type'}
-                </label>
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
-                  {taskType === 'feature' ? (
-                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
-                  ) : taskType === 'bug' ? (
-                    <Bug className="w-4 h-4 text-rose-500 shrink-0" />
-                  ) : taskType === 'improvement' ? (
-                    <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                  ) : taskType === 'design' ? (
-                    <Palette className="w-4 h-4 text-purple-500 shrink-0" />
-                  ) : taskType === 'research' ? (
-                    <Lightbulb className="w-4 h-4 text-cyan-500 shrink-0" />
-                  ) : (
-                    <CheckSquare className="w-4 h-4 text-blue-500 shrink-0" />
+                        );
+                      })}
+                    </div>
                   )}
-                  <select
-                    value={taskType}
-                    onChange={(e) => handleTaskTypeChange(e.target.value as TaskType)}
-                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs capitalize"
-                  >
-                    <option value="task" className="dark:bg-[#161822]">{language === 'id' ? 'Tugas Umum' : 'Task'}</option>
-                    <option value="feature" className="dark:bg-[#161822]">{language === 'id' ? 'Fitur Baru' : 'Feature'}</option>
-                    <option value="bug" className="dark:bg-[#161822]">Bug / Isu</option>
-                    <option value="improvement" className="dark:bg-[#161822]">{language === 'id' ? 'Peningkatan' : 'Improvement'}</option>
-                    <option value="design" className="dark:bg-[#161822]">{language === 'id' ? 'Desain UI-UX' : 'Design'}</option>
-                    <option value="research" className="dark:bg-[#161822]">{language === 'id' ? 'Riset' : 'Research'}</option>
-                  </select>
+
+                  {/* Comments list */}
+                  {task.comments.length > 0 ? (
+                    <div className="space-y-3 pt-1">
+                      {task.comments.map((comm) => {
+                        const author = users.find((u) => u.id === comm.authorId);
+                        return (
+                          <div
+                            key={comm.id}
+                            className="flex items-start gap-2.5 p-3 rounded-xl border border-neutral-200/60 dark:border-[#222532] bg-white dark:bg-[#161822] text-xs"
+                          >
+                            <UserAvatar
+                              avatar={author?.avatar}
+                              name={author?.name || 'User'}
+                              color={author?.color}
+                              className="w-7 h-7 text-[10px] shrink-0 mt-0.5"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <span className="font-semibold text-neutral-900 dark:text-white">
+                                  {author?.name || 'Anggota Tim'}
+                                </span>
+                                <span className="text-[10px] text-neutral-400 font-mono">
+                                  {comm.createdAt}
+                                </span>
+                              </div>
+                              <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                                {comm.content}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    task.activities.length === 0 && (
+                      <p className="text-xs text-neutral-400 italic text-center py-4">
+                        {language === 'id' ? 'Belum ada komentar atau aktivitas.' : 'No comments or activity yet.'}
+                      </p>
+                    )
+                  )}
                 </div>
               </div>
 
-              {/* Batas Waktu (Due Date) */}
-              <div className="space-y-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  {t('dueDateLabel')}
-                </label>
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
-                  <Calendar className="w-4 h-4 text-neutral-400 shrink-0" />
-                  <input
-                    ref={dateInputRef}
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => handleDueDateChange(e.target.value)}
-                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer text-xs"
-                  />
-                </div>
+              {/* Trello bottom pill indicators (Screenshot 2 bottom: Power-ups, Automations, Comments) */}
+              <div className="pt-4 border-t border-neutral-200/60 dark:border-[#222532] flex items-center justify-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#161822] border border-neutral-200/60 dark:border-[#242838]">
+                  <Zap className="w-3 h-3 text-amber-500" />
+                  <span>Power-ups</span>
+                </span>
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#161822] border border-neutral-200/60 dark:border-[#242838]">
+                  <Sparkles className="w-3 h-3 text-blue-500" />
+                  <span>Automations</span>
+                </span>
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold">
+                  <MessageSquare className="w-3 h-3" />
+                  <span>Comments</span>
+                </span>
               </div>
-
-              {/* Estimasi Waktu (Estimate) */}
-              <div className="space-y-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  {language === 'id' ? 'Estimasi Waktu' : 'Estimate'}
-                </label>
-                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a38]">
-                  <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
-                  <input
-                    type="text"
-                    value={estimate}
-                    onChange={(e) => handleEstimateChange(e.target.value)}
-                    placeholder={language === 'id' ? 'cth: 2 hari, 4 jam' : 'e.g. 2 days'}
-                    className="w-full bg-transparent font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none text-xs placeholder:text-neutral-400"
-                  />
-                </div>
-              </div>
-
-              {/* Warna Kartu / Card Cover Accent */}
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium block">
-                  {language === 'id' ? 'Warna Aksen Kartu' : 'Card Color'}
-                </label>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {[
-                    { label: 'Polos', value: '', color: 'bg-neutral-200 dark:bg-neutral-700' },
-                    { label: 'Red', value: '#ef4444', color: 'bg-red-500' },
-                    { label: 'Emerald', value: '#10b981', color: 'bg-emerald-500' },
-                    { label: 'Sky', value: '#0284c7', color: 'bg-sky-500' },
-                    { label: 'Amber', value: '#d97706', color: 'bg-amber-500' },
-                    { label: 'Purple', value: '#7c3aed', color: 'bg-purple-500' },
-                  ].map((c) => (
-                    <button
-                      key={c.label}
-                      type="button"
-                      onClick={() => handleCardColorChange(c.value)}
-                      title={c.label}
-                      className={`w-6 h-6 rounded-full ${c.color} transition-all flex items-center justify-center cursor-pointer hover:scale-110 ${
-                        cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-[#12141a]' : 'opacity-80 hover:opacity-100'
-                      }`}
-                    >
-                      {cardColor === c.value && <Check className="w-3 h-3 text-white stroke-[3]" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Activity Log */}
-              {task.activities.length > 0 && (
-                <div className="pt-3 border-t border-neutral-200/80 dark:border-[#222532] space-y-2">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-                    <History className="w-3.5 h-3.5" />
-                    <span>{t('activityLog')}</span>
-                  </div>
-                  <div className="space-y-2 pl-2.5 border-l border-neutral-200 dark:border-[#272a38] text-[11px] text-neutral-500 dark:text-neutral-400">
-                    {task.activities.slice(0, 3).map((act) => {
-                      const actUser = users.find((u) => u.id === act.authorId);
-                      return (
-                        <div key={act.id} className="leading-tight">
-                          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-                            {actUser?.name || 'Anggota'}
-                          </span>{' '}
-                          <span>{act.action}</span>
-                          <p className="text-[10px] text-neutral-400 font-mono mt-0.5">
-                            {act.timestamp}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
