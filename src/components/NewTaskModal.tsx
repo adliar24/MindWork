@@ -26,6 +26,7 @@ import { useLanguage } from '../context/LanguageContext';
 interface NewTaskModalProps {
   columns: Column[];
   users: User[];
+  currentUser?: User;
   defaultColumnId?: ColumnId;
   projectId: string;
   onClose: () => void;
@@ -35,6 +36,7 @@ interface NewTaskModalProps {
 export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   columns,
   users,
+  currentUser,
   defaultColumnId = 'todo',
   projectId,
   onClose,
@@ -64,7 +66,9 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   const [taskType, setTaskType] = useState<TaskType>('task');
   const [cardColor, setCardColor] = useState<string>('');
   const [estimate, setEstimate] = useState<string>('');
-  const [assigneeId, setAssigneeId] = useState<string>(users[0]?.id || '');
+  const [assigneeId, setAssigneeId] = useState<string>(
+    currentUser?.id || users[0]?.id || ''
+  );
   const [dueDate, setDueDate] = useState<string>(
     new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().split('T')[0]
   );
@@ -190,6 +194,16 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const creatorId = currentUser?.id || assigneeId;
+    const assignedUser = users.find((u) => u.id === assigneeId);
+
+    const actionText =
+      assigneeId && creatorId && assigneeId !== creatorId && assignedUser
+        ? (language === 'id'
+            ? `membuat tugas ini dan menugaskannya ke ${assignedUser.name}`
+            : `created this task and assigned it to ${assignedUser.name}`)
+        : (language === 'id' ? 'membuat tugas baru ini' : 'created this new task');
+
     const newTask: Task = {
       id: `task-${Date.now()}`,
       projectId,
@@ -201,6 +215,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
       cardColor,
       estimate: estimate.trim(),
       assigneeId,
+      creatorId,
       dueDate,
       tags,
       attachments,
@@ -208,8 +223,8 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
       activities: [
         {
           id: `act-${Date.now()}`,
-          authorId: assigneeId,
-          action: 'membuat tugas baru ini',
+          authorId: creatorId,
+          action: actionText,
           timestamp: 'Baru saja',
         },
       ],

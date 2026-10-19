@@ -803,6 +803,7 @@ export default function App() {
         <NewTaskModal
           columns={INITIAL_COLUMNS}
           users={users}
+          currentUser={currentUser}
           defaultColumnId={quickAddColumnId}
           projectId={activeProject.id}
           onClose={() => setIsNewTaskOpen(false)}

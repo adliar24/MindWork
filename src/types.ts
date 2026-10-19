@@ -82,6 +82,7 @@ export interface Task {
   isCompleted?: boolean;
   estimate?: string;
   assigneeId: string;
+  creatorId?: string;
   dueDate: string;
   tags: string[];
   attachments: Attachment[];

@@ -336,7 +336,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleAssigneeChange = (newAssigneeId: string) => {
     setAssigneeId(newAssigneeId);
-    onUpdateTask({ ...task, assigneeId: newAssigneeId });
+    const newAssignedUser = users.find((u) => u.id === newAssigneeId);
+    const actText = newAssignedUser
+      ? (language === 'id'
+          ? `mengubah penanggung jawab ke ${newAssignedUser.name}`
+          : `changed assignee to ${newAssignedUser.name}`)
+      : (language === 'id' ? 'menghapus penanggung jawab' : 'removed assignee');
+    const newActivity = {
+      id: `act-${Date.now()}`,
+      authorId: currentUser.id,
+      action: actText,
+      timestamp: 'Baru saja',
+    };
+    onUpdateTask({
+      ...task,
+      assigneeId: newAssigneeId,
+      activities: [newActivity, ...task.activities],
+    });
   };
 
   const handleDueDateChange = (newDate: string) => {
@@ -1650,7 +1666,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
                 <div className="space-y-2 pl-3 border-l border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400">
                   {task.activities.slice(0, 4).map((act) => {
-                    const actUser = users.find((u) => u.id === act.authorId);
+                    const authorId =
+                      (act.action.includes('membuat tugas') || act.action.includes('created')) && task.creatorId
+                        ? task.creatorId
+                        : act.authorId;
+                    const actUser = users.find((u) => u.id === authorId);
                     return (
                       <div key={act.id} className="leading-tight">
                         <span className="font-semibold text-neutral-700 dark:text-neutral-300">
