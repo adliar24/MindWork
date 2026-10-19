@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Users,
@@ -101,16 +101,21 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<ProjectRole>('member');
 
-  // Exit animation state
-  const [isClosing, setIsClosing] = useState(false);
-
+  // Fast, instant close handler
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 180);
+    onClose();
   };
+
+  // Close instantly on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !editingCustomRoleId) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingCustomRoleId, onClose]);
 
   // Change a member's role and persist immediately
   const handleChangeRole = (userId: string, newRole: ProjectRole) => {
@@ -290,9 +295,19 @@ export const InviteModal: React.FC<InviteModalProps> = ({
     setIsNewUserFormOpen(false);
   };
 
-  // Save changes and close
+  // Save changes and close instantly
   const handleSave = () => {
-    onUpdateProjectMembers(project.id, memberIds, memberRoles);
+    // Only invoke update if something actually changed compared to current project prop
+    const hasMemberChanges =
+      memberIds.length !== (project.memberIds || []).length ||
+      memberIds.some((id) => !project.memberIds?.includes(id));
+    const hasRoleChanges = Object.entries(memberRoles).some(
+      ([id, role]) => project.memberRoles?.[id] !== role
+    );
+
+    if (hasMemberChanges || hasRoleChanges) {
+      onUpdateProjectMembers(project.id, memberIds, memberRoles);
+    }
     handleClose();
   };
 
@@ -312,15 +327,11 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs overflow-y-auto cursor-pointer ${
-        isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-      }`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto cursor-pointer animate-in fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-lg rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col cursor-default ${
-          isClosing ? 'animate-modal-out' : 'animate-modal-in'
-        }`}
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col cursor-default animate-modal-in"
       >
         {/* Modal Header */}
         <div className="p-4 px-6 border-b border-neutral-200 dark:border-[#20232c] flex items-center justify-between shrink-0 bg-white dark:bg-[#12141a]">
