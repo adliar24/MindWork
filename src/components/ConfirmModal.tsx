@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, AlertCircle, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -29,9 +30,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   const { language } = useLanguage();
 
-  // Close on Escape, confirm on Enter
+  // Close on Escape, prevent background scrolling
   useEffect(() => {
     if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -41,7 +45,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -58,10 +65,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   const defaultCancelText = cancelText || (language === 'id' ? 'Batal' : 'Cancel');
 
-  return (
+  const modalContent = (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-150 select-none"
       role="dialog"
       aria-modal="true"
     >
@@ -154,4 +161,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 };

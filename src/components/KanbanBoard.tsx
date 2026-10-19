@@ -264,7 +264,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const handleDeleteColumn = (colId: string) => {
     if (!onDeleteList) return;
-    const col = boardLists.find((c) => c.id === colId);
+    const col = columns.find((c) => c.id === colId);
     const title = col ? getColumnTitle(col.id, col.title) : colId;
     const taskCount = tasks.filter((t) => t.columnId === colId).length;
     setDeleteColumnConfirm({
