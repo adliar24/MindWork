@@ -250,36 +250,21 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                {t('projectKeyLabel')}
-              </label>
-              <input
-                type="text"
-                value={key}
-                onChange={(e) => setKey(e.target.value.toUpperCase())}
-                placeholder={t('projectKeyPlaceholder')}
-                maxLength={6}
-                className="w-full h-9 px-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-mono uppercase"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                {t('categoryLabel')}
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white cursor-pointer"
-              >
-                {UNIVERSAL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              {t('categoryLabel')}
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white cursor-pointer"
+            >
+              {UNIVERSAL_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
           {category === 'Lainnya (Kustom)' && (

@@ -345,9 +345,6 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 <h3 className="text-sm font-bold text-neutral-950 dark:text-white">
                   {language === 'id' ? 'Anggota Proyek' : 'Project Members'}
                 </h3>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60">
-                  {project.key}
-                </span>
               </div>
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 {project.name}

@@ -81,12 +81,9 @@ export const Header: React.FC<HeaderProps> = ({
                   {t('home')}
                 </button>
                 <span className="text-neutral-300 dark:text-neutral-700 text-xs">/</span>
-                <h1 className="text-xs sm:text-base font-bold text-neutral-950 dark:text-white truncate max-w-[105px] xs:max-w-[160px] sm:max-w-xs md:max-w-none">
+                <h1 className="text-xs sm:text-base font-bold text-neutral-950 dark:text-white truncate max-w-[140px] xs:max-w-[200px] sm:max-w-xs md:max-w-none">
                   {project.name}
                 </h1>
-                <span className="hidden sm:inline-flex text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800">
-                  {project.key}
-                </span>
               </div>
             ) : (
               <h1 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white truncate">

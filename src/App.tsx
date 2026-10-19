@@ -6,6 +6,7 @@ import { KanbanBoard } from './components/KanbanBoard';
 import { TaskDetailModal } from './components/TaskDetailModal';
 import { NewTaskModal } from './components/NewTaskModal';
 import { NewProjectModal } from './components/NewProjectModal';
+import { EditProjectModal } from './components/EditProjectModal';
 import { InviteModal } from './components/InviteModal';
 import { AuthModal } from './components/AuthModal';
 import { CloudSetupModal } from './components/CloudSetupModal';
@@ -18,6 +19,7 @@ import {
   fetchCloudUsers,
   fetchCloudLists,
   saveCloudProject,
+  deleteCloudProject,
   saveCloudProjectMembers,
   saveCloudTask,
   deleteCloudTask,
@@ -184,6 +186,8 @@ export default function App() {
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
   const [quickAddColumnId, setQuickAddColumnId] = useState<ColumnId>('todo');
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
@@ -776,6 +780,34 @@ export default function App() {
     });
   };
 
+  const handleOpenEditProject = (proj?: Project | null) => {
+    const target = proj || activeProject;
+    if (target) {
+      setProjectToEdit(target);
+      setIsEditProjectOpen(true);
+    }
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    setProjects((prev) => {
+      const next = prev.filter((p) => p.id !== projectId);
+      try {
+        localStorage.setItem('vermilion_projects', JSON.stringify(next));
+      } catch (err) {
+        console.warn('LocalStorage save project error:', err);
+      }
+      return next;
+    });
+    setBoardLists((prev) => prev.filter((l) => l.projectId !== projectId));
+    setTasks((prev) => prev.filter((t) => t.projectId !== projectId));
+    if (activeProjectId === projectId) {
+      setActiveProjectId('');
+    }
+    setIsEditProjectOpen(false);
+    setProjectToEdit(null);
+    deleteCloudProject(projectId).catch(() => {});
+  };
+
   const handleRegisterUser = (newUser: User) => {
     setUsers((prev) => {
       const filtered = prev.filter(
@@ -1023,6 +1055,7 @@ export default function App() {
                   users={users}
                   onSelectProject={(projId) => setActiveProjectId(projId)}
                   onOpenNewProject={() => setIsNewProjectOpen(true)}
+                  onOpenEditProjectModal={(proj) => handleOpenEditProject(proj)}
                 />
               </div>
             ) : (
@@ -1030,6 +1063,7 @@ export default function App() {
                 <KanbanBoard
                   project={activeProject}
                   onUpdateProject={handleUpdateProject}
+                  onOpenEditProjectModal={() => handleOpenEditProject(activeProject)}
                   columns={activeProjectColumns}
                   tasks={filteredTasks}
                   users={users}
@@ -1119,6 +1153,21 @@ export default function App() {
           status={cloudStatus}
           onRefresh={refreshCloudData}
           onClose={() => setIsCloudModalOpen(false)}
+        />
+      )}
+
+      {/* 10. Modal Edit Proyek */}
+      {isEditProjectOpen && (projectToEdit || activeProject) && (
+        <EditProjectModal
+          project={projectToEdit || activeProject!}
+          isOpen={isEditProjectOpen}
+          onClose={() => {
+            setIsEditProjectOpen(false);
+            setProjectToEdit(null);
+          }}
+          onUpdateProject={handleUpdateProject}
+          onDeleteProject={handleDeleteProject}
+          currentUserRole={currentUserRole}
         />
       )}
     </div>

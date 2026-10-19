@@ -10,6 +10,7 @@ import {
   Briefcase,
   Eye,
   Users,
+  Edit2,
 } from 'lucide-react';
 import { Project, ProjectRole, Task, User } from '../types';
 import { UserAvatar } from './UserAvatar';
@@ -22,6 +23,7 @@ interface HomeDashboardProps {
   users: User[];
   onSelectProject: (projectId: string) => void;
   onOpenNewProject: () => void;
+  onOpenEditProjectModal?: (project: Project) => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -31,6 +33,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   users,
   onSelectProject,
   onOpenNewProject,
+  onOpenEditProjectModal,
 }) => {
   const { t } = useLanguage();
 
@@ -179,7 +182,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 flex items-center justify-end pr-4 text-white/20 font-black text-2xl select-none">
-                              {project.key}
+                              {project.name.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
@@ -200,39 +203,51 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                         </div>
                       </div>
 
-                      {/* Key, Category & Role Badge */}
+                      {/* Category & Actions */}
                       <div className="flex items-center justify-between gap-2 mb-2 pt-1 pl-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60 shrink-0">
-                            {project.key}
-                          </span>
-                          <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500 truncate">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 truncate">
                             {project.category || 'Umum'}
                           </span>
                         </div>
 
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
-                            isUserLeader
-                              ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-                              : userRole === 'viewer' || userRole.toLowerCase().includes('peninjau')
-                              ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
-                              : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
-                          }`}
-                        >
-                          {isUserLeader && <Crown className="w-2.5 h-2.5" />}
-                          <span>
-                            {isUserLeader
-                              ? userRole === 'leader'
-                                ? t('roleLeader')
-                                : userRole
-                              : userRole === 'member'
-                              ? t('roleMember')
-                              : userRole === 'viewer'
-                              ? t('roleViewer')
-                              : userRole}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {onOpenEditProjectModal && (isUserLeader || userRole === 'member') && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenEditProjectModal(project);
+                              }}
+                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+                              title={language === 'id' ? 'Edit Proyek' : 'Edit Project'}
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              isUserLeader
+                                ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                                : userRole === 'viewer' || userRole.toLowerCase().includes('peninjau')
+                                ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                            }`}
+                          >
+                            {isUserLeader && <Crown className="w-2.5 h-2.5" />}
+                            <span>
+                              {isUserLeader
+                                ? userRole === 'leader'
+                                  ? t('roleLeader')
+                                  : userRole
+                                : userRole === 'member'
+                                ? t('roleMember')
+                                : userRole === 'viewer'
+                                ? t('roleViewer')
+                                : userRole}
+                            </span>
                           </span>
-                        </span>
+                        </div>
                       </div>
 
                       {/* Project Name */}

@@ -539,6 +539,19 @@ export async function deleteCloudList(listId: string): Promise<boolean> {
   }
 }
 
+export async function deleteCloudProject(projectId: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    await supabase.from('board_lists').delete().eq('project_id', projectId);
+    await supabase.from('tasks').delete().eq('project_id', projectId);
+    await supabase.from('project_members').delete().eq('project_id', projectId);
+    const { error } = await supabase.from('projects').delete().eq('id', projectId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 // ----------------------------------------------------------------------
 // REALTIME SUBSCRIPTION
 // ----------------------------------------------------------------------

@@ -34,6 +34,7 @@ interface KanbanBoardProps {
   onCreateList?: (title: string) => void;
   onUpdateList?: (updatedList: Column) => void;
   onDeleteList?: (listId: string) => void;
+  onOpenEditProjectModal?: () => void;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -51,6 +52,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onCreateList,
   onUpdateList,
   onDeleteList,
+  onOpenEditProjectModal,
 }) => {
   const { language, t } = useLanguage();
   const isViewer = currentUserRole === 'viewer';
@@ -450,12 +452,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
                         {project.name}
                       </h2>
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-                        {project.key}
-                      </span>
                       <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
                         {project.category}
                       </span>
+                      {onOpenEditProjectModal && (
+                        <button
+                          type="button"
+                          onClick={onOpenEditProjectModal}
+                          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1f2230] dark:hover:bg-[#282c3e] border border-neutral-200/80 dark:border-[#2f3346] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer shadow-xs"
+                          title={language === 'id' ? 'Edit nama & detail proyek' : 'Edit project details'}
+                        >
+                          <Edit2 className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
+                          <span>{language === 'id' ? 'Edit Proyek' : 'Edit Project'}</span>
+                        </button>
+                      )}
                     </div>
                     {project.description && (
                       <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl line-clamp-2">
