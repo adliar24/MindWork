@@ -38,11 +38,41 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [mobileActiveColumn, setMobileActiveColumn] = useState<ColumnId | 'all'>('all');
+  const [dragPreviewWidth, setDragPreviewWidth] = useState<number>(310);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const dragPreviewRef = useRef<HTMLDivElement>(null);
   const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Global smooth drag tracking across entire window to eliminate lag, freezing, or offset jumps
+  useEffect(() => {
+    if (!draggingTaskId) return;
+
+    const handleGlobalDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      if (dragPreviewRef.current && e.clientX > 0 && e.clientY > 0) {
+        const x = e.clientX - dragOffsetRef.current.x;
+        const y = e.clientY - dragOffsetRef.current.y;
+        dragPreviewRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(1.5deg)`;
+      }
+    };
+
+    const handleGlobalDragEnd = () => {
+      setDraggingTaskId(null);
+      setDragOverColumnId(null);
+    };
+
+    window.addEventListener('dragover', handleGlobalDragOver);
+    window.addEventListener('dragend', handleGlobalDragEnd);
+    window.addEventListener('drop', handleGlobalDragEnd);
+
+    return () => {
+      window.removeEventListener('dragover', handleGlobalDragOver);
+      window.removeEventListener('dragend', handleGlobalDragEnd);
+      window.removeEventListener('drop', handleGlobalDragEnd);
+    };
+  }, [draggingTaskId]);
 
   const draggedTask = useMemo(() => {
     return tasks.find((t) => t.id === draggingTaskId) || null;
@@ -173,11 +203,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
     if (isViewer) return;
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
+    const cardEl = (e.currentTarget as HTMLElement).closest('.kanban-card-item') as HTMLElement || (e.currentTarget as HTMLElement);
+    const rect = cardEl ? cardEl.getBoundingClientRect() : (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const cardWidth = rect.width > 0 ? rect.width : 310;
+    const cardHeight = rect.height > 0 ? rect.height : 90;
+
+    setDragPreviewWidth(cardWidth);
+
+    // Center horizontally so the card is always balanced directly under pointer/touch
+    const offsetX = cardWidth / 2;
+    const offsetY = Math.min(cardHeight / 2, 40);
+
     dragOffsetRef.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: offsetX,
+      y: offsetY,
     };
 
     e.dataTransfer.setData('text/plain', taskId);
@@ -191,6 +230,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     } catch {}
 
     setDraggingTaskId(taskId);
+
+    if (dragPreviewRef.current && e.clientX > 0 && e.clientY > 0) {
+      dragPreviewRef.current.style.transform = `translate3d(${e.clientX - offsetX}px, ${e.clientY - offsetY}px, 0) rotate(1.5deg)`;
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, columnId: ColumnId) => {
@@ -552,32 +595,39 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         </div>
       </div>
 
-      {/* 100% Solid Floating Drag Preview (Zero Transparency) */}
+      {/* 100% Solid Floating Drag Preview (Zero Transparency, Centered Under Pointer) */}
       {draggedTask && (
         <div
           ref={dragPreviewRef}
           className="fixed top-0 left-0 pointer-events-none z-[9999] opacity-100 will-change-transform"
           style={{
-            width: 310,
+            width: dragPreviewWidth || 310,
             transform: 'translate3d(-9999px, -9999px, 0)',
           }}
         >
-          <div className="rounded-xl border-2 border-red-500 ring-4 ring-red-500/25 bg-white dark:bg-[#20232c] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.55)] overflow-hidden opacity-100 select-none">
+          <div className="rounded-xl border-2 border-red-500 ring-4 ring-red-500/25 bg-white dark:bg-[#161822] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.45)] overflow-hidden opacity-100 select-none">
             {draggedTask.cardColor && (
               <div
-                className="w-full h-8 opacity-100"
+                className="w-full h-1.5 opacity-100"
                 style={{ backgroundColor: draggedTask.cardColor }}
               />
             )}
-            <div className="p-3.5 space-y-2 bg-white dark:bg-[#20232c] opacity-100">
-              <h3 className="text-sm font-bold text-neutral-900 dark:text-white line-clamp-2 leading-snug">
+            <div className="p-3 space-y-1.5 bg-white dark:bg-[#161822] opacity-100">
+              <div className="flex items-center gap-1.5">
+                {draggedTask.priority === 'Tinggi' ? (
+                  <span className="w-2 h-2 rounded-full bg-red-500 ring-2 ring-red-500/30 shrink-0" />
+                ) : draggedTask.priority === 'Sedang' ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600 shrink-0" />
+                )}
+                <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase">
+                  {draggedTask.key || 'TASK'}
+                </span>
+              </div>
+              <h3 className="text-xs sm:text-[13px] font-semibold text-neutral-900 dark:text-white line-clamp-2 leading-snug">
                 {draggedTask.title}
               </h3>
-              {draggedTask.description && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">
-                  {draggedTask.description}
-                </p>
-              )}
             </div>
           </div>
         </div>

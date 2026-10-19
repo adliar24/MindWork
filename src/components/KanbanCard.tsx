@@ -137,7 +137,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
 
       {/* 2. Cover / Thumbnail image if exists */}
       {coverAttachment && coverAttachment.url && (
-        <div className="relative w-full h-24 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
+        <div className="relative w-full h-20 sm:h-24 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
           <img
             src={coverAttachment.url}
             alt={coverAttachment.name}
@@ -148,46 +148,64 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
       )}
 
       {/* Card Body */}
-      <div className="p-3 sm:p-3.5 space-y-2">
-        {/* Top row: Priority & Type badge & Tags */}
+      <div className="p-2.5 sm:p-3.5 space-y-1.5 sm:space-y-2">
+        {/* Top row: Priority & Type badge & Tags (Ultra-clean on mobile) */}
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Priority Indicator */}
             {task.priority === 'Tinggi' ? (
-              <span
-                title="Prioritas: Tinggi"
-                className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
-              >
-                <AlertCircle className="w-3 h-3 stroke-[2.2]" />
-                <span>Tinggi</span>
-              </span>
+              <>
+                {/* Mobile: Minimal crisp red dot */}
+                <span
+                  title="Prioritas: Tinggi"
+                  className="sm:hidden w-2 h-2 rounded-full bg-red-500 ring-2 ring-red-500/30 shrink-0"
+                />
+                {/* Desktop: Compact text badge */}
+                <span
+                  title="Prioritas: Tinggi"
+                  className="hidden sm:flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
+                >
+                  <AlertCircle className="w-3 h-3 stroke-[2.2]" />
+                  <span>Tinggi</span>
+                </span>
+              </>
             ) : task.priority === 'Sedang' ? (
               <span
                 title="Prioritas: Sedang"
-                className="w-2 h-2 rounded-full bg-amber-500"
+                className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
               />
             ) : (
               <span
                 title="Prioritas: Rendah"
-                className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600"
+                className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600 shrink-0"
               />
             )}
 
             {/* Task Type Badge */}
             {typeBadge && (
-              <span
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeBadge.style}`}
-              >
-                <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
-                <span>{typeBadge.label}</span>
-              </span>
+              <>
+                {/* Mobile: Subtle icon only */}
+                <span
+                  title={typeBadge.label}
+                  className="sm:hidden text-neutral-400 dark:text-neutral-500 shrink-0"
+                >
+                  <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
+                </span>
+                {/* Desktop: Full styled badge */}
+                <span
+                  className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeBadge.style}`}
+                >
+                  <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
+                  <span>{typeBadge.label}</span>
+                </span>
+              </>
             )}
 
-            {/* Tags (Max 2) */}
+            {/* Tags (Desktop only - hidden on mobile to eliminate clutter) */}
             {task.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
+                className="hidden sm:inline-flex text-[9px] px-1.5 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
               >
                 {tag}
               </span>
@@ -206,17 +224,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           {task.title}
         </h3>
 
-        {/* Optional 1-line Description excerpt */}
+        {/* Description excerpt (Desktop only - hidden on mobile for clean scannability) */}
         {task.description && (
-          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 leading-normal">
+          <p className="hidden sm:block text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 leading-normal">
             {task.description}
           </p>
         )}
 
         {/* Card Footer: Metadata Indicators (Date, Checklist count, Attachments, Comments) + Assignee */}
-        <div className="pt-2 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-2">
+        <div className="pt-1.5 sm:pt-2 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-1.5 text-[10px]">
           {/* Left indicators */}
-          <div className="flex items-center gap-2 text-[10px] text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
+          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
             {/* Due Date Indicator */}
             {task.dueDate && (
               <span
@@ -224,7 +242,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                   task.isCompleted || task.columnId === 'done'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                     : isOverdue
-                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30'
+                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 font-semibold'
                     : isDueSoon
                     ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
                     : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700/60'
@@ -251,10 +269,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               </span>
             )}
 
-            {/* Time Estimate */}
+            {/* Time Estimate (Desktop only) */}
             {task.estimate && (
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1 py-0.5 rounded"
+                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1 py-0.5 rounded"
                 title={`Estimasi: ${task.estimate}`}
               >
                 <Clock className="w-3 h-3" />
@@ -273,10 +291,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               </span>
             )}
 
-            {/* External Links indicator */}
+            {/* External Links indicator (Desktop only) */}
             {linkCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
                 title={`${linkCount} tautan`}
               >
                 <Link2 className="w-3 h-3" />
