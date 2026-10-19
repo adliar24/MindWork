@@ -33,6 +33,7 @@ import {
   Palette,
   Lightbulb,
   Clock,
+  Edit3,
 } from 'lucide-react';
 import {
   Attachment,
@@ -122,15 +123,34 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   // Full image preview modal state
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Exit animation state
-  const [isClosing, setIsClosing] = useState(false);
+  // Save confirmation state
+  const [hasSavedFeedback, setHasSavedFeedback] = useState(false);
 
+  // Fast, instant close handler without hanging timer
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
+    onClose();
+  };
+
+  const handleSaveTask = (closeAfter = false) => {
+    const updated: Task = {
+      ...task,
+      title: title.trim() || task.title,
+      description: description.trim(),
+      columnId,
+      priority,
+      taskType,
+      cardColor,
+      assigneeId,
+      dueDate,
+      estimate: estimate.trim(),
+      isCompleted,
+    };
+    onUpdateTask(updated);
+    setHasSavedFeedback(true);
+    setTimeout(() => setHasSavedFeedback(false), 2000);
+    if (closeAfter) {
       onClose();
-    }, 180);
+    }
   };
 
   useEffect(() => {
@@ -573,15 +593,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto cursor-pointer ${
-        isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-      }`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/60 overflow-y-auto cursor-pointer animate-in fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#111215] border border-neutral-200 dark:border-neutral-800 shadow-2xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default ${
-          isClosing ? 'animate-modal-out' : 'animate-modal-in'
-        }`}
+        className="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#111215] border border-neutral-200 dark:border-neutral-800 shadow-2xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default animate-modal-in"
       >
         {/* Trello-style Card Color Top Banner */}
         {cardColor && (
@@ -624,8 +640,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-1">
+          {/* Action buttons with prominent Simpan button */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSaveTask(false)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{hasSavedFeedback ? (language === 'id' ? 'Tersimpan!' : 'Saved!') : (language === 'id' ? 'Simpan' : 'Save')}</span>
+            </button>
             <button
               onClick={() => {
                 if (confirm(t('deleteTaskConfirm'))) {
@@ -652,7 +676,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           {/* LEFT: Main Content (Title, Description, Links, Checklist, Attachments, Comments) */}
           <div className="flex-1 lg:overflow-y-auto p-4 sm:p-5 md:p-7 space-y-6">
-            {/* Title */}
+            {/* Title with clear edit trigger */}
             <div>
               {isEditingTitle ? (
                 <input
@@ -665,17 +689,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   className="w-full text-lg md:text-xl font-bold bg-transparent text-neutral-950 dark:text-white border-b-2 border-red-500 focus:outline-none pb-1"
                 />
               ) : (
-                <h1
+                <div
                   onClick={() => setIsEditingTitle(true)}
-                  title="Klik untuk mengedit judul"
-                  className="text-lg md:text-xl font-bold text-neutral-950 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer transition-colors leading-snug"
+                  title="Klik untuk mengedit judul tugas"
+                  className="group flex items-center gap-2 cursor-pointer"
                 >
-                  {title}
-                </h1>
+                  <h1 className="text-lg md:text-xl font-bold text-neutral-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-snug">
+                    {title}
+                  </h1>
+                  <span className="opacity-0 group-hover:opacity-100 text-[10px] text-red-500 font-medium px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 transition-opacity flex items-center gap-1 shrink-0">
+                    <Edit3 className="w-2.5 h-2.5" />
+                    <span>{language === 'id' ? 'Edit Judul' : 'Edit'}</span>
+                  </span>
+                </div>
               )}
             </div>
 
-            {/* Description */}
+            {/* Description with clear edit trigger */}
             <div>
               {isEditingDesc ? (
                 <textarea
@@ -684,17 +714,28 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   onBlur={handleDescBlur}
                   rows={3}
                   autoFocus
-                  placeholder="Tambah deskripsi..."
-                  className="w-full p-2.5 text-xs rounded-lg bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none resize-none leading-relaxed"
+                  placeholder="Tambah deskripsi tugas..."
+                  className="w-full p-2.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none resize-none leading-relaxed"
                 />
               ) : (
                 <div
                   onClick={() => setIsEditingDesc(true)}
-                  className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+                  className="group p-2.5 rounded-xl border border-transparent hover:border-neutral-200 dark:hover:border-neutral-800 hover:bg-neutral-50/70 dark:hover:bg-neutral-850/40 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed cursor-pointer transition-all"
                 >
-                  {description || (
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+                      {language === 'id' ? 'Deskripsi Tugas' : 'Task Description'}
+                    </span>
+                    <span className="opacity-0 group-hover:opacity-100 text-[10px] text-red-500 font-medium flex items-center gap-1">
+                      <Edit3 className="w-2.5 h-2.5" />
+                      <span>{language === 'id' ? 'Edit' : 'Edit'}</span>
+                    </span>
+                  </div>
+                  {description ? (
+                    <p className="whitespace-pre-wrap">{description}</p>
+                  ) : (
                     <span className="text-neutral-400 italic">
-                      + Tambah deskripsi tugas...
+                      + Tambah deskripsi tugas lengkap di sini...
                     </span>
                   )}
                 </div>
@@ -1044,15 +1085,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 ))}
               </div>
 
-              {/* Add checklist input */}
-              <form onSubmit={handleAddChecklist} className="flex items-center gap-2 pt-0.5">
+              {/* Add checklist input with clear Add button */}
+              <form onSubmit={handleAddChecklist} className="flex items-center gap-2 pt-1">
                 <input
                   type="text"
                   value={newChecklistTitle}
                   onChange={(e) => setNewChecklistTitle(e.target.value)}
-                  placeholder={t('newSubtaskPlaceholder')}
-                  className="flex-1 px-2.5 py-1.5 text-xs bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-red-500 focus:outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 transition-colors"
+                  placeholder={language === 'id' ? 'Tambah subtugas baru...' : 'Add new subtask...'}
+                  className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
                 />
+                <button
+                  type="submit"
+                  disabled={!newChecklistTitle.trim()}
+                  className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{language === 'id' ? 'Tambah' : 'Add'}</span>
+                </button>
               </form>
             </div>
 

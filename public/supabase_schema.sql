@@ -68,6 +68,12 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS card_color TEXT DEFAULT '';
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS task_type TEXT DEFAULT 'task';
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS estimate TEXT DEFAULT '';
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS creator_id TEXT DEFAULT '';
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- Aktifkan akses baca & tulis untuk anon / authenticated

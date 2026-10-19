@@ -246,12 +246,25 @@ export default function App() {
         const cleanCloudTasks = cloudTasks.filter(
           (t) => t.projectId !== 'proj-1' && t.projectId !== 'proj-2' && t.projectId !== 'proj-3'
         );
-        setTasks(cleanCloudTasks);
-        try {
-          localStorage.setItem('vermilion_tasks', JSON.stringify(cleanCloudTasks));
-        } catch (e) {
-          console.warn('LocalStorage tasks quota warning:', e);
-        }
+        setTasks((prevTasks) => {
+          const merged = cleanCloudTasks.map((ct) => {
+            const lt = prevTasks.find((x) => x.id === ct.id);
+            return {
+              ...ct,
+              cardColor: ct.cardColor || lt?.cardColor || '',
+              taskType: ct.taskType || lt?.taskType || 'task',
+              estimate: ct.estimate || lt?.estimate || '',
+              isCompleted: ct.isCompleted ?? lt?.isCompleted ?? false,
+              creatorId: ct.creatorId || lt?.creatorId || '',
+            };
+          });
+          try {
+            localStorage.setItem('vermilion_tasks', JSON.stringify(merged));
+          } catch (e) {
+            console.warn('LocalStorage tasks quota warning:', e);
+          }
+          return merged;
+        });
       }
     }
   };
@@ -425,8 +438,8 @@ export default function App() {
   // Task Handlers with Optimistic Local Update & Background Cloud Sync
   const handleMoveTask = (taskId: string, targetColumn: ColumnId) => {
     let movedTask: Task | null = null;
-    setTasks((prev) =>
-      prev.map((t) => {
+    setTasks((prev) => {
+      const next = prev.map((t) => {
         if (t.id === taskId && t.columnId !== targetColumn) {
           const colTitles: Record<ColumnId, string> = {
             todo: 'To Do',
@@ -448,8 +461,14 @@ export default function App() {
           return movedTask;
         }
         return t;
-      })
-    );
+      });
+      try {
+        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage move task warning:', e);
+      }
+      return next;
+    });
 
     if (movedTask && cloudStatus.tableReady) {
       saveCloudTask(movedTask);
@@ -457,14 +476,30 @@ export default function App() {
   };
 
   const handleUpdateTask = (updatedTask: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    setTasks((prev) => {
+      const next = prev.map((t) => (t.id === updatedTask.id ? updatedTask : t));
+      try {
+        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage update task warning:', e);
+      }
+      return next;
+    });
     if (cloudStatus.tableReady) {
       saveCloudTask(updatedTask);
     }
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    setTasks((prev) => {
+      const next = prev.filter((t) => t.id !== taskId);
+      try {
+        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage delete task warning:', e);
+      }
+      return next;
+    });
     setSelectedTaskId(null);
     if (cloudStatus.tableReady) {
       deleteCloudTask(taskId);
@@ -472,7 +507,15 @@ export default function App() {
   };
 
   const handleCreateTask = (newTask: Task) => {
-    setTasks((prev) => [newTask, ...prev]);
+    setTasks((prev) => {
+      const next = [newTask, ...prev];
+      try {
+        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
+      } catch (e) {
+        console.warn('LocalStorage create task warning:', e);
+      }
+      return next;
+    });
     if (cloudStatus.tableReady) {
       saveCloudTask(newTask);
     }

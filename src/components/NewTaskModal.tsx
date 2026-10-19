@@ -18,6 +18,7 @@ import {
   CheckSquare,
   Clock,
   Check,
+  Trash2,
 } from 'lucide-react';
 import { Column, ColumnId, Priority, Task, TaskType, User, Attachment } from '../types';
 import { formatFileSize, getFileTypeFromExtension, compressImageFile, detectCloudService } from '../utils/fileHelpers';
@@ -75,6 +76,24 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   const [tagsInput, setTagsInput] = useState('Desain, Sprint-1');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Subtasks/Checklist state
+  const [checklistItems, setChecklistItems] = useState<{ id: string; title: string; completed: boolean }[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+  const handleAddSubtask = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newSubtaskTitle.trim()) return;
+    setChecklistItems((prev) => [
+      ...prev,
+      { id: `chk-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`, title: newSubtaskTitle.trim(), completed: false },
+    ]);
+    setNewSubtaskTitle('');
+  };
+
+  const handleRemoveSubtask = (id: string) => {
+    setChecklistItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   // Cloud Link state in NewTaskModal
   const [isAddingCloudLink, setIsAddingCloudLink] = useState(false);
@@ -175,14 +194,8 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const [isClosing, setIsClosing] = useState(false);
-
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 180);
+    onClose();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -228,7 +241,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           timestamp: 'Baru saja',
         },
       ],
-      checklist: [],
+      checklist: checklistItems,
       externalLinks: [],
       createdAt: 'Baru saja',
     };
@@ -240,15 +253,11 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto cursor-pointer ${
-        isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-      }`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto cursor-pointer animate-in fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default ${
-          isClosing ? 'animate-modal-out' : 'animate-modal-in'
-        }`}
+        className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default animate-modal-in"
       >
         {/* Trello-like Top Color Banner */}
         {cardColor && (
@@ -454,6 +463,65 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               placeholder={t('tagsPlaceholder')}
               className="w-full h-9 px-3 text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
             />
+          </div>
+
+          {/* Checklist / Subtugas */}
+          <div className="space-y-2 pt-1 border-t border-neutral-100 dark:border-neutral-800">
+            <div className="flex items-center justify-between text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+              <span className="flex items-center gap-1.5">
+                <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
+                <span>{language === 'id' ? 'Checklist / Subtugas' : 'Subtasks / Checklist'}</span>
+              </span>
+              {checklistItems.length > 0 && (
+                <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                  {checklistItems.length} {language === 'id' ? 'subtugas' : 'subtasks'}
+                </span>
+              )}
+            </div>
+
+            {checklistItems.length > 0 && (
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {checklistItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-700/60 text-xs"
+                  >
+                    <span className="truncate text-neutral-800 dark:text-neutral-200">{item.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSubtask(item.id)}
+                      className="p-1 text-neutral-400 hover:text-red-500 rounded cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddSubtask();
+                  }
+                }}
+                placeholder={language === 'id' ? 'Tambah subtugas (misal: Buat storyboard)...' : 'Add subtask...'}
+                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddSubtask()}
+                disabled={!newSubtaskTitle.trim()}
+                className="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
+              >
+                {language === 'id' ? '+ Tambah' : '+ Add'}
+              </button>
+            </div>
           </div>
 
           {/* Lampiran */}

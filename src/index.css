@@ -137,18 +137,15 @@
 }
 
 .animate-modal-in {
-  animation: modalSpringIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, opacity;
+  animation: modalSpringIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-modal-out {
-  animation: modalSpringOut 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  animation: modalSpringOut 150ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-backdrop-out {
-  animation: backdropFadeOut 180ms ease-out forwards;
-  will-change: opacity;
+  animation: backdropFadeOut 150ms ease-out forwards;
 }
 
 .animate-view-fade {

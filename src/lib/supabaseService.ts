@@ -367,6 +367,11 @@ export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null
       title: t.title,
       description: t.description || '',
       priority: t.priority,
+      taskType: t.task_type || 'task',
+      cardColor: t.card_color || '',
+      estimate: t.estimate || '',
+      isCompleted: Boolean(t.is_completed),
+      creatorId: t.creator_id || '',
       assigneeId: t.assignee_id,
       dueDate: t.due_date || '',
       tags: Array.isArray(t.tags) ? t.tags : [],
@@ -385,7 +390,7 @@ export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null
 export async function saveCloudTask(task: Task): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
-    const { error } = await supabase.from('tasks').upsert({
+    const fullPayload: any = {
       id: task.id,
       project_id: task.projectId,
       column_id: task.columnId,
@@ -400,8 +405,20 @@ export async function saveCloudTask(task: Task): Promise<boolean> {
       activities: task.activities || [],
       checklist: task.checklist || [],
       external_links: task.externalLinks || [],
-    });
-    return !error;
+      card_color: task.cardColor || '',
+      task_type: task.taskType || 'task',
+      is_completed: Boolean(task.isCompleted),
+      estimate: task.estimate || '',
+      creator_id: task.creatorId || '',
+    };
+
+    const { error } = await supabase.from('tasks').upsert(fullPayload);
+    if (!error) return true;
+
+    // Resilient fallback if schema hasn't run migrations for new columns yet
+    const { card_color, task_type, is_completed, estimate, creator_id, ...fallbackPayload } = fullPayload;
+    const { error: fallbackError } = await supabase.from('tasks').upsert(fallbackPayload);
+    return !fallbackError;
   } catch {
     return false;
   }

@@ -51,15 +51,9 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
     );
   };
 
-  // Exit animation state
-  const [isClosing, setIsClosing] = useState(false);
-
+  // Fast instant close
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 180);
+    onClose();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -103,15 +97,11 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto cursor-pointer ${
-        isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-      }`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto cursor-pointer animate-in fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-md max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default ${
-          isClosing ? 'animate-modal-out' : 'animate-modal-in'
-        }`}
+        className="w-full max-w-md max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default animate-modal-in"
       >
         <div className="p-4 px-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
