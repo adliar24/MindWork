@@ -35,7 +35,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onOpenNewProject,
   onOpenEditProjectModal,
 }) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.columnId === 'done').length;
