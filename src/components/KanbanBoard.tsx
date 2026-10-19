@@ -37,6 +37,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [mobileActiveColumn, setMobileActiveColumn] = useState<ColumnId | 'all'>('all');
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -229,13 +230,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       onDragOver={updateDragPreviewPos}
       className="flex-1 flex flex-col overflow-y-auto bg-slate-50/60 dark:bg-[#090a0f] transition-colors scroll-smooth relative"
     >
-      {/* 1. Clean, Modern Executive Project Header */}
+      {/* 1. Project Header (Cover + Profile Picture) - Strict 3:1 Aspect Ratio on All Devices */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
-          <div className="w-full rounded-2xl border border-neutral-200/80 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-3 sm:p-4">
-            {/* Cover Banner */}
+          <div className="max-w-[860px] mx-auto sm:mx-0 rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
+            {/* Cover Banner - Strict 3:1 Aspect Ratio on All Devices */}
             {!isBannerCollapsed && (
-              <div className="relative w-full h-24 sm:h-28 md:h-32 rounded-xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs mb-3">
+              <div className="relative w-full aspect-[3/1] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs">
                 {project.coverImage ? (
                   <img
                     src={project.coverImage}
@@ -243,14 +244,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     className="w-full h-full object-cover object-center select-none"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-end pr-6 bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/25">
-                    <span className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-widest select-none font-mono">
-                      {project.key}
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-red-600 via-rose-700 to-amber-600 text-white/35">
+                    <span className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-widest select-none">
+                      {project.name}
                     </span>
                   </div>
                 )}
 
-                {/* Cover Action Button */}
+                {/* Cover Action Button - with z-30 to guarantee it is always clickable */}
                 {!isViewer && onUpdateProject && (
                   <button
                     type="button"
@@ -259,10 +260,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       coverInputRef.current?.click();
                     }}
                     disabled={isUploadingCover}
-                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md border border-white/10 transition-all cursor-pointer"
+                    className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg border border-white/10 transition-all cursor-pointer hover:scale-105 active:scale-95"
                   >
                     <Camera className="w-3.5 h-3.5" />
-                    <span>
+                    <span className="inline">
                       {isUploadingCover
                         ? (language === 'id' ? 'Memproses...' : 'Processing...')
                         : (language === 'id' ? 'Ubah Sampul' : 'Change Cover')}
@@ -272,92 +273,100 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               </div>
             )}
 
-            {/* Profile Avatar & Details Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              {/* Left: Avatar + Title + Category */}
-              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                {/* Project Avatar */}
-                <div className="relative group shrink-0">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border-2 border-white dark:border-[#1c1f2b] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center">
-                    {project.avatar ? (
-                      <img
-                        src={project.avatar}
-                        alt={project.name}
-                        className="w-full h-full object-cover select-none"
-                      />
-                    ) : (
-                      <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-lg sm:text-xl select-none`}>
-                        {project.name.charAt(0).toUpperCase()}
-                      </div>
+            {/* Profile Avatar & Details Section - in normal flow below cover banner to prevent text collision */}
+            <div className="px-1.5 sm:px-2.5 pb-1 sm:pb-2 pt-0">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                {/* Left: Avatar + Title + Description */}
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
+                  {/* Project Profile Avatar - only the avatar overlaps into the banner */}
+                  <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-9 sm:-mt-11 md:-mt-12' : 'mt-3.5'} z-20`}>
+                    <div className="w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center">
+                      {project.avatar ? (
+                        <img
+                          src={project.avatar}
+                          alt={project.name}
+                          className="w-full h-full object-cover select-none"
+                        />
+                      ) : (
+                        <div className={`w-full h-full ${project.iconColor || 'bg-red-600'} text-white flex items-center justify-center font-black text-xl sm:text-2xl md:text-3xl select-none`}>
+                          {project.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Change Profile Avatar Overlay Button */}
+                    {!isViewer && onUpdateProject && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          avatarInputRef.current?.click();
+                        }}
+                        disabled={isUploadingAvatar}
+                        className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity cursor-pointer border-4 border-transparent"
+                        title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
+                      >
+                        <Camera className="w-5 h-5 mb-0.5" />
+                        <span>
+                          {isUploadingAvatar ? '...' : (language === 'id' ? 'Ubah' : 'Edit')}
+                        </span>
+                      </button>
                     )}
                   </div>
 
-                  {/* Change Avatar Overlay */}
-                  {!isViewer && onUpdateProject && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        avatarInputRef.current?.click();
-                      }}
-                      disabled={isUploadingAvatar}
-                      className="absolute inset-0 rounded-xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-semibold transition-opacity cursor-pointer"
-                      title={language === 'id' ? 'Ubah Foto Profil Proyek' : 'Change Project Photo'}
-                    >
-                      <Camera className="w-4 h-4 mb-0.5" />
-                      <span>{isUploadingAvatar ? '...' : 'Ubah'}</span>
-                    </button>
-                  )}
+                  {/* Project Titles & Category - Clean normal flow, never hits cover or photo */}
+                  <div className="pt-1 sm:pt-0 sm:pb-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
+                        {project.name}
+                      </h2>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                        {project.key}
+                      </span>
+                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                        {project.category}
+                      </span>
+                    </div>
+                    {project.description && (
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 max-w-xl line-clamp-2">
+                        {project.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Project Titles & Category */}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white tracking-tight truncate max-w-[200px] xs:max-w-xs sm:max-w-none">
-                      {project.name}
-                    </h2>
-                    <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-                      {project.key}
-                    </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
-                      {project.category}
+                {/* Right: Stats & Collapse Toggle */}
+                <div className="flex items-center gap-2.5 shrink-0 self-start md:self-end pt-2 md:pt-0 pb-1 text-xs">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium">
+                    <span>{language === 'id' ? 'Progres' : 'Progress'}:</span>
+                    <span className="font-bold text-neutral-900 dark:text-white">
+                      {doneCount}/{totalCount} ({progressPercent}%)
                     </span>
                   </div>
-                  {project.description && (
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 max-w-xl truncate">
-                      {project.description}
-                    </p>
+
+                  {!isViewer && onQuickAddTask && (
+                    <button
+                      onClick={() => onQuickAddTask('todo')}
+                      className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>{t('newTask')}</span>
+                    </button>
                   )}
-                </div>
-              </div>
 
-              {/* Right: Stats & Controls */}
-              <div className="flex items-center gap-2 shrink-0 text-xs pt-1 sm:pt-0">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#181a22] border border-neutral-200/80 dark:border-[#272a35] text-neutral-600 dark:text-neutral-300 text-[11px] font-medium">
-                  <span>Progres:</span>
-                  <span className="font-bold text-neutral-900 dark:text-white">
-                    {doneCount}/{totalCount} ({progressPercent}%)
-                  </span>
-                </div>
-
-                {!isViewer && onQuickAddTask && (
                   <button
-                    onClick={() => onQuickAddTask('todo')}
-                    className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer text-xs"
+                    type="button"
+                    onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
+                    title={isBannerCollapsed ? (language === 'id' ? 'Tampilkan Sampul' : 'Show Cover') : (language === 'id' ? 'Sembunyikan Sampul' : 'Hide Cover')}
+                    className="p-1.5 rounded-xl border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>{t('newTask')}</span>
+                    {isBannerCollapsed ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronUp className="w-4 h-4" />
+                    )}
                   </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
-                  title={isBannerCollapsed ? 'Tampilkan Sampul' : 'Sembunyikan Sampul'}
-                  className="p-1.5 rounded-lg border border-neutral-200 dark:border-[#272a35] text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
-                >
-                  {isBannerCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </button>
+                </div>
               </div>
             </div>
 
@@ -395,10 +404,45 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         </div>
       )}
 
+      {/* Mobile Column Navigation Switcher */}
+      <div className="sm:hidden px-3 pt-1 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileActiveColumn('all')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+            mobileActiveColumn === 'all'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
+          }`}
+        >
+          {language === 'id' ? 'Semua' : 'All'} ({tasks.length})
+        </button>
+        {columns.map((col) => {
+          const colTasks = tasksByColumn[col.id] || [];
+          return (
+            <button
+              key={col.id}
+              type="button"
+              onClick={() => setMobileActiveColumn(col.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                mobileActiveColumn === col.id
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
+              }`}
+            >
+              <span>{getColumnTitle(col.id, col.title)}</span>
+              <span className="font-mono text-[10px] opacity-80">({colTasks.length})</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* 3. Horizontal Kanban Columns */}
       <div className="flex-1 flex overflow-x-auto p-3 sm:p-5 md:p-6 pt-1">
         <div className="flex gap-4 sm:gap-5 h-full items-start min-w-max pb-4 flex-1">
-        {columns.map((column) => {
+        {columns
+          .filter((col) => mobileActiveColumn === 'all' || mobileActiveColumn === col.id)
+          .map((column) => {
           const columnTasks = tasksByColumn[column.id] || [];
           const isOver = dragOverColumnId === column.id;
           const displayTitle = getColumnTitle(column.id, column.title);
@@ -410,7 +454,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               onDragLeave={() => handleDragLeave(column.id)}
               onDrop={(e) => handleDrop(e, column.id)}
               onDragEnd={handleDragEnd}
-              className={`w-[84vw] max-w-[320px] sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-200 select-none shadow-xs animate-card-enter
+              className={`${
+                mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
+              } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-200 select-none shadow-xs animate-card-enter
                 ${
                   isOver
                     ? 'border-red-500 bg-red-500/8 dark:bg-red-950/20 shadow-md scale-[1.01]'

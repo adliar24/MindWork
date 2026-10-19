@@ -265,12 +265,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-[12px] leading-snug break-words">
-                                {user.name}
-                              </span>
+                            {/* Member Name */}
+                            <p className="font-semibold text-neutral-900 dark:text-neutral-100 text-[12px] leading-snug truncate">
+                              {user.name}
+                            </p>
+
+                            {/* Member Role (Always placed below the name) */}
+                            <div className="mt-1 flex items-center">
                               <span
-                                className={`text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 leading-none ${
+                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded leading-none ${
                                   isUserLeader
                                     ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                                     : isUserViewer
@@ -289,7 +292,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                   : memberRole}
                               </span>
                             </div>
-                            <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
+
+                            {/* Username or Email */}
+                            <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mt-1">
                               {user.username ? `@${user.username}` : user.email}
                             </p>
                           </div>

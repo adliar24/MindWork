@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Paperclip,
   Calendar,
   MessageSquare,
-  ChevronRight,
-  ChevronLeft,
   AlertCircle,
   CheckSquare,
   Link2,
@@ -14,9 +12,6 @@ import {
   Palette,
   Lightbulb,
   Clock,
-  ChevronDown,
-  ChevronUp,
-  Check,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
 import { formatDateLocale } from '../utils/fileHelpers';
@@ -39,15 +34,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   task,
   assignee,
   onClick,
-  onMoveColumn,
   isDragging,
   onDragStart,
   isReadOnly = false,
-  onToggleChecklist,
-  onToggleComplete,
 }) => {
-  const { language, t } = useLanguage();
-  const [isChecklistExpanded, setIsChecklistExpanded] = useState(false);
+  const { language } = useLanguage();
 
   // Find cover image attachment if any
   const coverAttachment = task.attachments.find(
@@ -65,38 +56,21 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
       ? Math.round((completedChecklistCount / totalChecklistCount) * 100)
       : 0;
 
-  // Due date status
-  const isDueSoon = React.useMemo(() => {
-    if (!task.dueDate) return false;
-    const due = new Date(task.dueDate).getTime();
-    const now = new Date('2026-10-15').getTime();
-    const diffDays = (due - now) / (1000 * 3600 * 24);
-    return diffDays >= 0 && diffDays <= 3;
-  }, [task.dueDate]);
-
+  // Due date status calculation
   const isOverdue = React.useMemo(() => {
     if (!task.dueDate) return false;
     const due = new Date(task.dueDate).getTime();
-    const now = new Date('2026-10-15').getTime();
+    const now = new Date().setHours(0, 0, 0, 0);
     return due < now && task.columnId !== 'done' && !task.isCompleted;
   }, [task.dueDate, task.columnId, task.isCompleted]);
 
-  // Next and prev columns for quick movement
-  const nextColumnMap: Record<ColumnId, ColumnId | null> = {
-    todo: 'in_progress',
-    in_progress: 'in_review',
-    in_review: 'done',
-    done: null,
-  };
-  const prevColumnMap: Record<ColumnId, ColumnId | null> = {
-    todo: null,
-    in_progress: 'todo',
-    in_review: 'in_progress',
-    done: 'in_review',
-  };
-
-  const nextCol = nextColumnMap[task.columnId];
-  const prevCol = prevColumnMap[task.columnId];
+  const isDueSoon = React.useMemo(() => {
+    if (!task.dueDate) return false;
+    const due = new Date(task.dueDate).getTime();
+    const now = new Date().setHours(0, 0, 0, 0);
+    const diffDays = (due - now) / (1000 * 3600 * 24);
+    return diffDays >= 0 && diffDays <= 3 && task.columnId !== 'done' && !task.isCompleted;
+  }, [task.dueDate, task.columnId, task.isCompleted]);
 
   // Task Type Badge details
   const getTaskTypeBadge = (type?: TaskType) => {
@@ -153,17 +127,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
         }
         bg-white dark:bg-[#161822] border-neutral-200/90 dark:border-[#262937] shadow-xs`}
     >
-      {/* 1. Subtle Color Header Cover */}
+      {/* 1. Subtle Color Header Strip */}
       {task.cardColor && !coverAttachment && (
         <div
-          className="w-full h-2 transition-opacity duration-200"
+          className="w-full h-1.5 transition-opacity duration-200"
           style={{ backgroundColor: task.cardColor }}
         />
       )}
 
       {/* 2. Cover / Thumbnail image if exists */}
       {coverAttachment && coverAttachment.url && (
-        <div className="relative w-full h-28 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
+        <div className="relative w-full h-24 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
           <img
             src={coverAttachment.url}
             alt={coverAttachment.name}
@@ -174,86 +148,56 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
       )}
 
       {/* Card Body */}
-      <div className="p-3.5 space-y-2.5">
-        {/* Top meta: Task Type badge, Priority icon & Tags */}
-        <div className="flex items-center justify-between gap-2">
+      <div className="p-3 sm:p-3.5 space-y-2">
+        {/* Top row: Priority & Type badge & Tags */}
+        <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Minimalist Priority Icon */}
+            {/* Priority Indicator */}
             {task.priority === 'Tinggi' ? (
               <span
                 title="Prioritas: Tinggi"
-                className="flex items-center justify-center w-5 h-5 rounded bg-red-500/15 text-red-600 dark:text-red-400"
+                className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
               >
-                <AlertCircle className="w-3.5 h-3.5 stroke-[2.2]" />
+                <AlertCircle className="w-3 h-3 stroke-[2.2]" />
+                <span>Tinggi</span>
               </span>
             ) : task.priority === 'Sedang' ? (
               <span
                 title="Prioritas: Sedang"
-                className="flex items-center justify-center w-5 h-5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400"
-              >
-                <span className="block w-2.5 h-0.5 bg-amber-500 rounded-full" />
-              </span>
+                className="w-2 h-2 rounded-full bg-amber-500"
+              />
             ) : (
               <span
                 title="Prioritas: Rendah"
-                className="flex items-center justify-center w-5 h-5 rounded bg-neutral-500/15 text-neutral-400"
-              >
-                <span className="block w-1.5 h-0.5 bg-neutral-400 rounded-full" />
-              </span>
+                className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600"
+              />
             )}
 
             {/* Task Type Badge */}
             {typeBadge && (
               <span
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${typeBadge.style}`}
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeBadge.style}`}
               >
                 <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
                 <span>{typeBadge.label}</span>
               </span>
             )}
 
-            {/* Tags / Labels */}
+            {/* Tags (Max 2) */}
             {task.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] px-2 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
+                className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
               >
                 {tag}
               </span>
             ))}
           </div>
-
-          {/* Quick status stepper controls */}
-          {!isReadOnly && onMoveColumn && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-neutral-100 dark:bg-[#202330] p-0.5 rounded border border-neutral-200/80 dark:border-[#2b2f3e]"
-            >
-              {prevCol && (
-                <button
-                  onClick={() => onMoveColumn(task.id, prevCol)}
-                  title="Pindah ke kolom sebelumnya"
-                  className="p-1 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-neutral-200 dark:hover:bg-[#363b4a] cursor-pointer"
-                >
-                  <ChevronLeft className="w-3 h-3" />
-                </button>
-              )}
-              {nextCol && (
-                <button
-                  onClick={() => onMoveColumn(task.id, nextCol)}
-                  title="Pindah ke kolom selanjutnya"
-                  className="p-1 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-neutral-200 dark:hover:bg-[#363b4a] cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Task Title */}
         <h3
-          className={`text-xs font-semibold leading-snug line-clamp-2 ${
+          className={`text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 ${
             task.isCompleted || task.columnId === 'done'
               ? 'line-through text-neutral-400 dark:text-neutral-500'
               : 'text-neutral-900 dark:text-white'
@@ -262,139 +206,58 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           {task.title}
         </h3>
 
-        {/* Description snippet */}
+        {/* Optional 1-line Description excerpt */}
         {task.description && (
-          <p className="text-[11px] text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-relaxed">
+          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 leading-normal">
             {task.description}
           </p>
         )}
 
-        {/* 3. Trello-style Expandable Subtask Checklist (Directly Checkable on Card) */}
-        {totalChecklistCount > 0 && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="pt-1 space-y-1.5"
-          >
-            {/* Header / Trigger */}
-            <div
-              onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
-              className={`flex items-center justify-between text-[11px] p-1.5 px-2 rounded-lg cursor-pointer transition-colors border ${
-                checklistPercent === 100
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                  : 'bg-neutral-100/70 dark:bg-[#1a1c24] text-neutral-600 dark:text-neutral-300 border-neutral-200/60 dark:border-neutral-800'
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span className="font-semibold text-[10px]">
-                  Checklist {completedChecklistCount}/{totalChecklistCount}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-mono">{checklistPercent}%</span>
-                {isChecklistExpanded ? (
-                  <ChevronUp className="w-3 h-3 text-neutral-400" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 text-neutral-400" />
-                )}
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  checklistPercent === 100 ? 'bg-emerald-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${checklistPercent}%` }}
-              />
-            </div>
-
-            {/* Expanded items list with 1-click checking */}
-            {isChecklistExpanded && (
-              <div className="space-y-1 pt-1 animate-in fade-in duration-150">
-                {(task.checklist || []).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onToggleChecklist?.(task.id, item.id)}
-                    className="w-full flex items-center gap-2 p-1 px-1.5 rounded-md hover:bg-neutral-100 dark:hover:bg-[#282b37] text-left text-[11px] transition-colors cursor-pointer group/item"
-                  >
-                    <div
-                      className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 border transition-all ${
-                        item.completed
-                          ? 'bg-emerald-600 border-emerald-600 text-white'
-                          : 'border-neutral-300 dark:border-neutral-600 group-hover/item:border-neutral-500'
-                      }`}
-                    >
-                      {item.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                    </div>
-                    <span
-                      className={`truncate flex-1 ${
-                        item.completed
-                          ? 'line-through text-neutral-400 dark:text-neutral-500'
-                          : 'text-neutral-800 dark:text-neutral-200'
-                      }`}
-                    >
-                      {item.title}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Card Footer: Metadata (Due date with checkbox, Estimate, Attachments, Comments) + Assignee */}
-        <div className="pt-2 border-t border-neutral-100 dark:border-[#2b2f3d] flex items-center justify-between gap-2">
+        {/* Card Footer: Metadata Indicators (Date, Checklist count, Attachments, Comments) + Assignee */}
+        <div className="pt-2 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-2">
           {/* Left indicators */}
-          <div className="flex items-center gap-2.5 text-[11px] text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
-            {/* Trello-like Due Date with Interactive Completion Toggle */}
+          <div className="flex items-center gap-2 text-[10px] text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
+            {/* Due Date Indicator */}
             {task.dueDate && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleComplete?.(task.id);
-                }}
-                title={
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${
                   task.isCompleted || task.columnId === 'done'
-                    ? 'Selesai! Klik untuk batalkan'
-                    : 'Klik untuk menandai selesai'
-                }
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-semibold transition-all cursor-pointer ${
-                  task.isCompleted || task.columnId === 'done'
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                     : isOverdue
-                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/25'
+                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30'
                     : isDueSoon
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
-                    : 'bg-neutral-100 dark:bg-[#282b37] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-[#323645]'
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700/60'
                 }`}
+                title={`Jatuh tempo: ${formatDateLocale(task.dueDate, language)}`}
               >
-                <div
-                  className={`w-3 h-3 rounded flex items-center justify-center border transition-all ${
-                    task.isCompleted || task.columnId === 'done'
-                      ? 'bg-emerald-600 border-emerald-600 text-white'
-                      : 'border-neutral-400'
-                  }`}
-                >
-                  {(task.isCompleted || task.columnId === 'done') && (
-                    <Check className="w-2 h-2 stroke-[3]" />
-                  )}
-                </div>
                 <Calendar className="w-3 h-3" />
                 <span>{formatDateLocale(task.dueDate, language)}</span>
-              </button>
+              </span>
             )}
 
-            {/* Time Estimate Badge */}
+            {/* Checklist Count Pill */}
+            {totalChecklistCount > 0 && (
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                  checklistPercent === 100
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border-neutral-200/60 dark:border-neutral-800'
+                }`}
+                title={`Sub-tugas: ${completedChecklistCount}/${totalChecklistCount} selesai`}
+              >
+                <CheckSquare className="w-3 h-3" />
+                <span>{completedChecklistCount}/{totalChecklistCount}</span>
+              </span>
+            )}
+
+            {/* Time Estimate */}
             {task.estimate && (
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-[#2a2e3a] border border-neutral-200/60 dark:border-neutral-700/60"
+                className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1 py-0.5 rounded"
                 title={`Estimasi: ${task.estimate}`}
               >
-                <Clock className="w-3 h-3 text-neutral-400" />
+                <Clock className="w-3 h-3" />
                 <span>{task.estimate}</span>
               </span>
             )}
@@ -402,7 +265,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Attachment indicator */}
             {attachmentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+                className="flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
                 title={`${attachmentCount} berkas`}
               >
                 <Paperclip className="w-3 h-3" />
@@ -413,8 +276,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* External Links indicator */}
             {linkCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
-                title={`${linkCount} tautan hasil`}
+                className="flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+                title={`${linkCount} tautan`}
               >
                 <Link2 className="w-3 h-3" />
                 <span>{linkCount}</span>
@@ -424,7 +287,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Comments indicator */}
             {commentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400"
+                className="flex items-center gap-1 text-neutral-400"
                 title={`${commentCount} komentar`}
               >
                 <MessageSquare className="w-3 h-3" />
@@ -439,8 +302,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               avatar={assignee.avatar}
               name={assignee.name}
               color={assignee.color}
-              className="w-6 h-6 text-[10px] shadow-xs shrink-0"
-              title={`Ditugaskan kepada: ${assignee.name}`}
+              className="w-5 h-5 sm:w-6 sm:h-6 text-[10px] shadow-xs shrink-0"
+              title={`Ditugaskan: ${assignee.name}`}
             />
           )}
         </div>
