@@ -469,29 +469,49 @@ export default function App() {
     };
   }, [cloudStatus.tableReady]);
 
-  // Persist state updates
+  // Persist state updates with debounce to prevent UI freezes on large payloads (Base64 images, many cards)
   useEffect(() => {
-    try {
-      localStorage.setItem('vermilion_tasks', JSON.stringify(tasks));
-    } catch (e) {
-      console.warn('LocalStorage tasks quota warning:', e);
-    }
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('vermilion_tasks', JSON.stringify(tasks));
+      } catch (e) {
+        console.warn('LocalStorage tasks quota warning:', e);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
   }, [tasks]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('vermilion_projects', JSON.stringify(projects));
-    } catch (e) {
-      console.warn('LocalStorage projects quota warning:', e);
-    }
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('vermilion_projects', JSON.stringify(projects));
+      } catch (e) {
+        console.warn('LocalStorage projects quota warning:', e);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
   }, [projects]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('vermilion_users', JSON.stringify(users));
-    } catch (e) {
-      console.warn('LocalStorage users quota warning:', e);
-    }
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('vermilion_board_lists', JSON.stringify(boardLists));
+      } catch (e) {
+        console.warn('LocalStorage board lists quota warning:', e);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [boardLists]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('vermilion_users', JSON.stringify(users));
+      } catch (e) {
+        console.warn('LocalStorage users quota warning:', e);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
   }, [users]);
 
   useEffect(() => {
@@ -598,19 +618,23 @@ export default function App() {
 
   // Dynamic lists/columns for current active project: automatically ensure default starter lists (To Do, Doing, Done)
   useEffect(() => {
-    if (!activeProject) return;
-    const projectLists = boardLists.filter((l) => l.projectId === activeProject.id);
-    if (projectLists.length === 0) {
+    if (!activeProject?.id) return;
+    const projId = activeProject.id;
+    setBoardLists((prev) => {
+      const hasLists = prev.some((l) => l.projectId === projId);
+      if (hasLists) return prev;
       const defaultCols: Column[] = [
-        { id: `list-${activeProject.id}-todo`, projectId: activeProject.id, title: 'To Do', order: 0 },
-        { id: `list-${activeProject.id}-doing`, projectId: activeProject.id, title: 'Doing', order: 1 },
-        { id: `list-${activeProject.id}-done`, projectId: activeProject.id, title: 'Done', order: 2 },
+        { id: `list-${projId}-todo`, projectId: projId, title: 'To Do', order: 0 },
+        { id: `list-${projId}-doing`, projectId: projId, title: 'Doing', order: 1 },
+        { id: `list-${projId}-done`, projectId: projId, title: 'Done', order: 2 },
       ];
-      setBoardLists((prev) => [...prev, ...defaultCols]);
-      defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
-      syncProjectListsFallback(activeProject.id, defaultCols).catch(() => {});
-    }
-  }, [activeProject?.id, boardLists]);
+      setTimeout(() => {
+        defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
+        syncProjectListsFallback(projId, defaultCols).catch(() => {});
+      }, 0);
+      return [...prev, ...defaultCols];
+    });
+  }, [activeProject?.id]);
 
   // Task detail modal data
   const selectedTask = useMemo(() => {
@@ -668,7 +692,7 @@ export default function App() {
   const handleMoveTask = (taskId: string, targetColumn: ColumnId) => {
     let movedTask: Task | null = null;
     setTasks((prev) => {
-      const next = prev.map((t) => {
+      return prev.map((t) => {
         if (t.id === taskId && t.columnId !== targetColumn) {
           const targetCol = boardLists.find((l) => l.id === targetColumn);
           const colTitle = targetCol ? targetCol.title : targetColumn;
@@ -687,12 +711,6 @@ export default function App() {
         }
         return t;
       });
-      try {
-        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
-      } catch (e) {
-        console.warn('LocalStorage move task warning:', e);
-      }
-      return next;
     });
 
     if (movedTask && cloudStatus.tableReady) {
@@ -701,30 +719,14 @@ export default function App() {
   };
 
   const handleUpdateTask = (updatedTask: Task) => {
-    setTasks((prev) => {
-      const next = prev.map((t) => (t.id === updatedTask.id ? updatedTask : t));
-      try {
-        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
-      } catch (e) {
-        console.warn('LocalStorage update task warning:', e);
-      }
-      return next;
-    });
+    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
     if (cloudStatus.tableReady) {
       saveCloudTask(updatedTask);
     }
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks((prev) => {
-      const next = prev.filter((t) => t.id !== taskId);
-      try {
-        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
-      } catch (e) {
-        console.warn('LocalStorage delete task warning:', e);
-      }
-      return next;
-    });
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
     setSelectedTaskId(null);
     if (cloudStatus.tableReady) {
       deleteCloudTask(taskId);
@@ -732,15 +734,7 @@ export default function App() {
   };
 
   const handleCreateTask = (newTask: Task) => {
-    setTasks((prev) => {
-      const next = [newTask, ...prev];
-      try {
-        localStorage.setItem('vermilion_tasks', JSON.stringify(next));
-      } catch (e) {
-        console.warn('LocalStorage create task warning:', e);
-      }
-      return next;
-    });
+    setTasks((prev) => [newTask, ...prev]);
     if (cloudStatus.tableReady) {
       saveCloudTask(newTask);
     }
@@ -795,15 +789,7 @@ export default function App() {
       memberIds: currentUser.id ? [currentUser.id] : [],
       memberRoles: currentUser.id ? { [currentUser.id]: 'leader' as const } : {},
     };
-    setProjects((prev) => {
-      const next = [...prev, projectWithCreator];
-      try {
-        localStorage.setItem('vermilion_projects', JSON.stringify(next));
-      } catch (err) {
-        console.warn('LocalStorage save project error:', err);
-      }
-      return next;
-    });
+    setProjects((prev) => [...prev, projectWithCreator]);
 
     // Automatically create default starter lists: To Do, Doing, Done (matching Trello)
     const defaultStarterLists: Column[] = [
@@ -824,15 +810,7 @@ export default function App() {
   };
 
   const handleUpdateProject = (updatedProject: Project) => {
-    setProjects((prev) => {
-      const next = prev.map((p) => (p.id === updatedProject.id ? updatedProject : p));
-      try {
-        localStorage.setItem('vermilion_projects', JSON.stringify(next));
-      } catch (err) {
-        console.warn('LocalStorage save project error:', err);
-      }
-      return next;
-    });
+    setProjects((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p)));
     // Unconditionally sync to Supabase so covers & avatars are immediately persistent
     saveCloudProject(updatedProject).catch((err) => {
       console.warn('Update project to Supabase error:', err);
@@ -848,15 +826,7 @@ export default function App() {
   };
 
   const handleDeleteProject = (projectId: string) => {
-    setProjects((prev) => {
-      const next = prev.filter((p) => p.id !== projectId);
-      try {
-        localStorage.setItem('vermilion_projects', JSON.stringify(next));
-      } catch (err) {
-        console.warn('LocalStorage save project error:', err);
-      }
-      return next;
-    });
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
     setBoardLists((prev) => prev.filter((l) => l.projectId !== projectId));
     setTasks((prev) => prev.filter((t) => t.projectId !== projectId));
     if (activeProjectId === projectId) {

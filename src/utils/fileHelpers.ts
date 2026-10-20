@@ -50,11 +50,30 @@ export function formatDateIndonesian(dateStr: string): string {
 }
 
 export function triggerDownload(filename: string, content?: string) {
-  // Safe in-browser download simulator or blob download
-  const blob = content && content.startsWith('data:')
-    ? dataURLtoBlob(content)
-    : new Blob([`Contoh konten berkas: ${filename}\nDiunduh dari MindWork Kanban System`], { type: 'text/plain;charset=utf-8' });
-
+  if (!content) return;
+  if (content.startsWith('data:')) {
+    const blob = dataURLtoBlob(content);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return;
+  }
+  if (content.startsWith('blob:') || content.startsWith('http')) {
+    const a = document.createElement('a');
+    a.href = content;
+    a.download = filename;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+  const blob = new Blob([`Contoh konten berkas: ${filename}\nDiunduh dari MindWork Kanban System`], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

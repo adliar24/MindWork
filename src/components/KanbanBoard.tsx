@@ -12,11 +12,13 @@ import {
   X,
   Check,
   FolderKanban,
+  Download,
 } from 'lucide-react';
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
 import { ConfirmModal } from './ConfirmModal';
+import { triggerDownload } from '../utils/fileHelpers';
 
 interface KanbanBoardProps {
   project?: Project | null;
@@ -777,6 +779,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           isReadOnly={isViewer}
                           onToggleChecklist={handleToggleChecklist}
                           onToggleComplete={handleToggleComplete}
+                          onImageClick={(url, title) => {
+                            setImageZoom({
+                              isOpen: true,
+                              src: url,
+                              title: title || task.title,
+                              subtitle: task.title,
+                            });
+                          }}
                         />
                       ))}
 
@@ -985,13 +995,24 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={() => setImageZoom(null)}
-                className="p-1.5 rounded-xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                title={language === 'id' ? 'Tutup (Esc)' : 'Close (Esc)'}
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => triggerDownload(imageZoom.title || 'gambar.png', imageZoom.src)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                  title={language === 'id' ? 'Unduh Gambar' : 'Download Image'}
+                >
+                  <Download className="w-3.5 h-3.5 text-neutral-300" />
+                  <span>{language === 'id' ? 'Unduh Gambar' : 'Download'}</span>
+                </button>
+                <button
+                  onClick={() => setImageZoom(null)}
+                  className="p-1.5 rounded-xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                  title={language === 'id' ? 'Tutup (Esc)' : 'Close (Esc)'}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Tampilan Gambar Zoom */}

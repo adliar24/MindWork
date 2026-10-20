@@ -1096,13 +1096,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
                 {/* Checklist Items List */}
                 <div className="space-y-1.5">
-                  {(!task.checklist || task.checklist.length === 0) && (
-                    <p className="text-[11px] text-neutral-400 dark:text-neutral-500 italic pb-0.5">
-                      {language === 'id'
-                        ? 'Belum ada sub-tugas. Checklist bersifat opsional (kartu bisa berupa ide, konsep, aset, atau catatan).'
-                        : 'No sub-tasks yet. Checklist is optional (card can be an idea, concept, asset, or note).'}
-                    </p>
-                  )}
                   {(task.checklist || []).map((item) => (
                     <div
                       key={item.id}
@@ -1185,29 +1178,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => resultFileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{language === 'id' ? '+ Hasil Kerja' : '+ Deliverable'}</span>
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-[#2b2f3e] hover:bg-neutral-100 dark:hover:bg-[#1d202c] text-neutral-700 dark:text-neutral-300 text-xs font-medium transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold shadow-xs hover:opacity-90 transition-all cursor-pointer"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      <span>{language === 'id' ? 'Unggah File' : 'Upload'}</span>
+                      <span>{language === 'id' ? 'Unggah Berkas' : 'Upload File'}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setIsAddingLink(!isAddingLink)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-[#2b2f3e] hover:bg-neutral-100 dark:hover:bg-[#1d202c] text-neutral-700 dark:text-neutral-300 text-xs font-medium transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-[#2b2f3e] hover:bg-neutral-100 dark:hover:bg-[#1d202c] text-neutral-700 dark:text-neutral-300 text-xs font-medium transition-all cursor-pointer"
                     >
                       <Link2 className="w-3.5 h-3.5" />
-                      <span>{isAddingLink ? (language === 'id' ? 'Batal' : 'Cancel') : '+ Tautan'}</span>
+                      <span>{isAddingLink ? (language === 'id' ? 'Batal' : 'Cancel') : (language === 'id' ? '+ Tautan' : '+ Link')}</span>
                     </button>
                   </div>
                 </div>
@@ -1228,8 +1212,8 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   className="hidden"
                 />
 
-                {/* Filter Tabs if multiple items */}
-                {(task.attachments.length > 0 || externalLinksList.length > 0) && (
+                {/* Filter Tabs only if multiple distinct categories exist */}
+                {((workDeliverables.length > 0 && regularAttachments.length > 0) || (task.attachments.length > 1 && externalLinksList.length > 0)) && (
                   <div className="flex items-center gap-1.5 text-[11px] pt-1">
                     <button
                       type="button"
@@ -1615,22 +1599,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   )}
                 </div>
               </div>
-
-              {/* Trello bottom pill indicators (Screenshot 2 bottom: Power-ups, Automations, Comments) */}
-              <div className="pt-4 border-t border-neutral-200/60 dark:border-[#222532] flex items-center justify-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#161822] border border-neutral-200/60 dark:border-[#242838]">
-                  <Zap className="w-3 h-3 text-amber-500" />
-                  <span>Power-ups</span>
-                </span>
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#161822] border border-neutral-200/60 dark:border-[#242838]">
-                  <Sparkles className="w-3 h-3 text-blue-500" />
-                  <span>Automations</span>
-                </span>
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold">
-                  <MessageSquare className="w-3 h-3" />
-                  <span>Comments</span>
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -1691,6 +1659,44 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         itemName={linkToDelete ? `Tautan: ${linkToDelete.title}` : undefined}
         confirmText={language === 'id' ? 'Hapus Tautan' : 'Delete Link'}
       />
+
+      {/* Lightbox Preview for Image Attachments */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute -top-12 right-0 flex items-center gap-2 z-10">
+              <button
+                type="button"
+                onClick={() => triggerDownload('lampiran-gambar.png', previewImage)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md text-xs font-medium transition-colors cursor-pointer"
+                title="Unduh Gambar"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Unduh</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <img
+              src={previewImage}
+              alt="Lampiran Gambar"
+              className="max-w-full max-h-[85vh] rounded-xl object-contain shadow-2xl border border-white/10"
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

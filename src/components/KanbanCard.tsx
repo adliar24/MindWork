@@ -21,6 +21,7 @@ import {
   Archive,
   Bookmark,
   FolderGit2,
+  ZoomIn,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
 import {
@@ -42,6 +43,7 @@ interface KanbanCardProps {
   isReadOnly?: boolean;
   onToggleChecklist?: (taskId: string, itemId: string) => void;
   onToggleComplete?: (taskId: string) => void;
+  onImageClick?: (url: string, title: string) => void;
 }
 
 export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
@@ -52,6 +54,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   onDragStart,
   isReadOnly = false,
   onToggleComplete,
+  onImageClick,
 }) => {
   const { language } = useLanguage();
 
@@ -185,14 +188,29 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
 
       {/* 2. Cover / Thumbnail image if exists */}
       {coverAttachment && coverAttachment.url && (
-        <div className="relative w-full h-32 sm:h-36 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onImageClick) {
+              onImageClick(coverAttachment.url!, coverAttachment.name || task.title);
+            }
+          }}
+          title={language === 'id' ? 'Klik untuk melihat & unduh gambar penuh' : 'Click to view & download full image'}
+          className="group/img relative w-full h-32 sm:h-36 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937] cursor-pointer"
+        >
           <img
             src={coverAttachment.url}
             alt={coverAttachment.name}
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
           />
+          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover/img:opacity-100">
+            <span className="bg-black/75 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-md backdrop-blur-xs flex items-center gap-1.5">
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>{language === 'id' ? 'Lihat Penuh' : 'View Full'}</span>
+            </span>
+          </div>
         </div>
       )}
 
