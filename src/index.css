@@ -42,9 +42,40 @@
     cursor: not-allowed;
   }
 
-  /* Universal lightweight micro-transitions */
-  button, a {
-    transition: color 100ms ease, background-color 100ms ease, border-color 100ms ease;
+  /* Universal butter-smooth theme transitions for dark & light mode */
+  html,
+  body,
+  header,
+  nav,
+  aside,
+  main,
+  footer,
+  section,
+  article,
+  div,
+  span,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  label,
+  button,
+  input,
+  select,
+  textarea {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 280ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Exempt draggable elements and inputs that need instant response */
+  [draggable="true"],
+  .no-theme-transition,
+  input[type="range"] {
+    transition-property: none !important;
   }
 }
 

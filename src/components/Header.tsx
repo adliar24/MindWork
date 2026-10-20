@@ -260,13 +260,15 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onToggleTheme}
             title={theme === 'dark' ? t('themeDark') : t('themeLight')}
-            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-neutral-200 dark:border-[#272a35] bg-neutral-100 dark:bg-[#181a22] text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-all shrink-0 cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-neutral-200 dark:border-[#272a35] bg-neutral-100 dark:bg-[#181a22] text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-all shrink-0 cursor-pointer active:scale-90"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-neutral-600" />
-            )}
+            <div className={`transition-transform duration-300 ease-out ${theme === 'dark' ? 'rotate-0' : 'rotate-90'}`}>
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-neutral-600" />
+              )}
+            </div>
           </button>
 
           {/* User Profile Avatar Pill */}

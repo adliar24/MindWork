@@ -212,13 +212,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <button
           onClick={onToggleTheme}
           title={theme === 'dark' ? t('themeDark') : t('themeLight')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#14161d] text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#14161d] text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer active:scale-90"
         >
-          {theme === 'dark' ? (
-            <Sun className="w-3.5 h-3.5 text-amber-400" />
-          ) : (
-            <Moon className="w-3.5 h-3.5 text-neutral-600" />
-          )}
+          <div className={`transition-transform duration-300 ease-out ${theme === 'dark' ? 'rotate-0' : 'rotate-90'}`}>
+            {theme === 'dark' ? (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-neutral-600" />
+            )}
+          </div>
         </button>
       </header>
 

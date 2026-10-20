@@ -1020,7 +1020,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ease-in-out
       ${
         theme === 'dark'
           ? 'bg-[#090a0d] text-neutral-100 dark'

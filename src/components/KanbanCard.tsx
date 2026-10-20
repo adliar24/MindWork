@@ -388,8 +388,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                           }}
                           className={`text-xs select-none cursor-pointer leading-snug break-words ${
                             item.completed
-                              ? 'line-through text-neutral-400 dark:text-neutral-500'
-                              : 'text-neutral-900 dark:text-neutral-100 font-medium'
+                              ? 'text-neutral-600 dark:text-neutral-300 font-medium'
+                              : 'text-neutral-900 dark:text-neutral-100 font-semibold'
                           }`}
                         >
                           {item.title}

@@ -1241,7 +1241,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                             <span
                               className={`truncate transition-all ${
                                 item.completed
-                                  ? 'text-neutral-400 dark:text-neutral-500 line-through font-medium'
+                                  ? 'text-neutral-600 dark:text-neutral-300 font-semibold'
                                   : 'text-neutral-900 dark:text-neutral-100 font-semibold'
                               }`}
                             >
