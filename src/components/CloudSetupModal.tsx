@@ -67,11 +67,7 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
   const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 180);
+    onClose();
   };
 
   const handleSyncAllLocal = async () => {
@@ -113,15 +109,11 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 overflow-y-auto cursor-pointer ${
-        isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-      }`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 overflow-y-auto cursor-pointer animate-in fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-lg rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[92vh] cursor-default ${
-          isClosing ? 'animate-modal-out' : 'animate-modal-in'
-        }`}
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[92vh] cursor-default animate-modal-in"
       >
         {/* Modal Header */}
         <div className="p-4 px-5 sm:px-6 border-b border-neutral-200 dark:border-[#272a35] flex items-center justify-between bg-neutral-50 dark:bg-[#161820] shrink-0">

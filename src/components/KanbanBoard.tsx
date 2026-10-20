@@ -641,7 +641,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     onDragEnd={handleDragEnd}
                     className={`${
                       mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
-                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-200 select-none shadow-xs animate-card-enter relative
+                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-150 select-none shadow-xs relative
                       ${
                         isOver
                           ? 'border-red-500 bg-red-500/8 dark:bg-red-950/20 shadow-md scale-[1.01]'

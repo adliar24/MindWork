@@ -147,13 +147,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setEstimate(task.estimate || '');
   }, [task.id]);
 
-  // Handle closing with smooth animation
+  // Handle closing immediately without artificial lag
   const handleClose = () => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 160);
+    onClose();
   };
 
   // Keyboard shortcut: Escape to close
@@ -515,15 +511,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       {/* Main Task Detail Modal Backdrop */}
       <div
         onClick={handleClose}
-        className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/70 overflow-y-auto cursor-pointer ${
-          isClosing ? 'animate-backdrop-out' : 'animate-in fade-in'
-        }`}
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/70 overflow-y-auto cursor-pointer animate-in fade-in"
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/90 dark:border-[#262936] shadow-2xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default ${
-            isClosing ? 'animate-modal-out' : 'animate-modal-in'
-          }`}
+          className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/90 dark:border-[#262936] shadow-xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default animate-modal-in"
         >
           {/* Subtle Color Accent Strip (if customized) */}
           {cardColor && (

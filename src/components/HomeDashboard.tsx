@@ -316,7 +316,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
               {/* Add Project Card at end of grid */}
               <div
                 onClick={onOpenNewProject}
-                className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 bg-transparent hover:bg-neutral-50/50 dark:hover:bg-[#14161f]/50 cursor-pointer text-center min-h-[220px] project-card-item animate-card-enter"
+                className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 bg-transparent hover:bg-neutral-50/50 dark:hover:bg-[#14161f]/50 cursor-pointer text-center min-h-[220px] project-card-item"
               >
                 <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#1a1c24] text-neutral-500 dark:text-neutral-400 flex items-center justify-center mb-2.5 transition-transform group-hover:scale-110">
                   <Plus className="w-5 h-5" />
