@@ -265,18 +265,19 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
         )}
 
         {/* Header */}
+        {/* Header */}
         <div className="p-4 px-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-[14px] bg-red-600 text-white flex items-center justify-center font-bold">
               <Plus className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+            <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white">
               {t('newTaskModalTitle')}
             </h3>
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors cursor-pointer"
+            className="p-1.5 text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -286,7 +287,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
           {/* Judul Tugas */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
               {t('titleLabel')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -295,13 +296,13 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('titlePlaceholder')}
-              className="w-full h-9 px-3 text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white transition-colors"
+              className="w-full h-10 px-3.5 text-xs sm:text-sm rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium transition-colors"
             />
           </div>
 
           {/* Deskripsi */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
               {t('descLabel')}
             </label>
             <textarea
@@ -309,20 +310,20 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t('descPlaceholder')}
-              className="w-full p-2.5 text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white resize-none transition-colors"
+              className="w-full p-3 text-xs sm:text-sm rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium resize-none transition-colors"
             />
           </div>
 
           {/* Status & Prioritas */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {t('statusLabel')}
               </label>
               <select
                 value={columnId}
                 onChange={(e) => setColumnId(e.target.value as ColumnId)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+                className="w-full h-10 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm"
               >
                 {columns.map((col) => (
                   <option key={col.id} value={col.id}>
@@ -333,13 +334,13 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {t('priorityLabel')}
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+                className="w-full h-10 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm"
               >
                 <option value="Tinggi">{t('priorityHigh')}</option>
                 <option value="Sedang">{t('priorityMedium')}</option>
@@ -349,15 +350,15 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           </div>
 
           {/* Jenis Tugas & Estimasi Waktu (Trello style) */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {language === 'id' ? 'Jenis Tugas' : 'Task Type'}
               </label>
               <select
                 value={taskType}
                 onChange={(e) => setTaskType(e.target.value as TaskType)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+                className="w-full h-10 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm"
               >
                 <option value="task">{language === 'id' ? '📋 Tugas Umum' : '📋 General Task'}</option>
                 <option value="concept">{language === 'id' ? '💡 Konsep / Ide' : '💡 Concept / Idea'}</option>
@@ -372,17 +373,17 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {language === 'id' ? 'Estimasi Waktu' : 'Time Estimate'}
               </label>
               <div className="relative">
-                <Clock className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Clock className="w-4 h-4 text-neutral-500 dark:text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={estimate}
                   onChange={(e) => setEstimate(e.target.value)}
                   placeholder={language === 'id' ? 'misal: 2 hari, 4 jam' : 'e.g. 2d, 4h'}
-                  className="w-full h-9 pl-8 pr-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white text-xs placeholder:text-neutral-400"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
                 />
               </div>
             </div>
@@ -390,10 +391,10 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
 
           {/* Warna Sampul Kartu (Trello Card Color) */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+            <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
               {language === 'id' ? 'Warna Sampul Kartu (Opsional)' : 'Card Cover Color (Optional)'}
             </label>
-            <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5 p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+            <div className="grid grid-cols-5 sm:grid-cols-9 gap-2 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700">
               {[
                 { label: 'Polos', value: '', bg: 'bg-neutral-300 dark:bg-neutral-600' },
                 { label: 'Emerald', value: '#10b981', bg: 'bg-emerald-500' },
@@ -410,12 +411,12 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                   type="button"
                   onClick={() => setCardColor(c.value)}
                   title={c.label}
-                  className={`h-6 rounded-md ${c.bg} transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${
-                    cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-neutral-900' : 'opacity-80 hover:opacity-100'
+                  className={`h-7 rounded-lg ${c.bg} transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${
+                    cardColor === c.value ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-neutral-900' : 'opacity-85 hover:opacity-100'
                   }`}
                 >
                   {cardColor === c.value && (
-                    <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow" />
+                    <Check className="w-4 h-4 text-white stroke-[3] drop-shadow" />
                   )}
                 </button>
               ))}
@@ -423,15 +424,15 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           </div>
 
           {/* Assignee & Tenggat */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {t('assigneeLabel')}
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white truncate"
+                className="w-full h-10 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm truncate"
               >
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -442,21 +443,21 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
                 {t('dueDateLabel')}
               </label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+                className="w-full h-10 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium text-xs sm:text-sm"
               />
             </div>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
               {t('tagsLabel')}
             </label>
             <input
@@ -464,43 +465,43 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder={t('tagsPlaceholder')}
-              className="w-full h-9 px-3 text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
+              className="w-full h-10 px-3.5 text-xs sm:text-sm rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium"
             />
           </div>
 
           {/* Checklist / Subtugas (Opsional) */}
-          <div className="space-y-2 pt-1 border-t border-neutral-100 dark:border-neutral-800">
-            <div className="flex items-center justify-between text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+          <div className="space-y-2 pt-1 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200">
               <span className="flex items-center gap-1.5">
-                <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
+                <CheckSquare className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                 <span>{language === 'id' ? 'Checklist / Subtugas (Opsional)' : 'Subtasks / Checklist (Optional)'}</span>
               </span>
               {checklistItems.length > 0 && (
-                <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                <span className="text-xs font-mono text-neutral-600 dark:text-neutral-400 font-bold">
                   {checklistItems.length} {language === 'id' ? 'subtugas' : 'subtasks'}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
               {language === 'id'
                 ? 'Checklist bersifat opsional. Kosongkan jika kartu berupa ide, konsep, aset, atau catatan.'
                 : 'Checklist is optional. Leave empty if this card is an idea, concept, asset, or note.'}
             </p>
 
             {checklistItems.length > 0 && (
-              <div className="space-y-1 max-h-32 overflow-y-auto">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {checklistItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-700/60 text-xs"
+                    className="flex items-center justify-between p-2 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-xs sm:text-sm"
                   >
-                    <span className="truncate text-neutral-800 dark:text-neutral-200">{item.title}</span>
+                    <span className="truncate text-neutral-900 dark:text-neutral-100 font-medium">{item.title}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveSubtask(item.id)}
                       className="p-1 text-neutral-400 hover:text-red-500 rounded cursor-pointer"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -519,13 +520,13 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                   }
                 }}
                 placeholder={language === 'id' ? 'Tambah subtugas (misal: Buat storyboard)...' : 'Add subtask...'}
-                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
+                className="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium placeholder-neutral-400 dark:placeholder-neutral-500"
               />
               <button
                 type="button"
                 onClick={() => handleAddSubtask()}
                 disabled={!newSubtaskTitle.trim()}
-                className="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
+                className="px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs sm:text-sm font-bold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
               >
                 {language === 'id' ? '+ Tambah' : '+ Add'}
               </button>
@@ -535,20 +536,20 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           {/* Lampiran */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+              <label className="text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200">
                 {t('attachments')}
               </label>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setIsAddingCloudLink(!isAddingCloudLink)}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md border transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                     isAddingCloudLink
                       ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                      : 'text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      : 'text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                   }`}
                 >
-                  <Cloud className="w-3 h-3 text-blue-500" />
+                  <Cloud className="w-3.5 h-3.5 text-blue-500" />
                   <span>+ {t('embedCloudLink')}</span>
                 </button>
               </div>
@@ -556,11 +557,11 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
 
             {/* Cloud Link Input Form */}
             {isAddingCloudLink && (
-              <div className="p-2.5 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/20 space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-medium text-blue-800 dark:text-blue-300">
+              <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-blue-950/20 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-300">
                   <span>{t('embedCloudTitle')}</span>
                   {cloudUrl && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/80">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/80 font-bold">
                       {detectCloudService(cloudUrl).name}
                     </span>
                   )}
@@ -570,16 +571,16 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                   value={cloudUrl}
                   onChange={(e) => setCloudUrl(e.target.value)}
                   placeholder={t('cloudUrlPlaceholder')}
-                  className="w-full px-2.5 py-1 text-xs rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-1.5 text-xs sm:text-sm rounded-xl bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-blue-500 font-medium"
                 />
                 <input
                   type="text"
                   value={cloudName}
                   onChange={(e) => setCloudName(e.target.value)}
                   placeholder={t('cloudNamePlaceholder')}
-                  className="w-full px-2.5 py-1 text-xs rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-1.5 text-xs sm:text-sm rounded-xl bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-blue-500 font-medium"
                 />
-                <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                <div className="flex items-center justify-end gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -587,7 +588,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                       setCloudUrl('');
                       setCloudName('');
                     }}
-                    className="px-2 py-0.5 text-[11px] text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer"
+                    className="px-3 py-1 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white cursor-pointer"
                   >
                     {t('cancel')}
                   </button>
@@ -595,7 +596,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                     type="button"
                     onClick={handleAddCloudLink}
                     disabled={!cloudUrl.trim()}
-                    className="px-2.5 py-0.5 text-[11px] font-medium rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 cursor-pointer"
+                    className="px-3.5 py-1 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 cursor-pointer"
                   >
                     {t('embedAction')}
                   </button>
@@ -614,9 +615,9 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2 px-3 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg text-xs text-neutral-500 hover:text-red-600 hover:border-red-500/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="w-full py-2.5 px-3 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl text-xs sm:text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-red-600 hover:border-red-500/50 flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
-              <UploadCloud className="w-4 h-4 text-neutral-400" />
+              <UploadCloud className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
               <span>
                 {attachments.length > 0
                   ? `+ (${attachments.length})`
@@ -625,23 +626,23 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             </button>
 
             {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1.5">
+              <div className="flex flex-wrap gap-2 pt-1.5">
                 {attachments.map((att) => (
                   <span
                     key={att.id}
-                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] border ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border ${
                       att.isCloudLink
                         ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-700'
                     }`}
                   >
                     {att.isCloudLink ? (
-                      <Cloud className="w-3 h-3 text-blue-500" />
+                      <Cloud className="w-3.5 h-3.5 text-blue-500" />
                     ) : (
-                      <Paperclip className="w-3 h-3 text-neutral-400" />
+                      <Paperclip className="w-3.5 h-3.5 text-neutral-400" />
                     )}
-                    <span className="truncate max-w-[140px] font-medium">{att.name}</span>
-                    <span className="text-[9px] opacity-75 font-mono">
+                    <span className="truncate max-w-[140px] font-semibold">{att.name}</span>
+                    <span className="text-[10px] opacity-75 font-mono">
                       {att.isCloudLink ? `(${att.cloudProvider || 'Cloud'})` : `(${att.size})`}
                     </span>
                     <button
@@ -658,19 +659,19 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-neutral-200 dark:border-neutral-800">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-full text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-full text-xs font-semibold bg-red-600 hover:bg-red-700 active:scale-95 text-white shadow-xs shadow-red-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-red-600 hover:bg-red-700 active:scale-95 text-white shadow-md shadow-red-600/30 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>{t('saveTaskBtn')}</span>
             </button>
           </div>

@@ -98,10 +98,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <Layers className="w-4 h-4 stroke-[2.2]" />
               </div>
               <div>
-                <span className="font-bold tracking-tight text-neutral-950 dark:text-white text-sm">
+                <span className="font-extrabold tracking-tight text-neutral-950 dark:text-white text-sm sm:text-base">
                   MINDWORK
                 </span>
-                <p className="text-[10px] text-neutral-400 font-medium leading-none">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold leading-none">
                   Team Workspace
                 </p>
               </div>
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               <button
                 type="button"
                 onClick={onCloseMobile}
-                className="lg:hidden p-1.5 text-neutral-400 hover:text-neutral-100 rounded-md cursor-pointer"
+                className="lg:hidden p-1.5 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white rounded-md cursor-pointer"
                 aria-label="Tutup Menu"
               >
                 <X className="w-5 h-5" />
@@ -141,10 +141,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 onSelectProject('');
                 onCloseMobile();
               }}
-              className={`w-full group text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2.5 cursor-pointer ${
+              className={`w-full group text-left px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
                 !activeProjectId
                   ? 'bg-red-600 text-white shadow-xs font-bold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-[#181a22] hover:text-neutral-900 dark:hover:text-white'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-[#181a22] hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               <Home className="w-4 h-4 shrink-0" />
@@ -155,18 +155,18 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           {/* Projects Section */}
           <div>
             <div className="flex items-center justify-between px-2 mb-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400">
-                <FolderKanban className="w-3.5 h-3.5 text-neutral-400" />
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200">
+                <FolderKanban className="w-4 h-4 text-red-600 dark:text-red-400" />
                 <span>{t('myProjects')}</span>
-                <span className="text-[11px] font-mono tabular-nums text-neutral-400">
+                <span className="text-xs font-mono font-bold tabular-nums text-neutral-500 dark:text-neutral-400">
                   ({projects.length})
                 </span>
               </div>
             </div>
 
             {projects.length === 0 ? (
-              <div className="px-3 py-3 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-lg">
-                <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+              <div className="px-3 py-3 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
                   {t('noProjectsYet')}
                 </p>
               </div>
@@ -183,26 +183,26 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                         onSelectProject(project.id);
                         onCloseMobile();
                       }}
-                      className={`w-full group text-left px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-between
+                      className={`w-full group text-left px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-between
                         ${
                           isActive
-                            ? 'bg-red-600/10 text-red-600 dark:text-red-400 font-semibold'
-                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                            ? 'bg-red-600/10 text-red-600 dark:text-red-400 font-bold'
+                            : 'text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-900'
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 pr-2">
                         <div
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            isActive ? 'bg-red-600 dark:bg-red-500' : 'bg-neutral-400 dark:bg-neutral-600'
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            isActive ? 'bg-red-600 dark:bg-red-500' : 'bg-neutral-400 dark:bg-neutral-500'
                           }`}
                         />
                         <span className="truncate">{project.name}</span>
                       </div>
                       <span
-                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 tabular-nums ${
+                        className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full shrink-0 tabular-nums ${
                           isActive
-                            ? 'bg-red-600 text-white font-semibold'
-                            : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'
                         }`}
                       >
                         {count}
@@ -219,11 +219,11 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 onOpenNewProjectModal();
                 onCloseMobile();
               }}
-              className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                border border-dashed border-neutral-300 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400
+              className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold
+                border border-dashed border-neutral-300 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300
                 hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>{t('addProject')}</span>
             </button>
           </div>
@@ -232,8 +232,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           {Boolean(activeProjectId) && (
             <div>
               <div className="flex items-center justify-between px-2 mb-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400">
-                  <Users className="w-3.5 h-3.5 text-neutral-400" />
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200">
+                  <Users className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
                   <span>{t('team')}</span>
                 </div>
                 {selectedAssigneeId && (
@@ -242,18 +242,18 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                       onSelectAssignee(null);
                       onCloseMobile();
                     }}
-                    className="text-[11px] text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                    className="text-xs text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                     {t('resetFilter')}
                   </button>
                 )}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {users.length === 0 ? (
-                  <div className="px-2.5 py-3 text-center border border-dashed border-neutral-200 dark:border-neutral-800/80 rounded-lg">
-                    <p className="text-[11px] text-neutral-400 dark:text-neutral-500">{t('noTeamMembers')}</p>
+                  <div className="px-2.5 py-3 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">{t('noTeamMembers')}</p>
                   </div>
                 ) : (
                   users.map((user) => {
@@ -280,7 +280,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                           onCloseMobile();
                         }}
                         title={isFiltered ? 'Klik untuk reset' : `${user.name} • ${memberRole}`}
-                        className={`w-full text-left px-2.5 py-2.5 rounded-xl transition-all flex items-start justify-between text-xs cursor-pointer ${
+                        className={`w-full text-left px-2.5 py-2.5 rounded-2xl transition-all flex items-start justify-between text-xs cursor-pointer ${
                           isFiltered
                             ? 'bg-red-600/10 text-red-600 dark:text-red-400 border border-red-500/40 shadow-xs'
                             : 'hover:bg-neutral-100 dark:hover:bg-neutral-900 border border-transparent'
@@ -292,7 +292,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                               avatar={user.avatar}
                               name={user.name}
                               color={user.color}
-                              className="w-7 h-7 text-[11px]"
+                              className="w-7 h-7 text-xs font-bold"
                             />
                             <span
                               className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-neutral-950 ${
@@ -302,18 +302,18 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                           </div>
                           <div className="min-w-0 flex-1">
                             {/* Member Name */}
-                            <p className="font-semibold text-neutral-900 dark:text-neutral-100 text-[12px] leading-snug truncate">
+                            <p className="font-bold text-neutral-950 dark:text-neutral-50 text-xs sm:text-sm leading-snug truncate">
                               {user.name}
                             </p>
 
                             {/* Member Role (Always placed below the name) */}
                             <div className="mt-1 flex items-center">
                               <span
-                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded leading-none ${
+                                className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full leading-none ${
                                   isUserLeader
                                     ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                                     : isUserViewer
-                                    ? 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20'
+                                    ? 'bg-neutral-500/10 text-neutral-700 dark:text-neutral-300 border border-neutral-500/20'
                                     : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
                                 }`}
                               >
@@ -330,13 +330,13 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                             </div>
 
                             {/* Username or Email */}
-                            <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate mt-1">
+                            <p className="text-xs text-neutral-600 dark:text-neutral-400 truncate mt-1 font-medium">
                               {user.username ? `@${user.username}` : user.email}
                             </p>
                           </div>
                         </div>
 
-                        <span className="text-[10px] font-mono tabular-nums text-neutral-400 dark:text-neutral-500 mt-1 shrink-0">
+                        <span className="text-xs font-mono font-bold tabular-nums text-neutral-600 dark:text-neutral-300 mt-1 shrink-0 px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800">
                           {userTaskCount}
                         </span>
                       </button>
@@ -351,19 +351,19 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         {/* Project Progress Footer (Hanya tampil saat proyek aktif dan memiliki tugas) */}
         {Boolean(activeProjectId) && totalTasks > 0 && (
           <div className="p-4 border-t border-neutral-200 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/40">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-neutral-500 dark:text-neutral-400 font-medium">{t('projectProgress')}</span>
-              <span className="font-mono tabular-nums font-bold text-neutral-900 dark:text-white">
+            <div className="flex items-center justify-between text-xs sm:text-sm mb-1.5 font-semibold">
+              <span className="text-neutral-700 dark:text-neutral-300">{t('projectProgress')}</span>
+              <span className="font-mono tabular-nums font-bold text-neutral-950 dark:text-white">
                 {progressPercent}%
               </span>
             </div>
-            <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-red-600 transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 mt-2 font-mono tabular-nums">
+            <div className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-300 mt-2 font-mono font-medium tabular-nums">
               <span>{doneTasks} {t('completed').toLowerCase()}</span>
               <span>{totalTasks} total</span>
             </div>

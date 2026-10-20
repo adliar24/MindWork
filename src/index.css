@@ -11,7 +11,15 @@
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Crisp high-contrast text and slightly elevated base size for mobile devices */
+  @media (max-width: 640px) {
+    html {
+      font-size: 15px;
+    }
   }
 
   /* Universal pointer cursor for buttons & interactive elements */

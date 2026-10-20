@@ -627,7 +627,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       onBlur={handleTitleBlur}
                       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                       placeholder="Judul Tugas..."
-                      className="w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-xl px-2 py-0.5 -ml-2 transition-all leading-snug text-neutral-950 dark:text-white"
+                      className="w-full text-xl sm:text-2xl font-extrabold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-xl px-2 py-0.5 -ml-2 transition-all leading-snug text-neutral-950 dark:text-white"
                     />
                   </div>
                 </div>
@@ -1025,8 +1025,8 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
               {/* Task Description (Trello style with ≡ icon) */}
               <div className="space-y-1.5 pt-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                  <FileText className="w-4 h-4 text-neutral-400" />
+                <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-neutral-950 dark:text-white">
+                  <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                   <span>{language === 'id' ? 'Deskripsi' : 'Description'}</span>
                 </div>
                 <textarea
@@ -1035,7 +1035,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   onBlur={handleDescBlur}
                   rows={3}
                   placeholder={language === 'id' ? 'Tambahkan deskripsi atau catatan yang lebih rinci...' : 'Add a more detailed description...'}
-                  className="w-full p-3 text-xs sm:text-sm rounded-xl bg-neutral-50/70 dark:bg-[#161822] border border-neutral-200/80 dark:border-[#272a37] text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 resize-none transition-all leading-relaxed"
+                  className="w-full p-3 text-xs sm:text-sm rounded-xl bg-neutral-50/70 dark:bg-[#161822] border border-neutral-300 dark:border-[#272a37] text-neutral-950 dark:text-neutral-100 font-medium placeholder-neutral-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 resize-none transition-all leading-relaxed"
                 />
               </div>
 
@@ -1043,18 +1043,18 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <div ref={checklistSectionRef} className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-neutral-400" />
-                    <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                    <CheckCircle2 className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                    <span className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white">
                       {language === 'id' ? 'Daftar Sub-Tugas' : 'Sub-tasks / Checklist'}
                     </span>
                     {totalChecklist > 0 && (
-                      <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#1a1d27] text-neutral-500 dark:text-neutral-400">
+                      <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-neutral-200 dark:bg-[#1a1d27] text-neutral-700 dark:text-neutral-200">
                         {completedChecklist}/{totalChecklist}
                       </span>
                     )}
                   </div>
                   {totalChecklist > 0 && (
-                    <span className="text-[11px] font-mono text-neutral-400 font-semibold">
+                    <span className="text-xs font-mono text-neutral-700 dark:text-neutral-300 font-bold">
                       {checklistPercent}%
                     </span>
                   )}
@@ -1062,7 +1062,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
                 {/* Checklist Progress Bar */}
                 {totalChecklist > 0 && (
-                  <div className="w-full h-1.5 bg-neutral-100 dark:bg-[#1e212d] rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-neutral-200 dark:bg-[#1e212d] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-red-600 dark:bg-red-500 rounded-full transition-all duration-300"
                       style={{ width: `${checklistPercent}%` }}
@@ -1075,10 +1075,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   {(task.checklist || []).map((item) => (
                     <div
                       key={item.id}
-                      className={`group flex items-center justify-between gap-2.5 p-2 px-2.5 rounded-xl border transition-colors text-xs ${
+                      className={`group flex items-center justify-between gap-2.5 p-2 px-3 rounded-xl border transition-colors text-xs sm:text-sm ${
                         item.completed
                           ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
-                          : 'border-neutral-200/60 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242]'
+                          : 'border-neutral-200 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242]'
                       }`}
                     >
                       <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none">
@@ -1091,14 +1091,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         <span
                           className={`truncate transition-all ${
                             item.completed
-                              ? 'text-neutral-900 dark:text-neutral-100 font-medium'
-                              : 'text-neutral-800 dark:text-neutral-200'
+                              ? 'text-neutral-900 dark:text-neutral-100 font-bold'
+                              : 'text-neutral-900 dark:text-neutral-100 font-medium'
                           }`}
                         >
                           {item.title}
                         </span>
                         {item.completed && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 ml-1">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 ml-1">
                             Selesai
                           </span>
                         )}

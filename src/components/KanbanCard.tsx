@@ -231,7 +231,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                 {/* Desktop: Compact text badge */}
                 <span
                   title="Prioritas: Tinggi"
-                  className="hidden sm:flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
+                  className="hidden sm:flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
                 >
                   <AlertCircle className="w-3 h-3 stroke-[2.2]" />
                   <span>Tinggi</span>
@@ -240,12 +240,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             ) : task.priority === 'Sedang' ? (
               <span
                 title="Prioritas: Sedang"
-                className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"
               />
             ) : (
               <span
                 title="Prioritas: Rendah"
-                className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600 shrink-0"
+                className="w-2.5 h-2.5 rounded-full bg-neutral-300 dark:bg-neutral-600 shrink-0"
               />
             )}
 
@@ -255,15 +255,15 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                 {/* Mobile: Subtle icon only */}
                 <span
                   title={typeBadge.label}
-                  className="sm:hidden text-neutral-400 dark:text-neutral-500 shrink-0"
+                  className="sm:hidden text-neutral-500 dark:text-neutral-400 shrink-0"
                 >
-                  <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
+                  <typeBadge.Icon className="w-3.5 h-3.5 stroke-[2.2]" />
                 </span>
                 {/* Desktop: Full styled badge */}
                 <span
-                  className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${typeBadge.style}`}
+                  className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${typeBadge.style}`}
                 >
-                  <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
+                  <typeBadge.Icon className="w-3.5 h-3.5 stroke-[2.2]" />
                   <span>{typeBadge.label}</span>
                 </span>
               </>
@@ -273,7 +273,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {task.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="hidden sm:inline-flex text-[9px] px-2 py-0.5 rounded-full font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
+                className="hidden sm:inline-flex text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-neutral-100 dark:bg-[#202330] text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-[#2f3346]"
               >
                 {tag}
               </span>
@@ -281,16 +281,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           </div>
         </div>
 
-        {/* Card Title (No checklist on title - checklists are managed inside the card) */}
+        {/* Card Title (Clearer, larger, high-contrast) */}
         <div>
-          <h3 className="text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 text-neutral-900 dark:text-white">
+          <h3 className="text-sm sm:text-[15px] font-bold leading-snug line-clamp-2 text-neutral-950 dark:text-neutral-50 tracking-tight">
             {task.title}
           </h3>
         </div>
 
-        {/* Description excerpt (Desktop only - hidden on mobile for clean scannability) */}
+        {/* Description excerpt (Clearer, high-contrast) */}
         {task.description && (
-          <p className="hidden sm:block text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 leading-normal">
+          <p className="hidden sm:block text-xs sm:text-[13px] text-neutral-600 dark:text-neutral-300 line-clamp-1 leading-normal font-normal">
             {task.description}
           </p>
         )}
@@ -382,24 +382,24 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
         )}
 
         {/* Card Footer: Metadata Indicators (Date, Checklist count, Attachments, Comments) + Assignee */}
-        <div className="pt-2 sm:pt-2.5 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-1.5 text-[10px]">
+        <div className="pt-2 sm:pt-2.5 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-1.5 text-xs">
           {/* Left indicators */}
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
+          <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 tabular-nums flex-wrap">
             {/* Due Date Indicator */}
             {task.dueDate && (
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold border ${
                   task.isCompleted || task.columnId === 'done'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                     : isOverdue
-                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 font-semibold'
+                    ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 font-bold'
                     : isDueSoon
                     ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700/60'
+                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-700 dark:text-neutral-200 border-neutral-200/80 dark:border-neutral-700/60'
                 }`}
                 title={`Jatuh tempo: ${formatDateLocale(task.dueDate, language)}`}
               >
-                <Calendar className="w-3 h-3" />
+                <Calendar className="w-3.5 h-3.5" />
                 <span>{formatDateLocale(task.dueDate, language)}</span>
               </span>
             )}
@@ -407,14 +407,14 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Checklist Count Pill */}
             {totalChecklistCount > 0 && (
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold border ${
                   checklistPercent === 100
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border-neutral-200/60 dark:border-neutral-800'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-800 dark:text-neutral-200 border-neutral-300 dark:border-neutral-700'
                 }`}
                 title={`Sub-tugas: ${completedChecklistCount}/${totalChecklistCount} selesai`}
               >
-                <CheckSquare className="w-3 h-3" />
+                <CheckSquare className="w-3.5 h-3.5" />
                 <span>{completedChecklistCount}/{totalChecklistCount}</span>
               </span>
             )}
@@ -422,10 +422,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Time Estimate (Desktop only) */}
             {task.estimate && (
               <span
-                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded-full"
+                className="hidden sm:inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-neutral-600 dark:text-neutral-300 px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#202330] border border-neutral-200/80 dark:border-neutral-700/60"
                 title={`Estimasi: ${task.estimate}`}
               >
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3.5 h-3.5" />
                 <span>{task.estimate}</span>
               </span>
             )}
@@ -433,10 +433,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Attachment indicator */}
             {attachmentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+                className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors font-medium text-xs"
                 title={`${attachmentCount} berkas`}
               >
-                <Paperclip className="w-3 h-3" />
+                <Paperclip className="w-3.5 h-3.5" />
                 <span>{attachmentCount}</span>
               </span>
             )}
@@ -444,10 +444,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* External Links indicator (Desktop only) */}
             {linkCount > 0 && (
               <span
-                className="hidden sm:inline-flex items-center gap-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors font-medium text-xs"
                 title={`${linkCount} tautan`}
               >
-                <Link2 className="w-3 h-3" />
+                <Link2 className="w-3.5 h-3.5" />
                 <span>{linkCount}</span>
               </span>
             )}
@@ -455,10 +455,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Comments indicator */}
             {commentCount > 0 && (
               <span
-                className="flex items-center gap-1 text-neutral-400"
+                className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors font-medium text-xs"
                 title={`${commentCount} komentar`}
               >
-                <MessageSquare className="w-3 h-3" />
+                <MessageSquare className="w-3.5 h-3.5" />
                 <span>{commentCount}</span>
               </span>
             )}

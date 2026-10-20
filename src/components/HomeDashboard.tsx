@@ -45,12 +45,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#f8f9fa] dark:bg-[#090a0d] text-neutral-900 dark:text-neutral-100 transition-colors">
       <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
         {/* Welcome Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-neutral-200 dark:border-neutral-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-neutral-200 dark:border-neutral-800">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 dark:text-white">
               {t('greeting')}, {currentUser.name}
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className="text-xs sm:text-base text-neutral-600 dark:text-neutral-300 mt-1 font-medium">
               {t('welcomeSubtitle')}
             </p>
           </div>
@@ -58,7 +58,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
           <button
             type="button"
             onClick={onOpenNewProject}
-            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-md shadow-red-600/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>{t('createNewProject')}</span>
@@ -67,42 +67,42 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
 
         {/* Quick Stats Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
-              <FolderKanban className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xs project-card-item">
+            <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm font-bold mb-1.5">
+              <FolderKanban className="w-4 h-4 text-red-600 dark:text-red-400" />
               <span>{t('totalProjects')}</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+            <p className="text-2xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white tabular-nums">
               {projects.length}
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
-              <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xs project-card-item">
+            <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm font-bold mb-1.5">
+              <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span>{t('totalTasks')}</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+            <p className="text-2xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white tabular-nums">
               {totalTasks}
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xs project-card-item">
+            <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm font-bold mb-1.5">
+              <Clock className="w-4 h-4 text-amber-500" />
               <span>{t('inProgress')}</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+            <p className="text-2xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white tabular-nums">
               {inProgressTasks}
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
-            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xs project-card-item">
+            <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 text-xs sm:text-sm font-bold mb-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               <span>{t('completed')}</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+            <p className="text-2xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white tabular-nums">
               {doneTasks}
             </p>
           </div>
@@ -112,10 +112,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-neutral-900 dark:text-white">
+              <h2 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white">
                 {t('projectBoards')}
               </h2>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 tabular-nums">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 tabular-nums">
                 {projects.length}
               </span>
             </div>
@@ -127,16 +127,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
               <div className="w-16 h-16 rounded-[24px] bg-neutral-100 dark:bg-[#1a1c24] border border-neutral-200 dark:border-[#272a35] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
                 <FolderKanban className="w-8 h-8 stroke-[1.6]" />
               </div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-1">
+              <h3 className="text-lg font-bold text-neutral-950 dark:text-white mb-1.5">
                 {t('noProjectsTitle')}
               </h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mb-5 leading-relaxed">
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 max-w-sm mb-5 leading-relaxed font-normal">
                 {t('noProjectsDesc')}
               </p>
               <button
                 type="button"
                 onClick={onOpenNewProject}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>{t('createFirstProject')}</span>
@@ -212,7 +212,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                       {/* Category & Actions */}
                       <div className="flex items-center justify-between gap-2 mb-2 pt-1 pl-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 truncate">
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 truncate">
                             {project.category || 'Umum'}
                           </span>
                         </div>
@@ -232,7 +232,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                             </button>
                           )}
                           <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold ${
                               isUserLeader
                                 ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                                 : userRole === 'viewer' || userRole.toLowerCase().includes('peninjau')
@@ -240,7 +240,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                                 : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
                             }`}
                           >
-                            {isUserLeader && <Crown className="w-2.5 h-2.5" />}
+                            {isUserLeader && <Crown className="w-3 h-3" />}
                             <span>
                               {isUserLeader
                                 ? userRole === 'leader'
@@ -257,12 +257,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                       </div>
 
                       {/* Project Name */}
-                      <h3 className="text-base font-bold text-neutral-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-1 mb-1.5">
+                      <h3 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-1 mb-1.5">
                         {project.name}
                       </h3>
 
                       {/* Project Description */}
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 min-h-[32px] leading-relaxed mb-4">
+                      <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 line-clamp-2 min-h-[36px] leading-relaxed mb-4 font-normal">
                         {project.description || '-'}
                       </p>
                     </div>
@@ -270,13 +270,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                     {/* Progress Bar & Footer */}
                     <div className="pt-3 border-t border-neutral-100 dark:border-[#1d202a] space-y-3">
                       <div>
-                        <div className="flex items-center justify-between text-[11px] mb-1.5">
-                          <span className="text-neutral-500 dark:text-neutral-400">{t('projectProgress')}</span>
-                          <span className="font-semibold text-neutral-800 dark:text-neutral-200 tabular-nums">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="text-neutral-600 dark:text-neutral-300 font-medium">{t('projectProgress')}</span>
+                          <span className="font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
                             {projDone}/{projTasks.length} ({progressPercent}%)
                           </span>
                         </div>
-                        <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-red-600 rounded-full transition-all duration-300"
                             style={{ width: `${progressPercent}%` }}
@@ -293,19 +293,19 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                               avatar={member.avatar}
                               name={member.name}
                               color={member.color}
-                              className="w-6 h-6 text-[9px] ring-2 ring-white dark:ring-[#12141a]"
+                              className="w-6 h-6 text-[10px] ring-2 ring-white dark:ring-[#12141a]"
                             />
                           ))}
                           {projectMembers.length > 4 && (
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[9px] bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 ring-2 ring-white dark:ring-[#12141a]">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 ring-2 ring-white dark:ring-[#12141a]">
                               +{projectMembers.length - 4}
                             </div>
                           )}
                         </div>
 
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 group-hover:translate-x-1.5 transition-transform duration-200">
+                        <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 group-hover:translate-x-1.5 transition-transform duration-200">
                           <span>{t('openBoard')}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRight className="w-4 h-4" />
                         </span>
                       </div>
                     </div>
@@ -318,13 +318,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                 onClick={onOpenNewProject}
                 className="flex flex-col items-center justify-center p-6 rounded-[32px] border-2 border-dashed border-neutral-200 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 bg-transparent hover:bg-neutral-50/50 dark:hover:bg-[#14161f]/50 cursor-pointer text-center min-h-[220px] project-card-item transition-all"
               >
-                <div className="w-12 h-12 rounded-[20px] bg-neutral-100 dark:bg-[#1a1c24] text-neutral-500 dark:text-neutral-400 flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                <div className="w-12 h-12 rounded-[20px] bg-neutral-100 dark:bg-[#1a1c24] text-neutral-600 dark:text-neutral-300 flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
                   <Plus className="w-5 h-5 stroke-[2.2]" />
                 </div>
-                <h4 className="text-xs font-bold text-neutral-900 dark:text-white mb-0.5">
+                <h4 className="text-sm font-bold text-neutral-950 dark:text-white mb-1">
                   {t('createNewProject')}
                 </h4>
-                <p className="text-[11px] text-neutral-400 dark:text-neutral-500 max-w-[200px]">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-[200px] font-medium">
                   {t('newProjectModalSubtitle')}
                 </p>
               </div>

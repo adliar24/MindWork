@@ -594,14 +594,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
       )}
 
       {/* Mobile Column Navigation Switcher */}
-      <div className="sm:hidden px-3 pt-1 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+      <div className="sm:hidden px-3 pt-1.5 pb-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
         <button
           type="button"
           onClick={() => setMobileActiveColumn('all')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shadow-xs ${
             mobileActiveColumn === 'all'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-              : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
+              ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md ring-2 ring-neutral-900/30 dark:ring-white/40'
+              : 'bg-neutral-200/90 text-neutral-800 dark:bg-[#1f2230] dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-[#282c3e]'
           }`}
         >
           {language === 'id' ? 'Semua' : 'All'} ({tasks.length})
@@ -615,19 +615,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
               key={col.id}
               type="button"
               onClick={() => setMobileActiveColumn(col.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer shadow-xs ${
                 isActive
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs ring-1'
-                  : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
+                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md ring-2'
+                  : 'bg-neutral-200/90 text-neutral-800 dark:bg-[#1f2230] dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-[#282c3e]'
               }`}
               style={{ ringColor: isActive ? colColor : undefined }}
             >
               <span
-                className="w-2 h-2 rounded-full shrink-0"
+                className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
                 style={{ backgroundColor: colColor }}
               />
               <span>{getColumnTitle(col.id, col.title)}</span>
-              <span className="font-mono text-[10px] opacity-80">({colTasks.length})</span>
+              <span className="font-mono text-xs opacity-90 font-bold">({colTasks.length})</span>
             </button>
           );
         })}
@@ -635,9 +635,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
           <button
             type="button"
             onClick={() => setIsAddingList(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 bg-red-500/15 border border-red-500/30 whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>{language === 'id' ? 'Daftar' : 'List'}</span>
           </button>
         )}
@@ -813,17 +813,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           <h2
                             onClick={() => !isViewer && startEditColumn(column)}
                             title={!isViewer ? (language === 'id' ? 'Klik untuk ubah nama' : 'Click to rename') : undefined}
-                            className={`text-sm font-bold truncate ${
-                              isLight ? 'text-neutral-900' : 'text-white drop-shadow-xs'
+                            className={`text-sm sm:text-base font-extrabold truncate tracking-tight ${
+                              isLight ? 'text-neutral-950' : 'text-white drop-shadow-xs'
                             } ${!isViewer ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                           >
                             {displayTitle}
                           </h2>
                           <span
-                            className={`text-[11px] font-mono tabular-nums px-2.5 py-0.5 rounded-full font-bold shadow-xs ${
+                            className={`text-xs font-mono tabular-nums px-2.5 py-0.5 rounded-full font-bold shadow-xs ${
                               isLight
-                                ? 'bg-black/10 text-neutral-900 border border-black/15'
-                                : 'bg-black/25 text-white border border-white/20'
+                                ? 'bg-black/15 text-neutral-950 border border-black/20'
+                                : 'bg-black/35 text-white border border-white/30'
                             }`}
                           >
                             {columnTasks.length}
@@ -834,13 +834,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       {/* Header Actions */}
                       {!isViewer && !isEditing && (
                         <div className="flex items-center gap-1 relative column-menu-container">
+                          {/* Plus button now triggers the instant inline card creation just like the bottom button */}
                           <button
-                            onClick={() => onQuickAddTask(column.id)}
-                            title={`+ ${displayTitle}`}
+                            onClick={() => {
+                              setAddingCardColumnId(addingCardColumnId === column.id ? null : column.id);
+                              setNewCardTitle('');
+                            }}
+                            title={language === 'id' ? '+ Tambah kartu di daftar ini' : '+ Add card to this list'}
                             className={`p-1.5 rounded-full transition-colors cursor-pointer ${
                               isLight
-                                ? 'text-neutral-700 hover:text-neutral-950 hover:bg-black/10'
-                                : 'text-white/85 hover:text-white hover:bg-white/20'
+                                ? 'text-neutral-800 hover:text-black hover:bg-black/10'
+                                : 'text-white/90 hover:text-white hover:bg-white/20'
                             }`}
                           >
                             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -1032,7 +1036,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           {!isViewer && (
                             <Plus className={`w-4 h-4 mb-0.5 transition-transform group-hover:scale-110 ${isLight ? 'text-neutral-800' : 'text-white'}`} />
                           )}
-                          <span className="text-xs font-semibold">
+                          <span className="text-xs sm:text-sm font-bold">
                             {language === 'id' ? '+ Tambah kartu' : '+ Add a card'}
                           </span>
                         </div>
@@ -1063,7 +1067,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                       {/* Inline Card Composer (Trello style) */}
                       {addingCardColumnId === column.id && (
-                        <div className="p-3.5 rounded-[24px] bg-white dark:bg-[#161822] border border-red-500 shadow-md space-y-2.5 animate-in fade-in">
+                        <div className="p-3.5 rounded-[24px] bg-white dark:bg-[#161822] border-2 border-red-500 shadow-lg space-y-2.5 animate-in fade-in">
                           <textarea
                             autoFocus
                             rows={2}
@@ -1080,14 +1084,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               }
                             }}
                             placeholder={language === 'id' ? 'Masukkan judul kartu (Enter untuk simpan)...' : 'Enter card title (Press Enter to add)...'}
-                            className="w-full text-xs sm:text-[13px] bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none resize-none font-medium leading-snug px-1"
+                            className="w-full text-sm sm:text-base bg-transparent text-neutral-950 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none resize-none font-semibold leading-relaxed px-1"
                           />
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => submitCreateCard(column.id)}
                               disabled={!newCardTitle.trim()}
-                              className="py-1.5 px-3.5 rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+                              className="py-2 px-4 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-colors"
                             >
                               {language === 'id' ? 'Tambah kartu' : 'Add card'}
                             </button>
@@ -1114,13 +1118,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                             setAddingCardColumnId(column.id);
                             setNewCardTitle('');
                           }}
-                          className={`w-full py-2 px-3 rounded-full text-xs font-semibold transition-colors flex items-center justify-start gap-1.5 cursor-pointer shadow-xs ${
+                          className={`w-full py-2.5 px-3.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center justify-start gap-2 cursor-pointer shadow-xs ${
                             isLight
-                              ? 'text-neutral-800 hover:text-neutral-950 bg-black/5 hover:bg-black/10'
-                              : 'text-white/90 hover:text-white bg-white/15 hover:bg-white/25'
+                              ? 'text-neutral-900 hover:text-black bg-black/10 hover:bg-black/15'
+                              : 'text-white hover:text-white bg-white/20 hover:bg-white/30'
                           }`}
                         >
-                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
                           <span>{language === 'id' ? 'Tambah kartu' : 'Add a card'}</span>
                         </button>
                       </div>
