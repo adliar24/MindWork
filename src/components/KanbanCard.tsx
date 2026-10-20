@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paperclip,
   Calendar,
@@ -22,6 +22,7 @@ import {
   Bookmark,
   FolderGit2,
   ZoomIn,
+  ChevronDown,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
 import {
@@ -30,9 +31,12 @@ import {
   isImageAttachment,
   isAudioAttachment,
   triggerDownload,
+  getItemAttachments,
+  getItemLinks,
 } from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
+import { SplitPillBadge } from './SplitPillBadge';
 
 interface KanbanCardProps {
   task: Task;
@@ -54,10 +58,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   isDragging,
   onDragStart,
   isReadOnly = false,
+  onToggleChecklist,
   onToggleComplete,
   onImageClick,
 }) => {
   const { language } = useLanguage();
+  const [isChecklistExpanded, setIsChecklistExpanded] = useState(false);
 
   // Find cover image attachment if any
   const coverAttachment = task.attachments.find(
@@ -295,96 +301,14 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
         {((task.externalLinks && task.externalLinks.length > 0) || nonImageAttachments.length > 0) && (
           <div className="flex flex-wrap gap-1.5 pt-0.5">
             {/* 1. External & Cloud Links (Split-Pill: [ Icon | Title ]) */}
-            {(task.externalLinks || []).slice(0, 2).map((link) => {
-              const cloud = detectCloudService(link.url);
-              return (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  title={`Buka ${link.title || cloud.name}: ${link.url}`}
-                  className="group/pill inline-flex items-stretch rounded-full border border-blue-300/80 dark:border-blue-800/70 bg-blue-50/60 dark:bg-blue-950/25 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-xs active:scale-95 transition-all max-w-full cursor-pointer overflow-hidden text-xs"
-                >
-                  {/* Left Compartment: Link Icon with vertical dividing border line */}
-                  <div className="px-2 sm:px-2.5 py-1 bg-blue-100/80 dark:bg-blue-900/40 border-r border-blue-300/80 dark:border-blue-800/70 flex items-center justify-center shrink-0">
-                    <Link2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  {/* Right Compartment: Link Title */}
-                  <div className="px-2.5 sm:px-3 py-1 flex items-center gap-1 min-w-0">
-                    <span className="truncate max-w-[120px] sm:max-w-[160px] text-blue-950 dark:text-blue-100 font-bold text-[11px] sm:text-xs">
-                      {link.title || cloud.name}
-                    </span>
-                    <ExternalLinkIcon className="w-2.5 h-2.5 text-blue-500 opacity-60 shrink-0" />
-                  </div>
-                </a>
-              );
-            })}
+            {(task.externalLinks || []).slice(0, 2).map((link) => (
+              <SplitPillBadge key={link.id} link={link} size="sm" />
+            ))}
 
             {/* 2. Uploaded Non-Image Files (Documents, Zip, Spreadsheets, Audio, etc.) */}
-            {nonImageAttachments.slice(0, 2).map((file) => {
-              const ext = (file.extension || '').toLowerCase();
-              const isZip = file.type === 'archive' || ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
-              const isSheet = file.type === 'spreadsheet' || ['xls', 'xlsx', 'csv'].includes(ext);
-              const isAudio = file.type === 'audio' || ['mp3', 'wav', 'ogg', 'm4a'].includes(ext);
-
-              return (
-                <div
-                  key={file.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (file.url) {
-                      triggerDownload(file.name, file.url);
-                    } else {
-                      onClick();
-                    }
-                  }}
-                  title={`Berkas: ${file.name} (${file.size || ext.toUpperCase()}) • Klik untuk unduh`}
-                  className={`group/pill inline-flex items-stretch rounded-full border transition-all max-w-full cursor-pointer overflow-hidden text-xs hover:shadow-xs active:scale-95 ${
-                    isZip
-                      ? 'border-amber-300 dark:border-amber-800/70 bg-amber-50/60 dark:bg-amber-950/25 hover:border-amber-400'
-                      : isSheet
-                      ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/60 dark:bg-emerald-950/25 hover:border-emerald-400'
-                      : isAudio
-                      ? 'border-purple-300 dark:border-purple-800/70 bg-purple-50/60 dark:bg-purple-950/25 hover:border-purple-400'
-                      : 'border-neutral-300 dark:border-[#303448] bg-neutral-100/80 dark:bg-[#1a1c27] hover:border-neutral-400 dark:hover:border-neutral-600'
-                  }`}
-                >
-                  {/* Left Compartment: Icon with vertical dividing border line */}
-                  <div
-                    className={`px-2 sm:px-2.5 py-1 border-r flex items-center justify-center shrink-0 ${
-                      isZip
-                        ? 'bg-amber-100/80 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800/70 text-amber-700 dark:text-amber-300'
-                        : isSheet
-                        ? 'bg-emerald-100/80 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300'
-                        : isAudio
-                        ? 'bg-purple-100/80 dark:bg-purple-900/40 border-purple-300 dark:border-purple-800/70 text-purple-700 dark:text-purple-300'
-                        : 'bg-neutral-200/80 dark:bg-[#252838] border-neutral-300 dark:border-[#303448] text-neutral-700 dark:text-neutral-300'
-                    }`}
-                  >
-                    {isZip ? (
-                      <Archive className="w-3.5 h-3.5" />
-                    ) : isSheet ? (
-                      <FileSpreadsheet className="w-3.5 h-3.5" />
-                    ) : isAudio ? (
-                      <Headphones className="w-3.5 h-3.5" />
-                    ) : (
-                      <FileText className="w-3.5 h-3.5" />
-                    )}
-                  </div>
-                  {/* Right Compartment: File Title & Extension */}
-                  <div className="px-2.5 sm:px-3 py-1 flex items-center gap-1.5 min-w-0">
-                    <span className="truncate max-w-[120px] sm:max-w-[160px] font-bold text-[11px] sm:text-xs text-neutral-900 dark:text-neutral-100">
-                      {file.name}
-                    </span>
-                    <span className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 font-bold shrink-0">
-                      {file.extension || file.size}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+            {nonImageAttachments.slice(0, 2).map((file) => (
+              <SplitPillBadge key={file.id} attachment={file} size="sm" />
+            ))}
 
             {/* Overflow Count */}
             {((task.externalLinks?.length || 0) + nonImageAttachments.length > 4) && (
@@ -392,6 +316,112 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                 +{((task.externalLinks?.length || 0) + nonImageAttachments.length) - 4}
               </span>
             )}
+          </div>
+        )}
+
+        {/* Expandable Checklist / Subtasks Section */}
+        {isChecklistExpanded && totalChecklistCount > 0 && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="pt-2 pb-1 space-y-2 border-t border-dashed border-neutral-200 dark:border-[#2a2e40] animate-in fade-in slide-in-from-top-1 duration-150"
+          >
+            <div className="flex items-center justify-between text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
+              <span className="flex items-center gap-1.5">
+                <CheckSquare className="w-3.5 h-3.5 text-red-500" />
+                <span>{language === 'id' ? 'Sub-tugas' : 'Subtasks'}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-200 dark:bg-[#202330] font-mono text-neutral-700 dark:text-neutral-300">
+                  {completedChecklistCount}/{totalChecklistCount}
+                </span>
+              </span>
+              <span className="font-mono text-[10px] font-bold text-neutral-500 dark:text-neutral-400">
+                {checklistPercent}%
+              </span>
+            </div>
+
+            {/* Micro Progress Bar */}
+            <div className="w-full h-1.5 bg-neutral-200 dark:bg-[#1f2230] rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  checklistPercent === 100 ? 'bg-emerald-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${checklistPercent}%` }}
+              />
+            </div>
+
+            {/* Checklist Items List */}
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
+              {(task.checklist || []).map((item) => {
+                const itemAtts = getItemAttachments(item);
+                const itemLinks = getItemLinks(item);
+                const hasMedia = itemAtts.length > 0 || itemLinks.length > 0;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-2 rounded-2xl border transition-all ${
+                      item.completed
+                        ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
+                        : 'border-neutral-200/90 dark:border-[#272b3b] bg-neutral-50/70 dark:bg-[#171924] hover:border-neutral-300 dark:hover:border-[#383d54]'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleChecklist?.(task.id, item.id);
+                        }}
+                        className="mt-0.5 shrink-0 text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                        title={item.completed ? 'Batal selesai' : 'Tandai selesai'}
+                      >
+                        {item.completed ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 fill-emerald-100 dark:fill-emerald-950/40" />
+                        ) : (
+                          <Circle className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleChecklist?.(task.id, item.id);
+                          }}
+                          className={`text-xs select-none cursor-pointer leading-snug break-words ${
+                            item.completed
+                              ? 'line-through text-neutral-400 dark:text-neutral-500'
+                              : 'text-neutral-900 dark:text-neutral-100 font-medium'
+                          }`}
+                        >
+                          {item.title}
+                        </p>
+
+                        {/* Attached Files & Links for this Checkbox (Split-Pill Badge!) */}
+                        {hasMedia && (
+                          <div className="flex flex-wrap gap-1.5 pt-1.5">
+                            {itemLinks.map((link) => (
+                              <SplitPillBadge
+                                key={link.id}
+                                link={link}
+                                size="xs"
+                                maxTitleWidth="max-w-[130px] sm:max-w-[170px]"
+                              />
+                            ))}
+                            {itemAtts.map((att) => (
+                              <SplitPillBadge
+                                key={att.id}
+                                attachment={att}
+                                size="xs"
+                                maxTitleWidth="max-w-[120px] sm:max-w-[160px]"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -418,19 +448,33 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               </span>
             )}
 
-            {/* Checklist Count Pill */}
+            {/* Checklist Count Pill - Interactive Toggle */}
             {totalChecklistCount > 0 && (
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold border ${
-                  checklistPercent === 100
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-800 dark:text-neutral-200 border-neutral-300 dark:border-neutral-700'
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsChecklistExpanded((prev) => !prev);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold border transition-all cursor-pointer ${
+                  isChecklistExpanded
+                    ? 'ring-2 ring-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/40'
+                    : checklistPercent === 100
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                    : 'bg-neutral-100 dark:bg-[#202330] text-neutral-800 dark:text-neutral-200 border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500'
                 }`}
-                title={`Sub-tugas: ${completedChecklistCount}/${totalChecklistCount} selesai`}
+                title={`Sub-tugas: ${completedChecklistCount}/${totalChecklistCount} • Klik untuk ${
+                  isChecklistExpanded ? 'tutup' : 'buka & centang sub-tugas'
+                }`}
               >
                 <CheckSquare className="w-3.5 h-3.5" />
                 <span>{completedChecklistCount}/{totalChecklistCount}</span>
-              </span>
+                <ChevronDown
+                  className={`w-3 h-3 text-neutral-500 transition-transform duration-200 ${
+                    isChecklistExpanded ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
             )}
 
             {/* Time Estimate (Desktop only) */}

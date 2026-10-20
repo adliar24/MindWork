@@ -1,4 +1,4 @@
-import { FileType, Language, LinkType } from '../types';
+import { FileType, Language, LinkType, Attachment, ExternalLink, ChecklistItem } from '../types';
 
 export function getFileTypeFromExtension(filename: string): { type: FileType; extension: string } {
   const parts = filename.split('.');
@@ -301,5 +301,96 @@ export function isAudioAttachment(att: {
   const target = ((att.name || '') + ' ' + (att.extension || '') + ' ' + (att.url || '')).toLowerCase();
   return /\.(mp3|wav|ogg|m4a|flac|aac|wma)(\?.*)?$/i.test(target);
 }
+
+export async function fileToAttachment(file: File, isWorkResult: boolean = false): Promise<Attachment> {
+  const { type, extension } = getFileTypeFromExtension(file.name);
+  if (type === 'image') {
+    try {
+      const compressed = await compressImageFile(file, 1200, 0.82);
+      return {
+        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: file.name,
+        size: compressed.size || formatFileSize(file.size),
+        type: 'image',
+        uploadedAt: 'Hari ini',
+        url: compressed.dataUrl,
+        extension,
+        isWorkResult,
+      };
+    } catch {
+      // Fallback to FileReader below
+    }
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      resolve({
+        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type,
+        uploadedAt: 'Hari ini',
+        url: e.target?.result as string,
+        extension,
+        isWorkResult,
+      });
+    };
+    reader.onerror = () => {
+      resolve({
+        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type,
+        uploadedAt: 'Hari ini',
+        extension,
+        isWorkResult,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+export function createExternalLink(rawUrl: string, title?: string): ExternalLink {
+  let url = rawUrl.trim();
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  const cloud = detectCloudService(url);
+  return {
+    id: `link-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    title: (title || '').trim() || cloud.name,
+    url,
+    type: cloud.type,
+    domain: cloud.domain,
+  };
+}
+
+export function getItemAttachments(item: ChecklistItem): Attachment[] {
+  const list: Attachment[] = [];
+  if (item.attachment) list.push(item.attachment);
+  if (Array.isArray(item.attachments)) {
+    item.attachments.forEach((a) => {
+      if (a && !list.some((existing) => existing.id === a.id)) {
+        list.push(a);
+      }
+    });
+  }
+  return list;
+}
+
+export function getItemLinks(item: ChecklistItem): ExternalLink[] {
+  const list: ExternalLink[] = [];
+  if (item.externalLink) list.push(item.externalLink);
+  if (Array.isArray(item.externalLinks)) {
+    item.externalLinks.forEach((l) => {
+      if (l && !list.some((existing) => existing.id === l.id)) {
+        list.push(l);
+      }
+    });
+  }
+  return list;
+}
+
 
 

@@ -24,9 +24,19 @@ import {
   FileSpreadsheet,
   Link2,
 } from 'lucide-react';
-import { Column, ColumnId, Priority, Task, TaskType, User, Attachment } from '../types';
-import { formatFileSize, getFileTypeFromExtension, compressImageFile, detectCloudService } from '../utils/fileHelpers';
+import { Column, ColumnId, Priority, Task, TaskType, User, Attachment, ChecklistItem, ExternalLink } from '../types';
+import {
+  formatFileSize,
+  getFileTypeFromExtension,
+  compressImageFile,
+  detectCloudService,
+  fileToAttachment,
+  createExternalLink,
+  getItemAttachments,
+  getItemLinks,
+} from '../utils/fileHelpers';
 import { useLanguage } from '../context/LanguageContext';
+import { SplitPillBadge } from './SplitPillBadge';
 
 interface NewTaskModalProps {
   columns: Column[];
@@ -82,21 +92,60 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Subtasks/Checklist state
-  const [checklistItems, setChecklistItems] = useState<{ id: string; title: string; completed: boolean }[]>([]);
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [subtaskPendingFile, setSubtaskPendingFile] = useState<Attachment | null>(null);
+  const [subtaskPendingLink, setSubtaskPendingLink] = useState<ExternalLink | null>(null);
+  const [isAddingSubtaskLink, setIsAddingSubtaskLink] = useState(false);
+  const [subtaskLinkUrl, setSubtaskLinkUrl] = useState('');
+  const [subtaskLinkTitle, setSubtaskLinkTitle] = useState('');
+  const subtaskFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddSubtask = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newSubtaskTitle.trim()) return;
     setChecklistItems((prev) => [
       ...prev,
-      { id: `chk-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`, title: newSubtaskTitle.trim(), completed: false },
+      {
+        id: `chk-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        title: newSubtaskTitle.trim(),
+        completed: false,
+        attachment: subtaskPendingFile || undefined,
+        attachments: subtaskPendingFile ? [subtaskPendingFile] : [],
+        externalLink: subtaskPendingLink || undefined,
+        externalLinks: subtaskPendingLink ? [subtaskPendingLink] : [],
+      },
     ]);
     setNewSubtaskTitle('');
+    setSubtaskPendingFile(null);
+    setSubtaskPendingLink(null);
+    setIsAddingSubtaskLink(false);
+    setSubtaskLinkUrl('');
+    setSubtaskLinkTitle('');
   };
 
   const handleRemoveSubtask = (id: string) => {
     setChecklistItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleAttachFileForSubtask = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const att = await fileToAttachment(file);
+      setSubtaskPendingFile(att);
+    } finally {
+      if (subtaskFileInputRef.current) subtaskFileInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveLinkForSubtask = () => {
+    if (!subtaskLinkUrl.trim()) return;
+    const link = createExternalLink(subtaskLinkUrl, subtaskLinkTitle);
+    setSubtaskPendingLink(link);
+    setIsAddingSubtaskLink(false);
+    setSubtaskLinkUrl('');
+    setSubtaskLinkTitle('');
   };
 
   // Cloud Link state in NewTaskModal
@@ -492,48 +541,164 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                 : 'Checklist is optional. Leave empty if this card is an idea, concept, asset, or note.'}
             </p>
 
+            {/* Hidden File Input for Subtasks */}
+            <input
+              type="file"
+              ref={subtaskFileInputRef}
+              onChange={handleAttachFileForSubtask}
+              className="hidden"
+            />
+
             {checklistItems.length > 0 && (
-              <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                {checklistItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 px-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-xs sm:text-sm"
-                  >
-                    <span className="truncate text-neutral-900 dark:text-neutral-100 font-medium">{item.title}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSubtask(item.id)}
-                      className="p-1 text-neutral-400 hover:text-red-500 rounded cursor-pointer"
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                {checklistItems.map((item) => {
+                  const itemAtts = getItemAttachments(item);
+                  const itemLinks = getItemLinks(item);
+                  const hasMedia = itemAtts.length > 0 || itemLinks.length > 0;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-2.5 px-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-xs sm:text-sm space-y-1.5"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-neutral-900 dark:text-neutral-100 font-semibold">{item.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSubtask(item.id)}
+                          className="p-1 text-neutral-400 hover:text-red-500 rounded cursor-pointer"
+                          title="Hapus sub-tugas"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Attached SplitPillBadges */}
+                      {hasMedia && (
+                        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-neutral-200/60 dark:border-neutral-700/60">
+                          {itemLinks.map((link) => (
+                            <SplitPillBadge key={link.id} link={link} size="xs" />
+                          ))}
+                          {itemAtts.map((att) => (
+                            <SplitPillBadge key={att.id} attachment={att} size="xs" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={newSubtaskTitle}
-                onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddSubtask();
-                  }
-                }}
-                placeholder={language === 'id' ? 'Tambah subtugas (misal: Buat storyboard)...' : 'Add subtask...'}
-                className="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-950 dark:text-white font-medium placeholder-neutral-400 dark:placeholder-neutral-500"
-              />
-              <button
-                type="button"
-                onClick={() => handleAddSubtask()}
-                disabled={!newSubtaskTitle.trim()}
-                className="px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs sm:text-sm font-bold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
-              >
-                {language === 'id' ? '+ Tambah' : '+ Add'}
-              </button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 p-1 px-1.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 focus-within:border-red-500 transition-colors">
+                <input
+                  type="text"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                  placeholder={language === 'id' ? 'Tambah subtugas (misal: Buat storyboard)...' : 'Add subtask...'}
+                  className="flex-1 px-2.5 py-1.5 text-xs sm:text-sm bg-transparent text-neutral-950 dark:text-white font-medium placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+                />
+
+                {/* Attach File Button */}
+                <button
+                  type="button"
+                  onClick={() => subtaskFileInputRef.current?.click()}
+                  className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-200/60 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                  title={language === 'id' ? 'Sematkan berkas ke subtugas ini' : 'Attach file to this subtask'}
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+
+                {/* Attach Link Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsAddingSubtaskLink(!isAddingSubtaskLink)}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    isAddingSubtaskLink || subtaskPendingLink
+                      ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/40'
+                      : 'text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+                  }`}
+                  title={language === 'id' ? 'Sematkan tautan web' : 'Attach link'}
+                >
+                  <Link2 className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddSubtask()}
+                  disabled={!newSubtaskTitle.trim()}
+                  className="px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs sm:text-sm font-bold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
+                >
+                  {language === 'id' ? '+ Tambah' : '+ Add'}
+                </button>
+              </div>
+
+              {/* Pending Attachments Preview for Subtask */}
+              {(subtaskPendingFile || subtaskPendingLink) && (
+                <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in">
+                  {subtaskPendingLink && (
+                    <SplitPillBadge
+                      link={subtaskPendingLink}
+                      size="xs"
+                      onRemove={() => setSubtaskPendingLink(null)}
+                    />
+                  )}
+                  {subtaskPendingFile && (
+                    <SplitPillBadge
+                      attachment={subtaskPendingFile}
+                      size="xs"
+                      onRemove={() => setSubtaskPendingFile(null)}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Pending Link Input Form for Subtask */}
+              {isAddingSubtaskLink && (
+                <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-in fade-in">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      type="url"
+                      value={subtaskLinkUrl}
+                      onChange={(e) => setSubtaskLinkUrl(e.target.value)}
+                      placeholder="https://drive.google.com/... atau https://figma.com/..."
+                      className="flex-1 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                      autoFocus
+                    />
+                    <input
+                      type="text"
+                      value={subtaskLinkTitle}
+                      onChange={(e) => setSubtaskLinkTitle(e.target.value)}
+                      placeholder={language === 'id' ? 'Nama tautan (opsional)' : 'Link title (optional)'}
+                      className="w-full sm:w-44 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingSubtaskLink(false)}
+                      className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer"
+                    >
+                      {language === 'id' ? 'Batal' : 'Cancel'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveLinkForSubtask}
+                      disabled={!subtaskLinkUrl.trim()}
+                      className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors"
+                    >
+                      {language === 'id' ? 'Sematkan' : 'Attach'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

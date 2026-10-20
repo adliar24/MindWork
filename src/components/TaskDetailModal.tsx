@@ -54,10 +54,15 @@ import {
   triggerDownload,
   compressImageFile,
   detectCloudService,
+  fileToAttachment,
+  createExternalLink,
+  getItemAttachments,
+  getItemLinks,
 } from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
 import { ConfirmModal } from './ConfirmModal';
+import { SplitPillBadge } from './SplitPillBadge';
 
 interface TaskDetailModalProps {
   task: Task;
@@ -100,6 +105,21 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [checklistTitleInput, setChecklistTitleInput] = useState('Checklist');
   const [showDetails, setShowDetails] = useState(true);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
+
+  // Checklist Item attachment & link state
+  const [activeLinkInputItemId, setActiveLinkInputItemId] = useState<string | null>(null);
+  const [tempChecklistLinkUrl, setTempChecklistLinkUrl] = useState('');
+  const [tempChecklistLinkTitle, setTempChecklistLinkTitle] = useState('');
+  const [targetChecklistItemIdForFile, setTargetChecklistItemIdForFile] = useState<string | null>(null);
+  const checklistFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Pending attachment/link for new checklist item input
+  const [pendingNewItemFile, setPendingNewItemFile] = useState<Attachment | null>(null);
+  const [pendingNewItemLink, setPendingNewItemLink] = useState<ExternalLink | null>(null);
+  const [isAddingNewItemLink, setIsAddingNewItemLink] = useState(false);
+  const [newSubtaskLinkUrl, setNewSubtaskLinkUrl] = useState('');
+  const [newSubtaskLinkTitle, setNewSubtaskLinkTitle] = useState('');
+  const newChecklistFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Attachments filter tab
   const [attachmentTab, setAttachmentTab] = useState<'all' | 'work' | 'docs'>('all');
@@ -258,6 +278,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       id: `check-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       title: newChecklistText.trim(),
       completed: false,
+      attachment: pendingNewItemFile || undefined,
+      attachments: pendingNewItemFile ? [pendingNewItemFile] : [],
+      externalLink: pendingNewItemLink || undefined,
+      externalLinks: pendingNewItemLink ? [pendingNewItemLink] : [],
     };
 
     onUpdateTask({
@@ -265,6 +289,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       checklist: [...(task.checklist || []), newItem],
     });
     setNewChecklistText('');
+    setPendingNewItemFile(null);
+    setPendingNewItemLink(null);
+    setIsAddingNewItemLink(false);
+    setNewSubtaskLinkUrl('');
+    setNewSubtaskLinkTitle('');
   };
 
   const handleAddChecklistFromPopover = (e: React.FormEvent) => {
@@ -287,6 +316,106 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const handleDeleteChecklist = (itemId: string) => {
     const updatedChecklist = (task.checklist || []).filter((item) => item.id !== itemId);
     onUpdateTask({ ...task, checklist: updatedChecklist });
+  };
+
+  // Handle attaching file directly to an existing checklist item
+  const handleAttachFileToChecklist = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !targetChecklistItemIdForFile) return;
+    try {
+      const att = await fileToAttachment(file);
+      const updatedChecklist = (task.checklist || []).map((item) => {
+        if (item.id === targetChecklistItemIdForFile) {
+          const currentAtts = getItemAttachments(item);
+          return {
+            ...item,
+            attachment: att,
+            attachments: [...currentAtts, att],
+          };
+        }
+        return item;
+      });
+      onUpdateTask({ ...task, checklist: updatedChecklist });
+    } finally {
+      setTargetChecklistItemIdForFile(null);
+      if (checklistFileInputRef.current) checklistFileInputRef.current.value = '';
+    }
+  };
+
+  // Handle attaching link to an existing checklist item
+  const handleSaveLinkToChecklistItem = (itemId: string) => {
+    if (!tempChecklistLinkUrl.trim()) return;
+    const link = createExternalLink(tempChecklistLinkUrl, tempChecklistLinkTitle);
+    const updatedChecklist = (task.checklist || []).map((item) => {
+      if (item.id === itemId) {
+        const currentLinks = getItemLinks(item);
+        return {
+          ...item,
+          externalLink: link,
+          externalLinks: [...currentLinks, link],
+        };
+      }
+      return item;
+    });
+    onUpdateTask({ ...task, checklist: updatedChecklist });
+    setActiveLinkInputItemId(null);
+    setTempChecklistLinkUrl('');
+    setTempChecklistLinkTitle('');
+  };
+
+  // Handle removing attachment from a checklist item
+  const handleRemoveChecklistAttachment = (itemId: string, attachmentId: string) => {
+    const updatedChecklist = (task.checklist || []).map((item) => {
+      if (item.id === itemId) {
+        const currentAtts = getItemAttachments(item);
+        const remaining = currentAtts.filter((a) => a.id !== attachmentId);
+        return {
+          ...item,
+          attachment: remaining.length > 0 ? remaining[0] : undefined,
+          attachments: remaining,
+        };
+      }
+      return item;
+    });
+    onUpdateTask({ ...task, checklist: updatedChecklist });
+  };
+
+  // Handle removing link from a checklist item
+  const handleRemoveChecklistLink = (itemId: string, linkId: string) => {
+    const updatedChecklist = (task.checklist || []).map((item) => {
+      if (item.id === itemId) {
+        const currentLinks = getItemLinks(item);
+        const remaining = currentLinks.filter((l) => l.id !== linkId);
+        return {
+          ...item,
+          externalLink: remaining.length > 0 ? remaining[0] : undefined,
+          externalLinks: remaining,
+        };
+      }
+      return item;
+    });
+    onUpdateTask({ ...task, checklist: updatedChecklist });
+  };
+
+  // Handle attaching file for new checklist item composer
+  const handleAttachFileForNewItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const att = await fileToAttachment(file);
+      setPendingNewItemFile(att);
+    } finally {
+      if (newChecklistFileInputRef.current) newChecklistFileInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveLinkForNewItem = () => {
+    if (!newSubtaskLinkUrl.trim()) return;
+    const link = createExternalLink(newSubtaskLinkUrl, newSubtaskLinkTitle);
+    setPendingNewItemLink(link);
+    setIsAddingNewItemLink(false);
+    setNewSubtaskLinkUrl('');
+    setNewSubtaskLinkTitle('');
   };
 
   // Attachment Processing
@@ -1070,67 +1199,283 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </div>
                 )}
 
+                {/* Hidden File Inputs for Subtasks */}
+                <input
+                  type="file"
+                  ref={checklistFileInputRef}
+                  onChange={handleAttachFileToChecklist}
+                  className="hidden"
+                />
+                <input
+                  type="file"
+                  ref={newChecklistFileInputRef}
+                  onChange={handleAttachFileForNewItem}
+                  className="hidden"
+                />
+
                 {/* Checklist Items List */}
-                <div className="space-y-1.5">
-                  {(task.checklist || []).map((item) => (
-                    <div
-                      key={item.id}
-                      className={`group flex items-center justify-between gap-2.5 p-2 px-3 rounded-xl border transition-colors text-xs sm:text-sm ${
-                        item.completed
-                          ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
-                          : 'border-neutral-200 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242]'
-                      }`}
-                    >
-                      <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={item.completed}
-                          onChange={() => handleToggleChecklist(item.id)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-700 cursor-pointer"
-                        />
-                        <span
-                          className={`truncate transition-all ${
-                            item.completed
-                              ? 'text-neutral-900 dark:text-neutral-100 font-bold'
-                              : 'text-neutral-900 dark:text-neutral-100 font-medium'
-                          }`}
-                        >
-                          {item.title}
-                        </span>
-                        {item.completed && (
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 ml-1">
-                            Selesai
-                          </span>
+                <div className="space-y-2">
+                  {(task.checklist || []).map((item) => {
+                    const itemAtts = getItemAttachments(item);
+                    const itemLinks = getItemLinks(item);
+                    const hasMedia = itemAtts.length > 0 || itemLinks.length > 0;
+                    const isLinkInputOpen = activeLinkInputItemId === item.id;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`group p-2.5 px-3 rounded-2xl border transition-all text-xs sm:text-sm ${
+                          item.completed
+                            ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
+                            : 'border-neutral-200 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2.5">
+                          <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={item.completed}
+                              onChange={() => handleToggleChecklist(item.id)}
+                              className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-700 cursor-pointer"
+                            />
+                            <span
+                              className={`truncate transition-all ${
+                                item.completed
+                                  ? 'text-neutral-400 dark:text-neutral-500 line-through font-medium'
+                                  : 'text-neutral-900 dark:text-neutral-100 font-semibold'
+                              }`}
+                            >
+                              {item.title}
+                            </span>
+                            {item.completed && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 ml-1">
+                                {language === 'id' ? 'Selesai' : 'Completed'}
+                              </span>
+                            )}
+                          </label>
+
+                          {/* Action Buttons for this Subtask: Attach File, Attach Link, Delete */}
+                          <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                            {/* Attach File Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTargetChecklistItemIdForFile(item.id);
+                                checklistFileInputRef.current?.click();
+                              }}
+                              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+                              title={language === 'id' ? 'Sematkan berkas / dokumen / zip' : 'Attach file'}
+                            >
+                              <Paperclip className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Attach Link Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isLinkInputOpen) {
+                                  setActiveLinkInputItemId(null);
+                                } else {
+                                  setActiveLinkInputItemId(item.id);
+                                  setTempChecklistLinkUrl('');
+                                  setTempChecklistLinkTitle('');
+                                }
+                              }}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isLinkInputOpen
+                                  ? 'text-blue-600 bg-blue-100/80 dark:bg-blue-900/40'
+                                  : 'text-neutral-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+                              }`}
+                              title={language === 'id' ? 'Sematkan tautan web' : 'Attach link'}
+                            >
+                              <Link2 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Delete Checklist Item */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteChecklist(item.id)}
+                              className="p-1.5 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+                              title={language === 'id' ? 'Hapus sub-tugas' : 'Delete subtask'}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Inline Link Input Popover if opened */}
+                        {isLinkInputOpen && (
+                          <div className="mt-2.5 p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-in fade-in">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <input
+                                type="url"
+                                value={tempChecklistLinkUrl}
+                                onChange={(e) => setTempChecklistLinkUrl(e.target.value)}
+                                placeholder="https://drive.google.com/... atau https://figma.com/..."
+                                className="flex-1 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                                autoFocus
+                              />
+                              <input
+                                type="text"
+                                value={tempChecklistLinkTitle}
+                                onChange={(e) => setTempChecklistLinkTitle(e.target.value)}
+                                placeholder={language === 'id' ? 'Nama tautan (opsional)' : 'Link title (optional)'}
+                                className="w-full sm:w-44 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setActiveLinkInputItemId(null)}
+                                className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer"
+                              >
+                                {language === 'id' ? 'Batal' : 'Cancel'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveLinkToChecklistItem(item.id)}
+                                disabled={!tempChecklistLinkUrl.trim()}
+                                className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors"
+                              >
+                                {language === 'id' ? 'Sematkan' : 'Attach'}
+                              </button>
+                            </div>
+                          </div>
                         )}
-                      </label>
+
+                        {/* Split-Pill Badges for attached files & links */}
+                        {hasMedia && (
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-neutral-100 dark:border-[#212433] mt-2">
+                            {itemLinks.map((link) => (
+                              <SplitPillBadge
+                                key={link.id}
+                                link={link}
+                                size="xs"
+                                onRemove={() => handleRemoveChecklistLink(item.id, link.id)}
+                              />
+                            ))}
+                            {itemAtts.map((att) => (
+                              <SplitPillBadge
+                                key={att.id}
+                                attachment={att}
+                                size="xs"
+                                onRemove={() => handleRemoveChecklistAttachment(item.id, att.id)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Add New Checklist Item Input Form */}
+                  <form onSubmit={handleAddChecklist} className="space-y-2 pt-1">
+                    <div className="flex items-center gap-1.5 p-1 px-1.5 rounded-2xl bg-neutral-50 dark:bg-[#161822] border border-neutral-200 dark:border-[#262936] focus-within:border-red-500 transition-colors">
+                      <input
+                        ref={checklistInputRef}
+                        type="text"
+                        value={newChecklistText}
+                        onChange={(e) => setNewChecklistText(e.target.value)}
+                        placeholder={
+                          language === 'id'
+                            ? '+ Tambah sub-tugas (Tekan Enter)...'
+                            : '+ Add a sub-task (Press Enter)...'
+                        }
+                        className="flex-1 px-2.5 py-1 text-xs bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
+                      />
+
+                      {/* Quick Attach File to pending item */}
                       <button
                         type="button"
-                        onClick={() => handleDeleteChecklist(item.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-neutral-400 hover:text-red-500 transition-opacity rounded cursor-pointer"
-                        title="Hapus sub-tugas"
+                        onClick={() => newChecklistFileInputRef.current?.click()}
+                        className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-200/60 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+                        title={language === 'id' ? 'Sematkan berkas ke sub-tugas ini' : 'Attach file to this subtask'}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Paperclip className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Quick Attach Link to pending item */}
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingNewItemLink(!isAddingNewItemLink)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          isAddingNewItemLink || pendingNewItemLink
+                            ? 'text-blue-600 bg-blue-100/80 dark:bg-blue-900/40'
+                            : 'text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+                        }`}
+                        title={language === 'id' ? 'Sematkan tautan web' : 'Attach link'}
+                      >
+                        <Link2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={!newChecklistText.trim()}
+                        className="px-3 py-1 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold text-xs disabled:opacity-30 cursor-pointer transition-all shrink-0"
+                      >
+                        {language === 'id' ? 'Tambah' : 'Add'}
                       </button>
                     </div>
-                  ))}
 
-                  {/* Add New Checklist Item Input */}
-                  <form onSubmit={handleAddChecklist} className="flex items-center gap-2 pt-1">
-                    <input
-                      ref={checklistInputRef}
-                      type="text"
-                      value={newChecklistText}
-                      onChange={(e) => setNewChecklistText(e.target.value)}
-                      placeholder={language === 'id' ? '+ Tambah sub-tugas (Tekan Enter)...' : '+ Add a sub-task (Press Enter)...'}
-                      className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50/70 dark:bg-[#161822] border border-neutral-200/80 dark:border-[#262936] text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-red-500"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newChecklistText.trim()}
-                      className="px-3 py-1.5 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold text-xs disabled:opacity-30 cursor-pointer transition-all"
-                    >
-                      {t('saveChanges')}
-                    </button>
+                    {/* Pending Attachments Preview for new item */}
+                    {(pendingNewItemFile || pendingNewItemLink) && (
+                      <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in">
+                        {pendingNewItemLink && (
+                          <SplitPillBadge
+                            link={pendingNewItemLink}
+                            size="xs"
+                            onRemove={() => setPendingNewItemLink(null)}
+                          />
+                        )}
+                        {pendingNewItemFile && (
+                          <SplitPillBadge
+                            attachment={pendingNewItemFile}
+                            size="xs"
+                            onRemove={() => setPendingNewItemFile(null)}
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Pending Link Input Dialog for new item */}
+                    {isAddingNewItemLink && (
+                      <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-in fade-in">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <input
+                            type="url"
+                            value={newSubtaskLinkUrl}
+                            onChange={(e) => setNewSubtaskLinkUrl(e.target.value)}
+                            placeholder="https://drive.google.com/... atau https://figma.com/..."
+                            className="flex-1 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                            autoFocus
+                          />
+                          <input
+                            type="text"
+                            value={newSubtaskLinkTitle}
+                            onChange={(e) => setNewSubtaskLinkTitle(e.target.value)}
+                            placeholder={language === 'id' ? 'Nama tautan (opsional)' : 'Link title (optional)'}
+                            className="w-full sm:w-44 px-2.5 py-1 text-xs rounded-lg bg-white dark:bg-[#12141c] border border-blue-200 dark:border-blue-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingNewItemLink(false)}
+                            className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer"
+                          >
+                            {language === 'id' ? 'Batal' : 'Cancel'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveLinkForNewItem}
+                            disabled={!newSubtaskLinkUrl.trim()}
+                            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors"
+                          >
+                            {language === 'id' ? 'Sematkan' : 'Attach'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </div>
               </div>

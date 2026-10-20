@@ -60,6 +60,10 @@ export interface ChecklistItem {
   id: string;
   title: string;
   completed: boolean;
+  attachment?: Attachment;
+  externalLink?: ExternalLink;
+  attachments?: Attachment[];
+  externalLinks?: ExternalLink[];
 }
 
 export type LinkType = 'drive' | 'figma' | 'canva' | 'doc' | 'sheet' | 'link';
