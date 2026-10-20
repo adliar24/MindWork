@@ -58,7 +58,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const { t, language } = useLanguage();
   const currentUserRole: ProjectRole =
     project.memberRoles?.[currentUser.id] ||
-    (project.leaderId === currentUser.id ? 'leader' : 'viewer');
+    (project.leaderId === currentUser.id ? 'leader' : 'member');
   
   // Can manage if leader, project creator, or sole member
   const isLeader =

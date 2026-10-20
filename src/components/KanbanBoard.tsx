@@ -56,7 +56,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
   onOpenEditProjectModal,
 }) => {
   const { language, t } = useLanguage();
-  const isViewer = currentUserRole === 'viewer';
+  const isViewer = currentUserRole?.toLowerCase() === 'viewer' || currentUserRole?.toLowerCase().includes('peninjau');
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<ColumnId | null>(null);
   const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);

@@ -522,12 +522,10 @@ export default function App() {
     localStorage.setItem('vermilion_active_proj', activeProjectId);
   }, [activeProjectId]);
 
-  // User's accessible projects (projects where current user is creator/leader or member)
+  // User's accessible projects (all projects in this workspace are accessible for team collaboration)
   const userProjects = useMemo<Project[]>(() => {
-    if (!currentUser.id) return [];
-    return projects.filter(
-      (p) => p.leaderId === currentUser.id || p.memberIds?.includes(currentUser.id)
-    );
+    if (!currentUser.id) return projects;
+    return projects;
   }, [projects, currentUser.id]);
 
   // Active Project Data (null when on Home view or no project selected)
@@ -560,10 +558,15 @@ export default function App() {
   const currentUserRole: ProjectRole = useMemo(() => {
     if (!currentUser.id || !activeProject) return 'member';
     if (!activeProject.leaderId || activeProject.leaderId === currentUser.id) return 'leader';
-    return (
-      activeProject.memberRoles?.[currentUser.id] ||
-      (activeProject.memberIds?.includes(currentUser.id) ? 'member' : 'viewer')
-    );
+    const assignedRole = activeProject.memberRoles?.[currentUser.id];
+    if (assignedRole) {
+      const lower = assignedRole.toLowerCase();
+      if (lower === 'viewer' || lower.includes('peninjau')) return 'viewer';
+      if (lower === 'leader' || lower.includes('ketua')) return 'leader';
+      return assignedRole;
+    }
+    // All registered team members have full member permissions to add & edit lists and cards
+    return 'member';
   }, [activeProject, currentUser]);
 
   const activeProjectMembers = useMemo(() => {
