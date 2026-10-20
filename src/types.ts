@@ -1,4 +1,4 @@
-export type FileType = 'image' | 'document' | 'spreadsheet' | 'archive' | 'other';
+export type FileType = 'image' | 'document' | 'spreadsheet' | 'archive' | 'audio' | 'other';
 
 export interface Attachment {
   id: string;
@@ -71,7 +71,7 @@ export interface ExternalLink {
   domain?: string;
 }
 
-export type TaskType = 'task' | 'feature' | 'bug' | 'improvement' | 'design' | 'research';
+export type TaskType = 'task' | 'feature' | 'bug' | 'improvement' | 'design' | 'research' | 'concept' | 'asset' | 'note';
 
 export interface Task {
   id: string;

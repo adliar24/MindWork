@@ -652,11 +652,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       onBlur={handleTitleBlur}
                       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                       placeholder="Judul Tugas..."
-                      className={`w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-lg px-2 py-0.5 -ml-2 transition-all leading-snug ${
-                        isCompleted
-                          ? 'line-through text-neutral-400 dark:text-neutral-500'
-                          : 'text-neutral-950 dark:text-white'
-                      }`}
+                      className="w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-lg px-2 py-0.5 -ml-2 transition-all leading-snug text-neutral-950 dark:text-white"
                     />
                   </div>
                 </div>
@@ -830,6 +826,31 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-neutral-400 block mb-1.5">
+                          {language === 'id' ? 'Tipe Kartu' : 'Card Type'}
+                        </label>
+                        <select
+                          value={taskType}
+                          onChange={(e) => {
+                            const newType = e.target.value as TaskType;
+                            setTaskType(newType);
+                            onUpdateTask({ ...task, taskType: newType });
+                          }}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-100 dark:bg-[#161822] border border-neutral-200/70 dark:border-[#272a38] text-neutral-900 dark:text-white text-xs font-medium focus:outline-none focus:border-red-500"
+                        >
+                          <option value="task">{language === 'id' ? '📋 Tugas Umum' : '📋 General Task'}</option>
+                          <option value="concept">{language === 'id' ? '💡 Konsep / Ide' : '💡 Concept / Idea'}</option>
+                          <option value="asset">{language === 'id' ? '🎨 Aset & Referensi' : '🎨 Asset & Media'}</option>
+                          <option value="note">{language === 'id' ? '📝 Catatan' : '📝 Note'}</option>
+                          <option value="feature">{language === 'id' ? '✨ Fitur Baru' : '✨ Feature'}</option>
+                          <option value="bug">🐛 Bug</option>
+                          <option value="design">{language === 'id' ? '🎨 Desain' : '🎨 Design'}</option>
+                          <option value="improvement">{language === 'id' ? '⚡ Peningkatan' : '⚡ Improvement'}</option>
+                          <option value="research">{language === 'id' ? '💡 Riset' : '💡 Research'}</option>
+                        </select>
                       </div>
 
                       <div>
@@ -1076,27 +1097,43 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
                 {/* Checklist Items List */}
                 <div className="space-y-1.5">
+                  {(!task.checklist || task.checklist.length === 0) && (
+                    <p className="text-[11px] text-neutral-400 dark:text-neutral-500 italic pb-0.5">
+                      {language === 'id'
+                        ? 'Belum ada sub-tugas. Checklist bersifat opsional (kartu bisa berupa ide, konsep, aset, atau catatan).'
+                        : 'No sub-tasks yet. Checklist is optional (card can be an idea, concept, asset, or note).'}
+                    </p>
+                  )}
                   {(task.checklist || []).map((item) => (
                     <div
                       key={item.id}
-                      className="group flex items-center justify-between gap-2.5 p-2 px-2.5 rounded-xl border border-neutral-200/60 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242] transition-colors text-xs"
+                      className={`group flex items-center justify-between gap-2.5 p-2 px-2.5 rounded-xl border transition-colors text-xs ${
+                        item.completed
+                          ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
+                          : 'border-neutral-200/60 dark:border-[#222532] bg-white dark:bg-[#161822] hover:border-neutral-300 dark:hover:border-[#2e3242]'
+                      }`}
                     >
                       <label className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={item.completed}
                           onChange={() => handleToggleChecklist(item.id)}
-                          className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-neutral-300 dark:border-neutral-700 cursor-pointer"
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-700 cursor-pointer"
                         />
                         <span
                           className={`truncate transition-all ${
                             item.completed
-                              ? 'line-through text-neutral-400 dark:text-neutral-500'
+                              ? 'text-neutral-900 dark:text-neutral-100 font-medium'
                               : 'text-neutral-800 dark:text-neutral-200'
                           }`}
                         >
                           {item.title}
                         </span>
+                        {item.completed && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 ml-1">
+                            Selesai
+                          </span>
+                        )}
                       </label>
                       <button
                         type="button"

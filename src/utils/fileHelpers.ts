@@ -17,6 +17,9 @@ export function getFileTypeFromExtension(filename: string): { type: FileType; ex
   if (['zip', 'rar', '7z', 'tar', 'gz', 'pkg'].includes(extLower)) {
     return { type: 'archive', extension };
   }
+  if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'].includes(extLower)) {
+    return { type: 'audio', extension };
+  }
   return { type: 'other', extension };
 }
 

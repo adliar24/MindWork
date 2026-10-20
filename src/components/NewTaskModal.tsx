@@ -360,6 +360,9 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                 className="w-full h-9 px-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white"
               >
                 <option value="task">{language === 'id' ? '📋 Tugas Umum' : '📋 General Task'}</option>
+                <option value="concept">{language === 'id' ? '💡 Konsep / Ide' : '💡 Concept / Idea'}</option>
+                <option value="asset">{language === 'id' ? '🎨 Aset & Referensi' : '🎨 Asset & Media'}</option>
+                <option value="note">{language === 'id' ? '📝 Catatan' : '📝 Note'}</option>
                 <option value="feature">{language === 'id' ? '✨ Fitur Baru' : '✨ Feature'}</option>
                 <option value="bug">🐛 Bug / Issue</option>
                 <option value="improvement">{language === 'id' ? '⚡ Peningkatan' : '⚡ Improvement'}</option>
@@ -465,12 +468,12 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
             />
           </div>
 
-          {/* Checklist / Subtugas */}
+          {/* Checklist / Subtugas (Opsional) */}
           <div className="space-y-2 pt-1 border-t border-neutral-100 dark:border-neutral-800">
             <div className="flex items-center justify-between text-xs font-semibold text-neutral-700 dark:text-neutral-300">
               <span className="flex items-center gap-1.5">
                 <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
-                <span>{language === 'id' ? 'Checklist / Subtugas' : 'Subtasks / Checklist'}</span>
+                <span>{language === 'id' ? 'Checklist / Subtugas (Opsional)' : 'Subtasks / Checklist (Optional)'}</span>
               </span>
               {checklistItems.length > 0 && (
                 <span className="text-[10px] font-mono text-neutral-400 font-normal">
@@ -478,6 +481,11 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
                 </span>
               )}
             </div>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+              {language === 'id'
+                ? 'Checklist bersifat opsional. Kosongkan jika kartu berupa ide, konsep, aset, atau catatan.'
+                : 'Checklist is optional. Leave empty if this card is an idea, concept, asset, or note.'}
+            </p>
 
             {checklistItems.length > 0 && (
               <div className="space-y-1 max-h-32 overflow-y-auto">

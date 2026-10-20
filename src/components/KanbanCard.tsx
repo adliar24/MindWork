@@ -14,9 +14,16 @@ import {
   Clock,
   CheckCircle2,
   Circle,
+  ExternalLink as ExternalLinkIcon,
+  Headphones,
+  FileText,
+  FileSpreadsheet,
+  Archive,
+  Bookmark,
+  FolderGit2,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
-import { formatDateLocale } from '../utils/fileHelpers';
+import { formatDateLocale, detectCloudService } from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -48,6 +55,21 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
     (att) => (att.isCover || att.type === 'image') && att.url
   );
 
+  // Find audio attachment if any
+  const audioAttachment = task.attachments.find(
+    (att) => att.type === 'audio' || ['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes((att.extension || '').toLowerCase())
+  );
+
+  // Find document/sheet/archive preview if no cover image
+  const primaryDocAttachment = !coverAttachment
+    ? task.attachments.find((att) => att.type !== 'audio' && att.type !== 'image')
+    : undefined;
+
+  const isNonTask =
+    task.taskType === 'concept' ||
+    task.taskType === 'asset' ||
+    task.taskType === 'note';
+
   const attachmentCount = task.attachments.length;
   const commentCount = task.comments.length;
   const linkCount = (task.externalLinks || []).length;
@@ -78,6 +100,24 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
   // Task Type Badge details
   const getTaskTypeBadge = (type?: TaskType) => {
     switch (type) {
+      case 'concept':
+        return {
+          label: language === 'id' ? 'Ide / Konsep' : 'Idea & Concept',
+          Icon: Lightbulb,
+          style: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+        };
+      case 'asset':
+        return {
+          label: language === 'id' ? 'Aset & Media' : 'Asset & Media',
+          Icon: FolderGit2,
+          style: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
+        };
+      case 'note':
+        return {
+          label: language === 'id' ? 'Catatan' : 'Note',
+          Icon: Bookmark,
+          style: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25',
+        };
       case 'feature':
         return {
           label: language === 'id' ? 'Fitur' : 'Feature',
@@ -216,9 +256,9 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           </div>
         </div>
 
-        {/* Task Title with Trello-style Check-off button */}
+        {/* Task Title with Trello-style Check-off button or Non-task indicator */}
         <div className="flex items-start gap-2">
-          {!isReadOnly && onToggleComplete && (
+          {!isReadOnly && onToggleComplete && !isNonTask && (
             <button
               type="button"
               onClick={(e) => {
@@ -235,15 +275,41 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               )}
             </button>
           )}
+          {isNonTask && (
+            <span
+              className="mt-0.5 shrink-0"
+              title={
+                task.taskType === 'concept'
+                  ? 'Konsep / Ide'
+                  : task.taskType === 'asset'
+                  ? 'Aset & Media'
+                  : 'Catatan'
+              }
+            >
+              {task.taskType === 'concept' ? (
+                <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+              ) : task.taskType === 'asset' ? (
+                <FolderGit2 className="w-3.5 h-3.5 text-indigo-500" />
+              ) : (
+                <Bookmark className="w-3.5 h-3.5 text-sky-500" />
+              )}
+            </span>
+          )}
           <h3
             className={`text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 flex-1 ${
               task.isCompleted
-                ? 'line-through text-neutral-400 dark:text-neutral-500'
+                ? 'text-neutral-900 dark:text-white'
                 : 'text-neutral-900 dark:text-white'
             }`}
           >
             {task.title}
           </h3>
+          {task.isCompleted && !isNonTask && (
+            <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-0.5">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              <span className="hidden sm:inline">Selesai</span>
+            </span>
+          )}
         </div>
 
         {/* Description excerpt (Desktop only - hidden on mobile for clean scannability) */}
@@ -251,6 +317,92 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           <p className="hidden sm:block text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 leading-normal">
             {task.description}
           </p>
+        )}
+
+        {/* Trello-style Media & Audio Preview Chips */}
+        {audioAttachment && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              if (audioAttachment.url) {
+                window.open(audioAttachment.url, '_blank', 'noopener,noreferrer');
+              } else {
+                onClick();
+              }
+            }}
+            title={`Berkas Audio: ${audioAttachment.name}`}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/25 text-violet-700 dark:text-violet-300 text-[10px] font-medium transition-all hover:bg-violet-500/20 cursor-pointer"
+          >
+            <Headphones className="w-3 h-3 text-violet-600 dark:text-violet-400 shrink-0" />
+            <span className="truncate flex-1 font-semibold">{audioAttachment.name}</span>
+            <span className="text-[9px] opacity-75 font-mono shrink-0">{audioAttachment.size || 'Audio'}</span>
+          </div>
+        )}
+
+        {primaryDocAttachment && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              if (primaryDocAttachment.url) {
+                window.open(primaryDocAttachment.url, '_blank', 'noopener,noreferrer');
+              } else {
+                onClick();
+              }
+            }}
+            title={`Berkas: ${primaryDocAttachment.name}`}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-medium transition-all cursor-pointer ${
+              primaryDocAttachment.type === 'document'
+                ? 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
+                : primaryDocAttachment.type === 'spreadsheet'
+                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                : primaryDocAttachment.type === 'archive'
+                ? 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                : 'bg-neutral-100 dark:bg-[#202330] border-neutral-200/80 dark:border-neutral-700/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/70'
+            }`}
+          >
+            {primaryDocAttachment.type === 'document' ? (
+              <FileText className="w-3 h-3 shrink-0" />
+            ) : primaryDocAttachment.type === 'spreadsheet' ? (
+              <FileSpreadsheet className="w-3 h-3 shrink-0" />
+            ) : primaryDocAttachment.type === 'archive' ? (
+              <Archive className="w-3 h-3 shrink-0" />
+            ) : (
+              <Paperclip className="w-3 h-3 shrink-0" />
+            )}
+            <span className="truncate flex-1 font-semibold">{primaryDocAttachment.name}</span>
+            <span className="text-[9px] opacity-75 font-mono shrink-0">
+              {primaryDocAttachment.extension || primaryDocAttachment.size}
+            </span>
+          </div>
+        )}
+
+        {/* Trello-style Clickable Direct External Links */}
+        {task.externalLinks && task.externalLinks.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {task.externalLinks.slice(0, 2).map((link) => {
+              const cloud = detectCloudService(link.url);
+              return (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  title={`Buka ${link.title || cloud.name}: ${link.url}`}
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-all hover:scale-[1.02] hover:shadow-xs active:scale-95 max-w-full ${cloud.badgeClass}`}
+                >
+                  <Link2 className="w-2.5 h-2.5 shrink-0" />
+                  <span className="truncate max-w-[120px] sm:max-w-[150px]">{link.title || cloud.name}</span>
+                  <ExternalLinkIcon className="w-2 h-2 opacity-60 shrink-0" />
+                </a>
+              );
+            })}
+            {task.externalLinks.length > 2 && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-[#202330] text-neutral-500 border border-neutral-200/60 dark:border-[#2b2f3e] self-center">
+                +{task.externalLinks.length - 2}
+              </span>
+            )}
+          </div>
         )}
 
         {/* Card Footer: Metadata Indicators (Date, Checklist count, Attachments, Comments) + Assignee */}
