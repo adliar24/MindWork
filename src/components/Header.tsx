@@ -6,6 +6,7 @@ import {
   UserPlus,
   Menu,
   X,
+  Database,
 } from 'lucide-react';
 import { Project, ProjectRole, ThemeMode, User } from '../types';
 import { UserAvatar } from './UserAvatar';
@@ -50,6 +51,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewProjectModal,
   onOpenInviteModal,
   onOpenAuthModal,
+  onOpenCloudModal,
+  cloudStatus,
   onToggleSidebarMobile,
   onGoHome,
 }) => {
@@ -179,6 +182,34 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
           </div>
+
+          {/* Cloud Database & Sync Pill */}
+          {onOpenCloudModal && (
+            <button
+              type="button"
+              onClick={onOpenCloudModal}
+              title={
+                cloudStatus?.connected
+                  ? 'Cloud Supabase Terhubung • Klik untuk sinkronisasi'
+                  : 'Koneksi Cloud Supabase • Klik untuk setup'
+              }
+              className={`flex items-center gap-1.5 h-8 sm:h-9 px-2 sm:px-2.5 rounded-xl border text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                cloudStatus?.connected
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[11px]">
+                {cloudStatus?.connected ? 'Cloud Sync' : 'Cloud Setup'}
+              </span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  cloudStatus?.connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`}
+              />
+            </button>
+          )}
 
           {/* Theme Toggle Button */}
           <button

@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import { Project, ProjectRole, Task, User, Column } from '../types';
+import { Project, ProjectRole, Task, User, Column, TaskType } from '../types';
 
 export interface CloudStatus {
   connected: boolean;
@@ -250,10 +250,13 @@ export async function fetchCloudProjects(): Promise<Project[] | null> {
         memberRoles[m.user_id] = m.role as ProjectRole;
       });
 
+      const rawDesc = p.description || '';
+      const cleanDesc = rawDesc.replace(/\s*<!--__MW_LISTS__:.*?-->/gs, '').trim();
+
       return {
         id: p.id,
         name: p.name,
-        description: p.description || '',
+        description: cleanDesc,
         key: p.key,
         category: p.category || 'General',
         leaderId: p.leader_id || memberIds[0] || 'user-1',
@@ -274,11 +277,25 @@ export async function fetchCloudProjects(): Promise<Project[] | null> {
 export async function saveCloudProject(project: Project): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
   try {
+    // Preserve any existing list metadata in description when updating
+    let finalDesc = project.description || '';
+    try {
+      const { data: existing } = await supabase
+        .from('projects')
+        .select('description')
+        .eq('id', project.id)
+        .single();
+      const existingMatch = (existing?.description || '').match(/<!--__MW_LISTS__:.*?-->/s);
+      if (existingMatch && !finalDesc.includes('<!--__MW_LISTS__:')) {
+        finalDesc = finalDesc ? `${finalDesc}\n\n${existingMatch[0]}` : existingMatch[0];
+      }
+    } catch {}
+
     // 1. Upsert project
     const row: any = {
       id: project.id,
       name: project.name,
-      description: project.description,
+      description: finalDesc,
       key: project.key,
       category: project.category,
       leader_id: project.leaderId,
@@ -350,6 +367,21 @@ export async function saveCloudProjectMembers(
 // TASKS
 // ----------------------------------------------------------------------
 
+function mapToSafeColumnId(colId: string): string {
+  const lower = (colId || '').toLowerCase();
+  if (lower.includes('progress') || lower.includes('doing')) return 'in_progress';
+  if (lower.includes('review')) return 'in_review';
+  if (lower.includes('done') || lower.includes('selesai')) return 'done';
+  return 'todo';
+}
+
+function normalizePriority(p?: string): 'Tinggi' | 'Sedang' | 'Rendah' {
+  const lower = (p || '').toLowerCase();
+  if (lower === 'tinggi' || lower === 'high' || lower === 'urgent') return 'Tinggi';
+  if (lower === 'rendah' || lower === 'low') return 'Rendah';
+  return 'Sedang';
+}
+
 export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null> {
   if (!isSupabaseConfigured) return null;
   try {
@@ -395,19 +427,35 @@ export async function fetchCloudTasks(projectId?: string): Promise<Task[] | null
       );
       const creatorId = t.creator_id || (creatorTag ? creatorTag.replace('__meta_creator:', '') : '');
 
+      const colTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_col:')
+      );
+      const columnId = colTag ? colTag.replace('__meta_col:', '') : t.column_id;
+
+      const keyTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_key:')
+      );
+      const key = t.key || (keyTag ? keyTag.replace('__meta_key:', '') : undefined);
+
+      const assigneeTag = rawTags.find(
+        (tag) => typeof tag === 'string' && tag.startsWith('__meta_assignee:')
+      );
+      const assigneeId = t.assignee_id || (assigneeTag ? assigneeTag.replace('__meta_assignee:', '') : '');
+
       return {
         id: t.id,
+        key,
         projectId: t.project_id,
-        columnId: t.column_id,
+        columnId,
         title: t.title,
         description: t.description || '',
-        priority: t.priority,
+        priority: normalizePriority(t.priority),
         taskType: (taskType as TaskType) || 'task',
         cardColor,
         estimate,
         isCompleted,
         creatorId,
-        assigneeId: t.assignee_id,
+        assigneeId,
         dueDate: t.due_date || '',
         tags: cleanTags,
         attachments: Array.isArray(t.attachments) ? t.attachments : [],
@@ -440,14 +488,22 @@ export async function saveCloudTask(task: Task): Promise<boolean> {
     if (task.estimate) enrichedTags.push(`__meta_est:${task.estimate}`);
     if (task.isCompleted) enrichedTags.push(`__meta_done:true`);
     if (task.creatorId) enrichedTags.push(`__meta_creator:${task.creatorId}`);
+    if (task.key) enrichedTags.push(`__meta_key:${task.key}`);
+    // Store original dynamic column ID in tags for seamless cross-device fidelity
+    enrichedTags.push(`__meta_col:${task.columnId}`);
+    if (task.assigneeId) {
+      enrichedTags.push(`__meta_assignee:${task.assigneeId}`);
+    }
+
+    const safePriority = normalizePriority(task.priority);
 
     const fullPayload: any = {
       id: task.id,
       project_id: task.projectId,
       column_id: task.columnId,
       title: task.title,
-      description: task.description,
-      priority: task.priority,
+      description: task.description || '',
+      priority: safePriority,
       assignee_id: task.assigneeId || null,
       due_date: task.dueDate || '',
       tags: enrichedTags,
@@ -466,13 +522,138 @@ export async function saveCloudTask(task: Task): Promise<boolean> {
     const { error } = await supabase.from('tasks').upsert(fullPayload);
     if (!error) return true;
 
-    // Resilient fallback if schema hasn't run migrations for new columns yet
-    const { card_color, task_type, is_completed, estimate, creator_id, ...fallbackPayload } = fullPayload;
-    fallbackPayload.tags = enrichedTags;
+    // Resilient fallback 1: Check constraint violation (code 23514) on tasks_column_id_check
+    const safeCol = mapToSafeColumnId(task.columnId);
+    const colFallbackPayload = {
+      ...fullPayload,
+      column_id: safeCol,
+    };
+    const { error: colError } = await supabase.from('tasks').upsert(colFallbackPayload);
+    if (!colError) return true;
+
+    // Resilient fallback 2: Foreign key violation on assignee_id (code 23503)
+    const noFkPayload = {
+      ...colFallbackPayload,
+      assignee_id: null,
+    };
+    const { error: noFkError } = await supabase.from('tasks').upsert(noFkPayload);
+    if (!noFkError) return true;
+
+    // Resilient fallback 3: If schema hasn't run migrations for newer optional columns
+    const { card_color, task_type, is_completed, estimate, creator_id, ...fallbackPayload } = noFkPayload;
     const { error: fallbackError } = await supabase.from('tasks').upsert(fallbackPayload);
-    return !fallbackError;
-  } catch {
+    if (!fallbackError) return true;
+
+    console.warn('saveCloudTask error:', fallbackError);
     return false;
+  } catch (e) {
+    console.warn('saveCloudTask exception:', e);
+    return false;
+  }
+}
+
+export interface FullSyncResult {
+  success: boolean;
+  usersSynced: number;
+  projectsSynced: number;
+  listsSynced: number;
+  tasksSynced: number;
+  errors: string[];
+}
+
+export async function syncAllLocalDataToCloud(): Promise<FullSyncResult> {
+  const result: FullSyncResult = {
+    success: true,
+    usersSynced: 0,
+    projectsSynced: 0,
+    listsSynced: 0,
+    tasksSynced: 0,
+    errors: [],
+  };
+
+  if (!isSupabaseConfigured) {
+    result.success = false;
+    result.errors.push('Supabase belum terkonfigurasi');
+    return result;
+  }
+
+  try {
+    // 1. Sync all local users
+    const localUsersStr = localStorage.getItem('vermilion_users');
+    let localUsers: User[] = [];
+    if (localUsersStr) {
+      try {
+        localUsers = JSON.parse(localUsersStr);
+      } catch {}
+    }
+    for (const u of localUsers) {
+      if (u.id && u.id !== 'user-1') {
+        const ok = await saveCloudUser(u);
+        if (ok) result.usersSynced++;
+      }
+    }
+
+    // 2. Sync all local projects FIRST (so project_id FK exists for tasks)
+    const localProjStr = localStorage.getItem('vermilion_projects');
+    let localProjects: Project[] = [];
+    if (localProjStr) {
+      try {
+        localProjects = JSON.parse(localProjStr);
+      } catch {}
+    }
+    for (const p of localProjects) {
+      if (p.id && !['proj-1', 'proj-2', 'proj-3'].includes(p.id)) {
+        const ok = await saveCloudProject(p);
+        if (ok) result.projectsSynced++;
+      }
+    }
+
+    // 3. Sync all local board lists & backup to project fallback
+    const localListsStr = localStorage.getItem('vermilion_board_lists');
+    let localLists: Column[] = [];
+    if (localListsStr) {
+      try {
+        localLists = JSON.parse(localListsStr);
+      } catch {}
+    }
+    for (const l of localLists) {
+      if (l.id) {
+        await saveCloudList(l);
+        result.listsSynced++;
+      }
+    }
+    const projectIds = Array.from(new Set(localLists.map((l) => l.projectId).filter(Boolean)));
+    for (const pId of projectIds) {
+      if (pId) {
+        await syncProjectListsFallback(pId, localLists.filter((l) => l.projectId === pId));
+      }
+    }
+
+    // 4. Sync all local tasks
+    const localTasksStr = localStorage.getItem('vermilion_tasks');
+    let localTasks: Task[] = [];
+    if (localTasksStr) {
+      try {
+        localTasks = JSON.parse(localTasksStr);
+      } catch {}
+    }
+    for (const t of localTasks) {
+      if (t.id && !['proj-1', 'proj-2', 'proj-3'].includes(t.projectId)) {
+        const ok = await saveCloudTask(t);
+        if (ok) {
+          result.tasksSynced++;
+        } else {
+          result.errors.push(`Gagal menyimpan tugas "${t.title}"`);
+        }
+      }
+    }
+
+    result.success = result.errors.length === 0;
+    return result;
+  } catch (err: any) {
+    result.success = false;
+    result.errors.push(err?.message || 'Terjadi kesalahan sinkronisasi');
+    return result;
   }
 }
 
@@ -490,23 +671,61 @@ export async function deleteCloudTask(taskId: string): Promise<boolean> {
 // BOARD LISTS (Trello-style Dynamic Lists)
 // ----------------------------------------------------------------------
 
+export async function syncProjectListsFallback(projectId: string, lists: Column[]): Promise<boolean> {
+  if (!isSupabaseConfigured || !projectId) return false;
+  try {
+    const { data } = await supabase.from('projects').select('description').eq('id', projectId).single();
+    if (!data) return false;
+    const cleanDesc = (data.description || '').replace(/\s*<!--__MW_LISTS__:.*?-->/gs, '').trim();
+    const metaStr = `<!--__MW_LISTS__:${JSON.stringify(lists)}-->`;
+    const newDesc = cleanDesc ? `${cleanDesc}\n\n${metaStr}` : metaStr;
+    await supabase.from('projects').update({ description: newDesc }).eq('id', projectId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchCloudLists(projectId?: string): Promise<Column[] | null> {
   if (!isSupabaseConfigured) return null;
   try {
-    let query = supabase.from('board_lists').select('*').order('position', { ascending: true });
-    if (projectId) {
-      query = query.eq('project_id', projectId);
+    // 1. First attempt primary table 'board_lists'
+    const { data, error } = await supabase.from('board_lists').select('*').order('position', { ascending: true });
+    if (!error && data && data.length > 0) {
+      const filtered = projectId ? data.filter((row: any) => row.project_id === projectId) : data;
+      return filtered.map((row: any) => ({
+        id: row.id,
+        projectId: row.project_id,
+        title: row.title,
+        order: row.position ?? 0,
+        badgeColor: row.color || '',
+      }));
     }
-    const { data, error } = await query;
-    if (error || !data) return null;
 
-    return data.map((row: any) => ({
-      id: row.id,
-      projectId: row.project_id,
-      title: row.title,
-      order: row.position ?? 0,
-      badgeColor: row.color || '',
-    }));
+    // 2. Resilient fallback if 'board_lists' table hasn't been created in Supabase yet:
+    // Extract lists embedded in project descriptions
+    let projQuery = supabase.from('projects').select('id, description');
+    if (projectId) {
+      projQuery = projQuery.eq('id', projectId);
+    }
+    const { data: projData } = await projQuery;
+    if (projData) {
+      const extracted: Column[] = [];
+      projData.forEach((p: any) => {
+        const match = (p.description || '').match(/<!--__MW_LISTS__:(.*?)-->/s);
+        if (match) {
+          try {
+            const parsed = JSON.parse(match[1]);
+            if (Array.isArray(parsed)) {
+              extracted.push(...parsed);
+            }
+          } catch {}
+        }
+      });
+      if (extracted.length > 0) return extracted;
+    }
+
+    return null;
   } catch {
     return null;
   }

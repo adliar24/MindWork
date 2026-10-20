@@ -28,6 +28,8 @@ import {
   saveCloudUser,
   deleteDemoUsers,
   subscribeToCloudChanges,
+  syncProjectListsFallback,
+  syncAllLocalDataToCloud,
   CloudStatus,
 } from './lib/supabaseService';
 import {
@@ -213,141 +215,172 @@ export default function App() {
         fetchCloudLists(),
       ]);
 
-      if (cloudUsers) {
-        const cleanCloudUsers = cloudUsers.filter(
-          (u) =>
-            u.id !== 'user-1' &&
-            !u.name.toLowerCase().includes('demo') &&
-            !u.username?.toLowerCase().includes('demo') &&
-            !u.email?.toLowerCase().includes('demo')
-        );
+      const safeCloudUsers = cloudUsers || [];
+      const safeCloudProjects = cloudProjects || [];
+      const safeCloudTasks = cloudTasks || [];
+      const safeCloudLists = cloudLists || [];
 
-        setUsers((prevUsers) => {
-          const mergedUsers = cleanCloudUsers.map((cu) => {
-            const local = prevUsers.find((u) => u.id === cu.id);
-            if (!local) return cu;
-            const isLocalCustom = local.avatar && (local.avatar.startsWith('data:image/') || local.avatar.startsWith('http'));
-            const isCloudCustom = cu.avatar && (cu.avatar.startsWith('data:image/') || cu.avatar.startsWith('http'));
-            const finalAvatar = isLocalCustom && !isCloudCustom ? local.avatar : (cu.avatar || local.avatar);
-            if (isLocalCustom && !isCloudCustom) {
-              saveCloudUser({ ...cu, avatar: finalAvatar }).catch(() => {});
-            }
-            return {
-              ...cu,
-              avatar: finalAvatar,
-              role: cu.role || local.role || '',
-            };
-          });
+      // 1. Process & Sync Users
+      const cleanCloudUsers = safeCloudUsers.filter(
+        (u) =>
+          u.id !== 'user-1' &&
+          !u.name.toLowerCase().includes('demo') &&
+          !u.username?.toLowerCase().includes('demo') &&
+          !u.email?.toLowerCase().includes('demo')
+      );
 
-          const missingLocals = prevUsers.filter(
-            (lu) => !cleanCloudUsers.some((cu) => cu.id === lu.id) && lu.id !== 'user-1'
-          );
-          missingLocals.forEach((lu) => {
-            saveCloudUser(lu).catch(() => {});
-          });
-
-          const finalUsers = [...mergedUsers, ...missingLocals];
-          try {
-            localStorage.setItem('vermilion_users', JSON.stringify(finalUsers));
-          } catch (e) {
-            console.warn('LocalStorage users quota warning:', e);
+      setUsers((prevUsers) => {
+        const mergedUsers = cleanCloudUsers.map((cu) => {
+          const local = prevUsers.find((u) => u.id === cu.id);
+          if (!local) return cu;
+          const isLocalCustom = local.avatar && (local.avatar.startsWith('data:image/') || local.avatar.startsWith('http'));
+          const isCloudCustom = cu.avatar && (cu.avatar.startsWith('data:image/') || cu.avatar.startsWith('http'));
+          const finalAvatar = isLocalCustom && !isCloudCustom ? local.avatar : (cu.avatar || local.avatar);
+          if (isLocalCustom && !isCloudCustom) {
+            saveCloudUser({ ...cu, avatar: finalAvatar }).catch(() => {});
           }
-          return finalUsers;
+          return {
+            ...cu,
+            avatar: finalAvatar,
+            role: cu.role || local.role || '',
+          };
         });
-      }
-      if (cloudProjects) {
-        const cleanCloudProjects = cloudProjects.filter(
-          (p) => p.id !== 'proj-1' && p.id !== 'proj-2' && p.id !== 'proj-3'
+
+        const missingLocals = prevUsers.filter(
+          (lu) => !cleanCloudUsers.some((cu) => cu.id === lu.id) && lu.id !== 'user-1'
         );
-        // Smart merge: retain local coverImage, avatar, and custom member roles if cloud has empty string
-        setProjects((prevProjects) => {
-          const merged = cleanCloudProjects.map((cp) => {
-            const local = prevProjects.find((p) => p.id === cp.id);
-            if (!local) return cp;
-            const finalCover = cp.coverImage || local.coverImage || '';
-            const finalAvatar = cp.avatar || local.avatar || '';
+        missingLocals.forEach((lu) => {
+          saveCloudUser(lu).catch(() => {});
+        });
 
-            // If local had coverImage or avatar that cloud didn't have, auto-sync back up to Supabase so all devices see it!
-            if ((!cp.coverImage && local.coverImage) || (!cp.avatar && local.avatar)) {
-              saveCloudProject({
-                ...cp,
-                coverImage: finalCover,
-                avatar: finalAvatar,
-              }).catch(() => {});
-            }
+        const finalUsers = [...mergedUsers, ...missingLocals];
+        try {
+          localStorage.setItem('vermilion_users', JSON.stringify(finalUsers));
+        } catch (e) {
+          console.warn('LocalStorage users quota warning:', e);
+        }
+        return finalUsers;
+      });
 
-            return {
+      // 2. Process & Sync Projects
+      const cleanCloudProjects = safeCloudProjects.filter(
+        (p) => p.id !== 'proj-1' && p.id !== 'proj-2' && p.id !== 'proj-3'
+      );
+
+      setProjects((prevProjects) => {
+        const merged = cleanCloudProjects.map((cp) => {
+          const local = prevProjects.find((p) => p.id === cp.id);
+          if (!local) return cp;
+          const finalCover = cp.coverImage || local.coverImage || '';
+          const finalAvatar = cp.avatar || local.avatar || '';
+
+          if ((!cp.coverImage && local.coverImage) || (!cp.avatar && local.avatar)) {
+            saveCloudProject({
               ...cp,
-              avatar: finalAvatar,
               coverImage: finalCover,
-              memberRoles: {
-                ...(local.memberRoles || {}),
-                ...(cp.memberRoles || {}),
-              },
-            };
-          });
-
-          const missingLocals = prevProjects.filter(
-            (lp) => !cleanCloudProjects.some((cp) => cp.id === lp.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lp.id)
-          );
-          missingLocals.forEach((lp) => {
-            saveCloudProject(lp).catch(() => {});
-          });
-
-          const finalProjects = [...merged, ...missingLocals];
-          try {
-            localStorage.setItem('vermilion_projects', JSON.stringify(finalProjects));
-          } catch (e) {
-            console.warn('LocalStorage quota warning:', e);
+              avatar: finalAvatar,
+            }).catch(() => {});
           }
-          return finalProjects;
+
+          return {
+            ...cp,
+            avatar: finalAvatar,
+            coverImage: finalCover,
+            memberRoles: {
+              ...(local.memberRoles || {}),
+              ...(cp.memberRoles || {}),
+            },
+          };
         });
-      }
-      if (cloudTasks) {
-        const cleanCloudTasks = cloudTasks.filter(
-          (t) => t.projectId !== 'proj-1' && t.projectId !== 'proj-2' && t.projectId !== 'proj-3'
+
+        const missingLocals = prevProjects.filter(
+          (lp) => !cleanCloudProjects.some((cp) => cp.id === lp.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lp.id)
         );
-        setTasks((prevTasks) => {
-          const merged = cleanCloudTasks.map((ct) => {
-            const lt = prevTasks.find((x) => x.id === ct.id);
-            return {
-              ...ct,
-              cardColor: ct.cardColor || lt?.cardColor || '',
-              taskType: ct.taskType || lt?.taskType || 'task',
-              estimate: ct.estimate || lt?.estimate || '',
-              isCompleted: ct.isCompleted ?? lt?.isCompleted ?? false,
-              creatorId: ct.creatorId || lt?.creatorId || '',
-            };
-          });
-          const missingLocals = prevTasks.filter(
-            (lt) => !cleanCloudTasks.some((ct) => ct.id === lt.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lt.projectId)
-          );
-          const finalTasks = [...merged, ...missingLocals];
-          try {
-            localStorage.setItem('vermilion_tasks', JSON.stringify(finalTasks));
-          } catch (e) {
-            console.warn('LocalStorage tasks quota warning:', e);
-          }
-          return finalTasks;
+        missingLocals.forEach((lp) => {
+          saveCloudProject(lp).catch(() => {});
         });
-      }
-      if (cloudLists) {
-        setBoardLists((prev) => {
-          const merged = cloudLists.map((cl) => {
-            const local = prev.find((l) => l.id === cl.id);
-            return local ? { ...cl, ...local, title: cl.title || local.title } : cl;
-          });
-          const missingLocals = prev.filter((pl) => !cloudLists.some((cl) => cl.id === pl.id));
-          missingLocals.forEach((ml) => saveCloudList(ml).catch(() => {}));
-          const finalLists = [...merged, ...missingLocals];
-          try {
-            localStorage.setItem('vermilion_board_lists', JSON.stringify(finalLists));
-          } catch (e) {
-            console.warn('LocalStorage board lists warning:', e);
-          }
-          return finalLists;
+
+        const finalProjects = [...merged, ...missingLocals];
+        try {
+          localStorage.setItem('vermilion_projects', JSON.stringify(finalProjects));
+        } catch (e) {
+          console.warn('LocalStorage quota warning:', e);
+        }
+        return finalProjects;
+      });
+
+      // 3. Process & Sync Board Lists
+      setBoardLists((prev) => {
+        const merged = safeCloudLists.map((cl) => {
+          const local = prev.find((l) => l.id === cl.id);
+          return local ? { ...cl, ...local, title: cl.title || local.title } : cl;
         });
-      }
+        const missingLocals = prev.filter((pl) => !safeCloudLists.some((cl) => cl.id === pl.id));
+        missingLocals.forEach((ml) => saveCloudList(ml).catch(() => {}));
+        const finalLists = [...merged, ...missingLocals];
+
+        // Backup lists to project metadata
+        const projectIdsWithLists = Array.from(new Set(finalLists.map((l) => l.projectId).filter(Boolean)));
+        projectIdsWithLists.forEach((pId) => {
+          if (pId) {
+            syncProjectListsFallback(pId, finalLists.filter((l) => l.projectId === pId)).catch(() => {});
+          }
+        });
+
+        try {
+          localStorage.setItem('vermilion_board_lists', JSON.stringify(finalLists));
+        } catch (e) {
+          console.warn('LocalStorage board lists warning:', e);
+        }
+        return finalLists;
+      });
+
+      // 4. Process & Sync Tasks
+      const cleanCloudTasks = safeCloudTasks.filter(
+        (t) => t.projectId !== 'proj-1' && t.projectId !== 'proj-2' && t.projectId !== 'proj-3'
+      );
+
+      setTasks((prevTasks) => {
+        const merged = cleanCloudTasks.map((ct) => {
+          const lt = prevTasks.find((x) => x.id === ct.id);
+          return {
+            ...ct,
+            cardColor: ct.cardColor || lt?.cardColor || '',
+            taskType: ct.taskType || lt?.taskType || 'task',
+            estimate: ct.estimate || lt?.estimate || '',
+            isCompleted: ct.isCompleted ?? lt?.isCompleted ?? false,
+            creatorId: ct.creatorId || lt?.creatorId || '',
+          };
+        });
+
+        const missingLocals = prevTasks.filter(
+          (lt) => !cleanCloudTasks.some((ct) => ct.id === lt.id) && !['proj-1', 'proj-2', 'proj-3'].includes(lt.projectId)
+        );
+
+        // Push any local tasks up to Supabase
+        missingLocals.forEach((lt) => {
+          saveCloudTask(lt).catch((err) => console.warn('Push local task error:', err));
+        });
+
+        const finalTasks = [...merged, ...missingLocals];
+        try {
+          localStorage.setItem('vermilion_tasks', JSON.stringify(finalTasks));
+        } catch (e) {
+          console.warn('LocalStorage tasks quota warning:', e);
+        }
+        return finalTasks;
+      });
+
+      // 5. Automatic safety net: if Supabase has 0 tasks but localStorage has tasks, trigger full sync
+      try {
+        const localTasksRaw = localStorage.getItem('vermilion_tasks');
+        if (localTasksRaw) {
+          const parsedLocal = JSON.parse(localTasksRaw);
+          if (Array.isArray(parsedLocal) && parsedLocal.length > 0 && safeCloudTasks.length === 0) {
+            syncAllLocalDataToCloud().catch(() => {});
+          }
+        }
+      } catch {}
     }
   };
 
@@ -408,6 +441,14 @@ export default function App() {
               };
             });
           });
+        }
+        // Also sync board lists when project updates in realtime
+        const freshLists = await fetchCloudLists();
+        if (freshLists) {
+          setBoardLists(freshLists);
+          try {
+            localStorage.setItem('vermilion_board_lists', JSON.stringify(freshLists));
+          } catch {}
         }
       } else if (table === 'profiles') {
         const updatedUsers = await fetchCloudUsers();
@@ -567,6 +608,7 @@ export default function App() {
       ];
       setBoardLists((prev) => [...prev, ...defaultCols]);
       defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
+      syncProjectListsFallback(activeProject.id, defaultCols).catch(() => {});
     }
   }, [activeProject?.id, boardLists]);
 
@@ -586,24 +628,39 @@ export default function App() {
       order: currentLists.length,
       badgeColor: '',
     };
-    setBoardLists((prev) => [...prev, newList]);
+    const nextLists = [...boardLists, newList];
+    setBoardLists(nextLists);
     if (cloudStatus.tableReady) {
       saveCloudList(newList);
+      syncProjectListsFallback(
+        activeProject.id,
+        nextLists.filter((l) => l.projectId === activeProject.id)
+      ).catch(() => {});
     }
   };
 
   const handleUpdateList = (updatedList: Column) => {
-    setBoardLists((prev) => prev.map((l) => (l.id === updatedList.id ? updatedList : l)));
-    if (cloudStatus.tableReady) {
+    const nextLists = boardLists.map((l) => (l.id === updatedList.id ? updatedList : l));
+    setBoardLists(nextLists);
+    if (cloudStatus.tableReady && activeProject) {
       saveCloudList(updatedList);
+      syncProjectListsFallback(
+        activeProject.id,
+        nextLists.filter((l) => l.projectId === activeProject.id)
+      ).catch(() => {});
     }
   };
 
   const handleDeleteList = (listId: string) => {
-    setBoardLists((prev) => prev.filter((l) => l.id !== listId));
+    const nextLists = boardLists.filter((l) => l.id !== listId);
+    setBoardLists(nextLists);
     setTasks((prev) => prev.filter((t) => t.columnId !== listId));
-    if (cloudStatus.tableReady) {
+    if (cloudStatus.tableReady && activeProject) {
       deleteCloudList(listId);
+      syncProjectListsFallback(
+        activeProject.id,
+        nextLists.filter((l) => l.projectId === activeProject.id)
+      ).catch(() => {});
     }
   };
 
@@ -723,7 +780,9 @@ export default function App() {
         },
       ],
       checklist: [],
+      externalLinks: [],
       isCompleted: false,
+      createdAt: new Date().toISOString(),
     };
     handleCreateTask(newTask);
   };

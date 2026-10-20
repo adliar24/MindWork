@@ -5,13 +5,13 @@
 -- Jalankan skrip SQL ini di Supabase Dashboard -> SQL Editor -> Run
 -- ==============================================================================
 
--- 1. TABEL PROFILES (Akun & Profil Pengguna)
+-- 1. TABEL PROFILES (Akun & Profil Pengguna - Peran/Role ditentukan di Proyek)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   username TEXT DEFAULT '',
   avatar TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'Team Member',
+  role TEXT DEFAULT '',
   color TEXT NOT NULL DEFAULT 'bg-red-600 text-white',
   email TEXT NOT NULL UNIQUE,
   password TEXT DEFAULT '',
@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password TEXT DEFAULT '';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username TEXT DEFAULT '';
+ALTER TABLE public.profiles ALTER COLUMN role DROP NOT NULL;
+ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT '';
 
 -- 2. TABEL PROJECTS (Proyek Tim)
 CREATE TABLE IF NOT EXISTS public.projects (
@@ -39,15 +41,17 @@ CREATE TABLE IF NOT EXISTS public.projects (
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '';
 ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS cover_image TEXT DEFAULT '';
 
--- 3. TABEL PROJECT_MEMBERS (Relasi Anggota & Peran Proyek: Leader / Member / Viewer)
+-- 3. TABEL PROJECT_MEMBERS (Relasi Anggota & Peran Proyek: Leader / Member / Viewer / Custom Role)
 CREATE TABLE IF NOT EXISTS public.project_members (
   id BIGSERIAL PRIMARY KEY,
   project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
   user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('leader', 'member', 'viewer')),
+  role TEXT NOT NULL DEFAULT 'member',
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   UNIQUE(project_id, user_id)
 );
+
+ALTER TABLE public.project_members DROP CONSTRAINT IF EXISTS project_members_role_check;
 
 -- 4. TABEL TASKS (Kartu Tugas Kanban)
 CREATE TABLE IF NOT EXISTS public.tasks (
@@ -73,6 +77,17 @@ ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS task_type TEXT DEFAULT 'task';
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS estimate TEXT DEFAULT '';
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS creator_id TEXT DEFAULT '';
+ALTER TABLE public.tasks DROP CONSTRAINT IF EXISTS tasks_column_id_check;
+
+-- 5. TABEL BOARD_LISTS (Daftar / Kolom Dinamis Trello-Style per Proyek)
+CREATE TABLE IF NOT EXISTS public.board_lists (
+  id TEXT PRIMARY KEY,
+  project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  color TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -83,6 +98,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.board_lists ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: Allow full access
 DROP POLICY IF EXISTS "Public access profiles" ON public.profiles;
@@ -100,9 +116,14 @@ CREATE POLICY "Public access project_members" ON public.project_members FOR ALL 
 DROP POLICY IF EXISTS "Public access tasks" ON public.tasks;
 CREATE POLICY "Public access tasks" ON public.tasks FOR ALL USING (true) WITH CHECK (true);
 
+-- Board Lists: Allow full access
+DROP POLICY IF EXISTS "Public access board_lists" ON public.board_lists;
+CREATE POLICY "Public access board_lists" ON public.board_lists FOR ALL USING (true) WITH CHECK (true);
+
 -- ==============================================================================
 -- REALTIME REPLICATION
 -- Aktifkan Realtime Channel agar perubahan kartu / proyek live sync ke semua anggota
+-- ==============================================================================
 DO $$
 BEGIN
   -- Pastikan publikasi realtime ada
@@ -116,7 +137,8 @@ BEGIN
       public.profiles, 
       public.projects, 
       public.project_members, 
-      public.tasks;
+      public.tasks,
+      public.board_lists;
   EXCEPTION
     WHEN duplicate_object THEN
       NULL; -- Tabel sudah terdaftar di publikasi
@@ -124,22 +146,12 @@ BEGIN
 END $$;
 
 -- ==============================================================================
--- PEMBERSIHAN AKUN DUMMY (Jalankan ini jika sebelumnya sudah ada data dummy)
+-- PEMBERSIHAN DATA DUMMY (Memastikan database bersih & kosong untuk akun baru Anda)
 -- ==============================================================================
+DELETE FROM public.tasks WHERE project_id IN ('proj-1', 'proj-2', 'proj-3');
+DELETE FROM public.project_members WHERE project_id IN ('proj-1', 'proj-2', 'proj-3');
+DELETE FROM public.projects WHERE id IN ('proj-1', 'proj-2', 'proj-3');
 DELETE FROM public.project_members WHERE user_id LIKE 'user-%';
 DELETE FROM public.profiles WHERE id LIKE 'user-%';
 
--- ==============================================================================
--- SEED DATA PROYEK AWAL (Tanpa akun dummy, akun Anda akan menjadi Leader saat dibuat)
--- ==============================================================================
-
-INSERT INTO public.projects (id, name, description, key, category, leader_id, icon_color)
-VALUES
-  ('proj-1', 'Lumina Festival & Expo 2026', 'Pusat koordinasi persiapan event tahunan, dari desain panggung, rundown pengisi acara, hingga vendor produksi fisik.', 'LUMINA', 'Event & Produksi', NULL, 'bg-red-600'),
-  ('proj-2', 'Kampanye Media Sosial & Promo', 'Rencana publikasi konten Instagram feeds, video reels, poster bintang tamu, dan rilis tiket early bird.', 'PROMO', 'Digital Marketing', NULL, 'bg-rose-600'),
-  ('proj-3', 'Operasional Venue & Perlengkapan', 'Manajemen perizinan lokasi, koordinasi sound system & lighting, serta logistik booth sponsor.', 'VENUE', 'Operasional', NULL, 'bg-red-800')
-ON CONFLICT (id) DO UPDATE SET
-  name = EXCLUDED.name,
-  description = EXCLUDED.description;
-
--- Selesai! Schema database Supabase siap digunakan untuk akun pengguna asli Anda.
+-- Selesai! Schema database Supabase siap digunakan untuk akun & proyek baru Anda yang bersih.

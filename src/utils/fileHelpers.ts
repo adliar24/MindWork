@@ -1,4 +1,4 @@
-import { FileType, Language } from '../types';
+import { FileType, Language, LinkType } from '../types';
 
 export function getFileTypeFromExtension(filename: string): { type: FileType; extension: string } {
   const parts = filename.split('.');
@@ -162,19 +162,68 @@ export function detectCloudService(url: string): {
   name: string;
   provider: 'drive' | 'dropbox' | 'onedrive' | 'box' | 'cloud';
   badgeClass: string;
+  domain: string;
+  type: LinkType;
 } {
+  let domain = '';
+  try {
+    domain = new URL(url).hostname;
+  } catch {
+    domain = '';
+  }
+
   const lower = url.toLowerCase();
-  if (lower.includes('drive.google.com') || lower.includes('docs.google.com')) {
+  if (lower.includes('drive.google.com')) {
     return {
       name: 'Google Drive',
       provider: 'drive',
+      type: 'drive',
+      domain,
       badgeClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    };
+  }
+  if (lower.includes('docs.google.com/document')) {
+    return {
+      name: 'Google Docs',
+      provider: 'drive',
+      type: 'doc',
+      domain,
+      badgeClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
+    };
+  }
+  if (lower.includes('docs.google.com/spreadsheets')) {
+    return {
+      name: 'Google Sheets',
+      provider: 'drive',
+      type: 'sheet',
+      domain,
+      badgeClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    };
+  }
+  if (lower.includes('figma.com')) {
+    return {
+      name: 'Figma',
+      provider: 'cloud',
+      type: 'figma',
+      domain,
+      badgeClass: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
+    };
+  }
+  if (lower.includes('canva.com')) {
+    return {
+      name: 'Canva',
+      provider: 'cloud',
+      type: 'canva',
+      domain,
+      badgeClass: 'text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
     };
   }
   if (lower.includes('dropbox.com')) {
     return {
       name: 'Dropbox',
       provider: 'dropbox',
+      type: 'link',
+      domain,
       badgeClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
     };
   }
@@ -182,6 +231,8 @@ export function detectCloudService(url: string): {
     return {
       name: 'OneDrive',
       provider: 'onedrive',
+      type: 'link',
+      domain,
       badgeClass: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border-sky-500/20',
     };
   }
@@ -189,12 +240,16 @@ export function detectCloudService(url: string): {
     return {
       name: 'Box Cloud',
       provider: 'box',
+      type: 'link',
+      domain,
       badgeClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
     };
   }
   return {
-    name: 'Cloud Storage',
+    name: 'Tautan Web',
     provider: 'cloud',
+    type: 'link',
+    domain: domain || url,
     badgeClass: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
   };
 }

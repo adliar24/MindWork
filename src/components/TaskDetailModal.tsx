@@ -301,8 +301,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const extension = file.name.split('.').pop()?.toLowerCase() || '';
-      const type = getFileTypeFromExtension(extension);
+      const { type, extension } = getFileTypeFromExtension(file.name);
 
       if (type === 'image') {
         try {
@@ -310,10 +309,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           incomingList.push({
             id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             name: file.name,
-            size: formatFileSize(file.size),
+            size: compressed.size || formatFileSize(file.size),
             type: 'image',
             uploadedAt: 'Hari ini',
-            url: compressed,
+            url: compressed.dataUrl,
             extension,
             isWorkResult,
           });
@@ -323,7 +322,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             name: file.name,
             size: formatFileSize(file.size),
-            type,
+            type: 'image',
             uploadedAt: 'Hari ini',
             extension,
             isWorkResult,

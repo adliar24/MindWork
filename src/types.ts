@@ -68,12 +68,14 @@ export interface ExternalLink {
   title: string;
   url: string;
   type: LinkType;
+  domain?: string;
 }
 
 export type TaskType = 'task' | 'feature' | 'bug' | 'improvement' | 'design' | 'research';
 
 export interface Task {
   id: string;
+  key?: string;
   projectId: string;
   columnId: ColumnId;
   title: string;

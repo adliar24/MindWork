@@ -9,9 +9,10 @@ import {
   ExternalLink,
   RefreshCw,
   Sparkles,
+  UploadCloud,
 } from 'lucide-react';
 import { SUPABASE_URL } from '../lib/supabase';
-import { CloudStatus } from '../lib/supabaseService';
+import { CloudStatus, syncAllLocalDataToCloud, FullSyncResult } from '../lib/supabaseService';
 
 interface CloudSetupModalProps {
   status: CloudStatus;
@@ -26,6 +27,42 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSyncingLocal, setIsSyncingLocal] = useState(false);
+  const [syncResult, setSyncResult] = useState<FullSyncResult | null>(null);
+
+  // Local data counts
+  const localProjectCount = (() => {
+    try {
+      const saved = localStorage.getItem('vermilion_projects');
+      if (!saved) return 0;
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.filter((p) => !['proj-1', 'proj-2', 'proj-3'].includes(p.id)).length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  const localListCount = (() => {
+    try {
+      const saved = localStorage.getItem('vermilion_board_lists');
+      if (!saved) return 0;
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+  const localTaskCount = (() => {
+    try {
+      const saved = localStorage.getItem('vermilion_tasks');
+      if (!saved) return 0;
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.filter((t) => !['proj-1', 'proj-2', 'proj-3'].includes(t.projectId)).length : 0;
+    } catch {
+      return 0;
+    }
+  })();
 
   const [isClosing, setIsClosing] = useState(false);
 
@@ -35,6 +72,20 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
     setTimeout(() => {
       onClose();
     }, 180);
+  };
+
+  const handleSyncAllLocal = async () => {
+    setIsSyncingLocal(true);
+    setSyncResult(null);
+    try {
+      const res = await syncAllLocalDataToCloud();
+      setSyncResult(res);
+      await onRefresh();
+    } catch {
+      // ignore
+    } finally {
+      setIsSyncingLocal(false);
+    }
   };
 
   const handleCopySql = () => {
@@ -145,6 +196,70 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
                 Aktif (PostgreSQL replication)
               </span>
             </div>
+          </div>
+
+          {/* Sync Local Data to Cloud Card */}
+          <div className="p-3.5 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/20 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h4 className="font-bold text-xs text-neutral-900 dark:text-white flex items-center gap-1.5">
+                  <UploadCloud className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <span>Sinkronisasi Data Perangkat Ini ke Cloud</span>
+                </h4>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+                  Jika Anda telah membuat daftar tugas, proyek, atau kolom di perangkat ini dan belum muncul di perangkat lain, klik tombol di bawah untuk mengunggah semuanya ke database Supabase.
+                </p>
+              </div>
+            </div>
+
+            {/* Counts Pill */}
+            <div className="grid grid-cols-3 gap-2 py-1">
+              <div className="p-2 rounded-lg bg-white dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-center">
+                <span className="text-[10px] text-neutral-400 block font-medium">Proyek Lokal</span>
+                <span className="font-bold text-sm text-neutral-900 dark:text-white">{localProjectCount}</span>
+              </div>
+              <div className="p-2 rounded-lg bg-white dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-center">
+                <span className="text-[10px] text-neutral-400 block font-medium">Daftar Kolom</span>
+                <span className="font-bold text-sm text-neutral-900 dark:text-white">{localListCount}</span>
+              </div>
+              <div className="p-2 rounded-lg bg-white dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-center">
+                <span className="text-[10px] text-neutral-400 block font-medium">Kartu Tugas</span>
+                <span className="font-bold text-sm text-red-600 dark:text-red-400">{localTaskCount}</span>
+              </div>
+            </div>
+
+            {syncResult && (
+              <div className={`p-2.5 rounded-lg text-[11px] ${
+                syncResult.success 
+                  ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20' 
+                  : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20'
+              }`}>
+                {syncResult.success ? (
+                  <p className="flex items-center gap-1.5 font-semibold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Sinkronisasi Berhasil! {syncResult.projectsSynced} proyek, {syncResult.listsSynced} daftar, dan {syncResult.tasksSynced} tugas tersinkron ke cloud. Buka perangkat lain sekarang untuk melihatnya.</span>
+                  </p>
+                ) : (
+                  <div>
+                    <p className="font-semibold text-amber-800 dark:text-amber-300">Hasil Sinkronisasi:</p>
+                    <p>{syncResult.tasksSynced} tugas terunggah.</p>
+                    {syncResult.errors.map((e, idx) => (
+                      <p key={idx} className="text-[10px] text-red-500 mt-0.5">• {e}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSyncAllLocal}
+              disabled={isSyncingLocal}
+              className="w-full h-9 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingLocal ? 'animate-spin' : ''}`} />
+              <span>{isSyncingLocal ? 'Sedang Mengunggah ke Cloud...' : 'Unggah & Sinkronkan Semua Data Lokal ke Cloud'}</span>
+            </button>
           </div>
 
           {/* Instructions for Setup if tables not ready */}
