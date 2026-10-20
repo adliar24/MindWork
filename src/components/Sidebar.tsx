@@ -29,7 +29,7 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar: React.FC<SidebarProps> = React.memo(({
   projects,
   activeProjectId,
   currentUserId,
@@ -45,10 +45,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { t } = useLanguage();
 
   // Task completion stats for the current project
-  const projectTasks = tasks.filter((t) => t.projectId === activeProjectId);
-  const doneTasks = projectTasks.filter(
-    (t) => t.columnId === 'done' || Boolean(t.isCompleted) || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
-  ).length;
+  const projectTasks = React.useMemo(() => {
+    if (!activeProjectId) return [];
+    return tasks.filter((t) => t.projectId === activeProjectId);
+  }, [tasks, activeProjectId]);
+
+  const doneTasks = React.useMemo(() => {
+    return projectTasks.filter(
+      (t) => t.columnId === 'done' || Boolean(t.isCompleted) || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
+    ).length;
+  }, [projectTasks]);
+
   const totalTasks = projectTasks.length;
   const progressPercent = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
@@ -338,4 +345,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </aside>
     </>
   );
-};
+});

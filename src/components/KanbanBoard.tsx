@@ -38,7 +38,7 @@ interface KanbanBoardProps {
   onOpenEditProjectModal?: () => void;
 }
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({
+export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
   project,
   onUpdateProject,
   columns,
@@ -357,6 +357,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     <img
                       src={project.coverImage}
                       alt="Sampul Proyek"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover object-center select-none transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                     {/* Zoom Indicator on Hover */}
@@ -403,6 +405,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           <img
                             src={project.avatar}
                             alt={project.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover select-none transition-transform duration-300 group-hover:scale-105"
                           />
                           {/* Zoom Indicator on Hover */}
@@ -1028,5 +1032,5 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       )}
     </div>
   );
-};
+});
 

@@ -26,7 +26,7 @@ interface HomeDashboardProps {
   onOpenEditProjectModal?: (project: Project) => void;
 }
 
-export const HomeDashboard: React.FC<HomeDashboardProps> = ({
+export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
   currentUser,
   projects,
   tasks,
@@ -38,8 +38,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const { language, t } = useLanguage();
 
   const totalTasks = tasks.length;
-  const doneTasks = tasks.filter((t) => t.columnId === 'done').length;
-  const inProgressTasks = tasks.filter((t) => t.columnId === 'in_progress').length;
+  const doneTasks = React.useMemo(() => tasks.filter((t) => t.columnId === 'done').length, [tasks]);
+  const inProgressTasks = React.useMemo(() => tasks.filter((t) => t.columnId === 'in_progress').length, [tasks]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#f8f9fa] dark:bg-[#090a0d] text-neutral-900 dark:text-neutral-100 transition-colors">
@@ -170,7 +170,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   <div
                     key={project.id}
                     onClick={() => onSelectProject(project.id)}
-                    className="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item animate-card-enter overflow-hidden"
+                    className="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item overflow-hidden"
                   >
                     <div>
                       {/* Project Card Cover Banner */}
@@ -180,6 +180,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                             <img
                               src={project.coverImage}
                               alt={project.name}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
@@ -195,6 +197,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                             <img
                               src={project.avatar}
                               alt={project.name}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -330,4 +334,4 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       </div>
     </div>
   );
-};
+});

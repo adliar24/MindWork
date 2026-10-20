@@ -1073,22 +1073,21 @@ export default function App() {
             </div>
           )}
 
-          {/* 3. Main Area: Home Dashboard OR Kanban Board */}
+          {/* 3. Main Area: Home Dashboard & Kanban Board */}
           <main className="flex-1 flex overflow-hidden relative">
-            {!activeProject ? (
-              <div key="home-dashboard" className="flex-1 flex overflow-hidden animate-view-fade">
-                <HomeDashboard
-                  currentUser={currentUser}
-                  projects={userProjects}
-                  tasks={userTasks}
-                  users={users}
-                  onSelectProject={(projId) => setActiveProjectId(projId)}
-                  onOpenNewProject={() => setIsNewProjectOpen(true)}
-                  onOpenEditProjectModal={(proj) => handleOpenEditProject(proj)}
-                />
-              </div>
-            ) : (
-              <div key={activeProject.id} className="flex-1 flex overflow-hidden animate-view-fade">
+            <div className={`flex-1 flex overflow-hidden ${!activeProject ? '' : 'hidden'}`}>
+              <HomeDashboard
+                currentUser={currentUser}
+                projects={userProjects}
+                tasks={userTasks}
+                users={users}
+                onSelectProject={(projId) => setActiveProjectId(projId)}
+                onOpenNewProject={() => setIsNewProjectOpen(true)}
+                onOpenEditProjectModal={(proj) => handleOpenEditProject(proj)}
+              />
+            </div>
+            {activeProject && (
+              <div key={activeProject.id} className="flex-1 flex overflow-hidden">
                 <KanbanBoard
                   project={activeProject}
                   onUpdateProject={handleUpdateProject}

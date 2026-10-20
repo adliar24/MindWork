@@ -510,31 +510,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   return (
     <>
-      {/* Lightbox for previewing full images */}
-      {previewImage && (
-        <div
-          onClick={() => setPreviewImage(null)}
-          className="fixed inset-0 z-60 bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden bg-black shadow-2xl flex flex-col cursor-default"
-          >
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition-colors z-20"
-              title="Tutup (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="w-full h-auto max-h-[85vh] object-contain"
-            />
-          </div>
-        </div>
-      )}
+
 
       {/* Main Task Detail Modal Backdrop */}
       <div

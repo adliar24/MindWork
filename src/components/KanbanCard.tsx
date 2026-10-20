@@ -202,6 +202,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             src={coverAttachment.url}
             alt={coverAttachment.name}
             loading="lazy"
+            decoding="async"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
           />
