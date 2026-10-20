@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FolderKanban, Plus } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -194,6 +194,42 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('mindwork_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebarDesktop = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('mindwork_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Keyboard shortcut Ctrl+B or Ctrl+\ to toggle desktop sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B' || e.key === '\\')) {
+        const activeEl = document.activeElement;
+        const isInput =
+          activeEl instanceof HTMLInputElement ||
+          activeEl instanceof HTMLTextAreaElement ||
+          activeEl?.getAttribute('contenteditable') === 'true';
+        if (!isInput) {
+          e.preventDefault();
+          handleToggleSidebarDesktop();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebarDesktop]);
 
   // Supabase Cloud Connection & Sync State
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
@@ -1007,6 +1043,8 @@ export default function App() {
           onSelectAssignee={setSelectedAssigneeId}
           isOpen={isSidebarMobileOpen}
           onCloseMobile={() => setIsSidebarMobileOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarDesktop}
         />
 
         {/* Right Content Area: Header (Atas) + Main Kanban Area */}
@@ -1034,6 +1072,8 @@ export default function App() {
             onOpenCloudModal={() => setIsCloudModalOpen(true)}
             cloudStatus={cloudStatus}
             onToggleSidebarMobile={() => setIsSidebarMobileOpen((prev) => !prev)}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebarDesktop={handleToggleSidebarDesktop}
             onGoHome={() => setActiveProjectId('')}
           />
 

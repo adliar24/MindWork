@@ -15,6 +15,8 @@ export const TRANSLATIONS = {
     workspaceHome: 'Beranda Workspace',
 
     // Sidebar
+    hideSidebar: 'Sembunyikan Sidebar',
+    showSidebar: 'Tampilkan Sidebar',
     myProjects: 'Proyek',
     noProjectsYet: 'Belum ada proyek',
     addProject: 'Tambah Proyek',
@@ -185,6 +187,8 @@ export const TRANSLATIONS = {
     workspaceHome: 'Workspace Home',
 
     // Sidebar
+    hideSidebar: 'Hide Sidebar',
+    showSidebar: 'Show Sidebar',
     myProjects: 'Projects',
     noProjectsYet: 'No projects yet',
     addProject: 'Add Project',

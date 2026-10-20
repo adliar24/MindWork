@@ -10,6 +10,7 @@ import {
   Layers,
   ChevronRight,
   Home,
+  PanelLeftClose,
 } from 'lucide-react';
 import { Project, User, Task } from '../types';
 import { UserAvatar } from './UserAvatar';
@@ -27,6 +28,8 @@ interface SidebarProps {
   onSelectAssignee: (assigneeId: string | null) => void;
   isOpen: boolean;
   onCloseMobile: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
@@ -41,6 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onSelectAssignee,
   isOpen,
   onCloseMobile,
+  isCollapsed = false,
+  onToggleCollapse,
 }) => {
   const { t } = useLanguage();
 
@@ -70,39 +75,61 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       )}
 
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-72 lg:w-76 flex flex-col shrink-0 transition-transform duration-200 ease-in-out
-        bg-white dark:bg-[#101116] border-r border-neutral-200 dark:border-[#20232c] text-neutral-800 dark:text-neutral-200
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col shrink-0 transition-[width,transform] duration-200 ease-in-out
+        bg-white dark:bg-[#101116] text-neutral-800 dark:text-neutral-200 overflow-hidden
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${
+          isCollapsed
+            ? 'w-72 lg:w-0 lg:border-r-0 lg:pointer-events-none'
+            : 'w-72 lg:w-76 border-r border-neutral-200 dark:border-[#20232c]'
+        }`}
       >
-        {/* Brand Header */}
-        <div className="h-16 px-5 flex items-center justify-between border-b border-neutral-200 dark:border-[#20232c]">
-          <div
-            onClick={() => {
-              onSelectProject('');
-              onCloseMobile();
-            }}
-            className="flex items-center gap-2.5 cursor-pointer group"
-          >
-            <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-xs font-bold group-hover:scale-105 transition-transform">
-              <Layers className="w-4 h-4 stroke-[2.2]" />
+        <div className="w-72 lg:w-76 flex flex-col h-full shrink-0">
+          {/* Brand Header */}
+          <div className="h-16 px-5 flex items-center justify-between border-b border-neutral-200 dark:border-[#20232c] shrink-0">
+            <div
+              onClick={() => {
+                onSelectProject('');
+                onCloseMobile();
+              }}
+              className="flex items-center gap-2.5 cursor-pointer group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-xs font-bold group-hover:scale-105 transition-transform">
+                <Layers className="w-4 h-4 stroke-[2.2]" />
+              </div>
+              <div>
+                <span className="font-bold tracking-tight text-neutral-950 dark:text-white text-sm">
+                  MINDWORK
+                </span>
+                <p className="text-[10px] text-neutral-400 font-medium leading-none">
+                  Team Workspace
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="font-bold tracking-tight text-neutral-950 dark:text-white text-sm">
-                MINDWORK
-              </span>
-              <p className="text-[10px] text-neutral-400 font-medium leading-none">
-                Team Workspace
-              </p>
+            <div className="flex items-center gap-1">
+              {/* Desktop Hide/Collapse Button */}
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
+                  title={t('hideSidebar')}
+                  aria-label={t('hideSidebar')}
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
+              )}
+              {/* Mobile Close Button */}
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className="lg:hidden p-1.5 text-neutral-400 hover:text-neutral-100 rounded-md cursor-pointer"
+                aria-label="Tutup Menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
           </div>
-          <button
-            onClick={onCloseMobile}
-            className="lg:hidden p-1.5 text-neutral-400 hover:text-neutral-100 rounded-md"
-            aria-label="Tutup Menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
         {/* Scrollable navigation area */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
@@ -342,6 +369,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             </div>
           </div>
         )}
+        </div>
       </aside>
     </>
   );

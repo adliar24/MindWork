@@ -7,6 +7,9 @@ import {
   Menu,
   X,
   Database,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Layers,
 } from 'lucide-react';
 import { Project, ProjectRole, ThemeMode, User } from '../types';
 import { UserAvatar } from './UserAvatar';
@@ -31,6 +34,8 @@ interface HeaderProps {
   onOpenCloudModal?: () => void;
   cloudStatus?: { connected: boolean; tableReady: boolean; message?: string };
   onToggleSidebarMobile: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebarDesktop?: () => void;
   selectedPriority?: string | null;
   onSelectPriority?: (priority: string | null) => void;
   onGoHome?: () => void;
@@ -54,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCloudModal,
   cloudStatus,
   onToggleSidebarMobile,
+  isSidebarCollapsed = false,
+  onToggleSidebarDesktop,
   onGoHome,
 }) => {
   const { t, language } = useLanguage();
@@ -63,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#101116] shrink-0 transition-colors">
       {/* Primary Top Bar */}
       <div className="h-14 sm:h-16 px-3 sm:px-5 md:px-6 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Hamburger + Project Name / Breadcrumbs */}
+        {/* Left: Hamburger + Desktop Sidebar Toggle + Project Name / Breadcrumbs */}
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <button
             onClick={onToggleSidebarMobile}
@@ -72,6 +79,43 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Menu className="w-5 h-5" />
           </button>
+
+          {/* Desktop Sidebar Toggle Button (Hide / Unhide) */}
+          {onToggleSidebarDesktop && (
+            <button
+              type="button"
+              onClick={onToggleSidebarDesktop}
+              className={`hidden lg:inline-flex items-center justify-center p-2 rounded-xl transition-all cursor-pointer ${
+                isSidebarCollapsed
+                  ? 'bg-neutral-100 dark:bg-[#1c1f28] text-red-600 dark:text-red-400 ring-1 ring-red-500/30 hover:bg-neutral-200 dark:hover:bg-[#252834]'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#1c1f28]'
+              }`}
+              title={isSidebarCollapsed ? t('showSidebar') : t('hideSidebar')}
+              aria-label={isSidebarCollapsed ? t('showSidebar') : t('hideSidebar')}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
+            </button>
+          )}
+
+          {/* If desktop sidebar is collapsed, show brand logo + title for quick home navigation */}
+          {isSidebarCollapsed && (
+            <div
+              onClick={onGoHome}
+              className="hidden lg:flex items-center gap-2 cursor-pointer group pr-1 select-none"
+              title={t('workspaceHome')}
+            >
+              <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-xs font-bold group-hover:scale-105 transition-transform">
+                <Layers className="w-3.5 h-3.5 stroke-[2.2]" />
+              </div>
+              <span className="font-bold tracking-tight text-neutral-950 dark:text-white text-xs">
+                MINDWORK
+              </span>
+            </div>
+          )}
 
           <div className="min-w-0">
             {project ? (
