@@ -145,7 +145,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
       onClick={handleClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden flex flex-col text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-md rounded-[36px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden flex flex-col text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Hidden File Input - allow flexible browsing (Photos, Gallery & File Manager/Folder) */}
@@ -158,14 +158,14 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
         />
 
         {/* Simple Header */}
-        <div className="px-5 py-3.5 border-b border-neutral-200 dark:border-[#272a35] flex items-center justify-between bg-neutral-50/50 dark:bg-[#161820]">
+        <div className="px-6 py-4 border-b border-neutral-200 dark:border-[#272a35] flex items-center justify-between bg-neutral-50/50 dark:bg-[#161820]">
           <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
             {isCameraActive ? 'Ambil Foto' : 'Pilih Avatar'}
           </h3>
           <button
             type="button"
             onClick={handleClose}
-            className="p-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

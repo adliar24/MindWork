@@ -64,12 +64,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col cursor-default animate-modal-in"
+        className="w-full max-w-md rounded-[36px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col cursor-default animate-modal-in"
       >
         {/* Header */}
         <div className="p-4 px-6 border-b border-neutral-200 dark:border-[#20232c] flex items-center justify-between bg-white dark:bg-[#12141a] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center border border-red-500/20 font-bold">
+            <div className="w-8 h-8 rounded-[14px] bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center border border-red-500/20 font-bold">
               <User className="w-4 h-4 stroke-[2.2]" />
             </div>
             <div>
@@ -83,7 +83,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -174,7 +174,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             type="button"
             onClick={handleLogoutClick}
             disabled={isLoggingOut}
-            className="w-full h-10 rounded-xl border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 active:scale-98 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            className="w-full h-10 rounded-full border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 active:scale-98 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
           >
             <LogOut className="w-4 h-4" />
             <span>{t('logoutBtn')}</span>
@@ -186,7 +186,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-neutral-200 dark:bg-[#20232c] hover:bg-neutral-300 dark:hover:bg-[#2a2d38] text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-full text-xs font-semibold bg-neutral-200 dark:bg-[#20232c] hover:bg-neutral-300 dark:hover:bg-[#2a2d38] text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer"
           >
             {t('closeBtn')}
           </button>

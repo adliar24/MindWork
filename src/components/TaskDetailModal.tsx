@@ -520,7 +520,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/90 dark:border-[#262936] shadow-xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default animate-modal-in"
+          className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-[36px] bg-white dark:bg-[#12141a] border border-neutral-200/90 dark:border-[#262936] shadow-2xl text-neutral-900 dark:text-neutral-100 overflow-hidden cursor-default animate-modal-in"
         >
           {/* Subtle Color Accent Strip (if customized) */}
           {cardColor && (
@@ -531,7 +531,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <div className="h-14 px-5 sm:px-6 border-b border-neutral-200/80 dark:border-[#222532] flex items-center justify-between shrink-0 bg-white dark:bg-[#12141a]">
             {/* List Switcher Pill & Task Type */}
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-neutral-100/80 dark:bg-[#1a1d27] border border-neutral-200/60 dark:border-[#292d3b]">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100/80 dark:bg-[#1a1d27] border border-neutral-200/60 dark:border-[#292d3b]">
                 <span className="text-[11px] text-neutral-400 font-medium hidden sm:inline">
                   {language === 'id' ? 'dalam daftar' : 'in list'}
                 </span>
@@ -555,7 +555,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
 
               {/* Task Type Badge */}
-              <div className="hidden xs:flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 dark:bg-[#1a1d27] text-neutral-600 dark:text-neutral-400 border border-neutral-200/50 dark:border-[#292d3b]">
+              <div className="hidden xs:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 dark:bg-[#1a1d27] text-neutral-600 dark:text-neutral-400 border border-neutral-200/50 dark:border-[#292d3b]">
                 {taskType === 'feature' ? (
                   <Sparkles className="w-3 h-3 text-emerald-500" />
                 ) : taskType === 'bug' ? (
@@ -578,7 +578,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handleToggleComplete}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isCompleted
                     ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
                     : 'bg-neutral-100 dark:bg-[#1c1f2b] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-[#252938]'
@@ -596,7 +596,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 type="button"
                 onClick={() => setIsDeleteTaskConfirmOpen(true)}
                 title={t('deleteTask')}
-                className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -605,7 +605,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 type="button"
                 onClick={handleClose}
                 title={`${t('closeBtn')} (Esc)`}
-                className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#1e212d] rounded-lg transition-colors cursor-pointer ml-1"
+                className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#1e212d] rounded-full transition-colors cursor-pointer ml-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -627,7 +627,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       onBlur={handleTitleBlur}
                       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                       placeholder="Judul Tugas..."
-                      className="w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-lg px-2 py-0.5 -ml-2 transition-all leading-snug text-neutral-950 dark:text-white"
+                      className="w-full text-lg sm:text-xl font-bold bg-transparent placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-red-500/50 rounded-xl px-2 py-0.5 -ml-2 transition-all leading-snug text-neutral-950 dark:text-white"
                     />
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivePopover(activePopover === 'add' ? null : 'add')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
                       activePopover === 'add'
                         ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
                         : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
@@ -652,7 +652,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivePopover(activePopover === 'labels' ? null : 'labels')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
                       activePopover === 'labels'
                         ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
                         : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
@@ -666,7 +666,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivePopover(activePopover === 'dates' ? null : 'dates')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
                       activePopover === 'dates'
                         ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
                         : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
@@ -680,7 +680,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivePopover(activePopover === 'checklist' ? null : 'checklist')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
                       activePopover === 'checklist'
                         ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
                         : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'
@@ -694,7 +694,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivePopover(activePopover === 'members' ? null : 'members')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
                       activePopover === 'members'
                         ? 'bg-neutral-200 dark:bg-[#252837] text-neutral-900 dark:text-white border-neutral-400 dark:border-[#3a3f55]'
                         : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 border-neutral-200/60 dark:border-[#282c3c]'

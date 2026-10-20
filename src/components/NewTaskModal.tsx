@@ -257,7 +257,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default animate-modal-in"
+        className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-[36px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 cursor-default animate-modal-in"
       >
         {/* Trello-like Top Color Banner */}
         {cardColor && (
@@ -267,7 +267,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
         {/* Header */}
         <div className="p-4 px-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-[14px] bg-red-600 text-white flex items-center justify-center font-bold">
               <Plus className="w-4 h-4 stroke-[2.5]" />
             </div>
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -276,7 +276,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -658,17 +658,17 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-neutral-200 dark:border-neutral-800">
             <button
               type="button"
               onClick={handleClose}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-full text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white shadow-xs shadow-red-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 rounded-full text-xs font-semibold bg-red-600 hover:bg-red-700 active:scale-95 text-white shadow-xs shadow-red-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>{t('saveTaskBtn')}</span>

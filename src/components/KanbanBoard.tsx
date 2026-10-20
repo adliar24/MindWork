@@ -414,7 +414,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
       {/* 1. Project Header (Cover + Profile Picture) - Strict 3:1 Aspect Ratio on All Devices */}
       {project && (
         <div className="p-3 sm:p-5 md:p-6 pb-2 shrink-0">
-          <div className="max-w-[860px] mx-auto sm:mx-0 rounded-3xl border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-xs relative p-2.5 sm:p-3.5 md:p-4">
+          <div className="max-w-[860px] mx-auto sm:mx-0 rounded-[36px] border border-neutral-200 dark:border-[#20232c] bg-white dark:bg-[#111217] shadow-sm relative p-3 sm:p-4 md:p-5">
             {/* Cover Banner - Strict 3:1 Aspect Ratio on All Devices */}
             {!isBannerCollapsed && (
               <div
@@ -428,7 +428,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     });
                   }
                 }}
-                className={`relative w-full aspect-[3/1] rounded-2xl overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs ${
+                className={`relative w-full aspect-[3/1] rounded-[28px] overflow-hidden bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 group shadow-xs ${
                   project.coverImage ? 'cursor-zoom-in' : ''
                 }`}
                 title={project.coverImage ? (language === 'id' ? 'Klik untuk memperbesar sampul' : 'Click to zoom cover') : undefined}
@@ -443,7 +443,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       className="w-full h-full object-cover object-center select-none transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                     {/* Zoom Indicator on Hover */}
-                    <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 px-2.5 py-1 rounded-xl bg-black/75 text-white text-xs font-medium flex items-center gap-1.5 shadow-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 px-3 py-1 rounded-full bg-black/75 text-white text-xs font-medium flex items-center gap-1.5 shadow-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <ZoomIn className="w-3.5 h-3.5" />
                       <span>{language === 'id' ? 'Perbesar' : 'Zoom'}</span>
                     </div>
@@ -458,12 +458,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
               </div>
             )}
 
-            {/* Profile Avatar & Details Section - in normal flow below cover banner to prevent text collision */}
+            {/* Profile Avatar & Details Section */}
             <div className="px-1.5 sm:px-2.5 pb-1 sm:pb-2 pt-0">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 {/* Left: Avatar + Title + Description */}
                 <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4.5 min-w-0">
-                  {/* Project Profile Avatar - only the avatar overlaps into the banner */}
+                  {/* Project Profile Avatar */}
                   <div className={`relative group shrink-0 ${!isBannerCollapsed ? '-mt-9 sm:-mt-11 md:-mt-12' : 'mt-3.5'} z-20`}>
                     <div
                       onClick={() => {
@@ -476,7 +476,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           });
                         }
                       }}
-                      className={`w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center relative ${
+                      className={`w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-[26px] overflow-hidden border-4 border-white dark:border-[#111217] shadow-xl bg-white dark:bg-[#181a24] flex items-center justify-center relative ${
                         project.avatar ? 'cursor-zoom-in' : ''
                       }`}
                       title={project.avatar ? (language === 'id' ? 'Klik untuk memperbesar foto profil' : 'Click to zoom profile photo') : undefined}
@@ -490,7 +490,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                             decoding="async"
                             className="w-full h-full object-cover select-none transition-transform duration-300 group-hover:scale-105"
                           />
-                          {/* Zoom Indicator on Hover */}
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                             <ZoomIn className="w-5 h-5 text-white drop-shadow" />
                           </div>
@@ -503,7 +502,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     </div>
                   </div>
 
-                  {/* Project Titles & Category - Clean normal flow, never hits cover or photo */}
+                  {/* Project Titles & Category */}
                   <div className="pt-1 sm:pt-0 sm:pb-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-lg sm:text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
@@ -516,7 +515,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                         <button
                           type="button"
                           onClick={onOpenEditProjectModal}
-                          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1f2230] dark:hover:bg-[#282c3e] border border-neutral-200/80 dark:border-[#2f3346] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer shadow-xs"
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1f2230] dark:hover:bg-[#282c3e] border border-neutral-200/80 dark:border-[#2f3346] text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer shadow-xs"
                           title={language === 'id' ? 'Edit nama & detail proyek' : 'Edit project details'}
                         >
                           <Edit2 className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
@@ -536,7 +535,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                 <div className="flex items-center gap-2.5 shrink-0 self-start md:self-end pt-2 md:pt-0 pb-1 text-xs">
                   <div
                     title={`${language === 'id' ? 'Progres penyelesaian kartu di papan ini' : 'Board cards completion progress'}: ${doneCount} dari ${totalCount} selesai`}
-                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium"
+                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium"
                   >
                     <span className="text-[11px] text-neutral-500 dark:text-neutral-400">{language === 'id' ? 'Progres' : 'Progress'}:</span>
                     <div className="w-16 sm:w-24 h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
@@ -553,7 +552,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                   {!isViewer && onQuickAddTask && (
                     <button
                       onClick={() => onQuickAddTask(columns[0]?.id || 'todo')}
-                      className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
+                      className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold flex items-center gap-1.5 shadow-xs shadow-red-600/30 transition-all cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>{t('newTask')}</span>
@@ -564,7 +563,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     type="button"
                     onClick={() => setIsBannerCollapsed(!isBannerCollapsed)}
                     title={isBannerCollapsed ? (language === 'id' ? 'Tampilkan Sampul' : 'Show Cover') : (language === 'id' ? 'Sembunyikan Sampul' : 'Hide Cover')}
-                    className="p-1.5 rounded-xl border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
+                    className="p-1.5 rounded-full border border-neutral-200 dark:border-[#272a35] text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#181a22] transition-colors cursor-pointer"
                   >
                     {isBannerCollapsed ? (
                       <ChevronDown className="w-4 h-4" />
@@ -581,14 +580,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
       {/* 2. Viewer Notice Banner */}
       {isViewer && (
-        <div className="mx-3 sm:mx-5 md:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-neutral-100 dark:bg-[#161822] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 text-xs flex items-center justify-between gap-3 shadow-xs shrink-0">
+        <div className="mx-3 sm:mx-5 md:mx-6 mb-2 px-4 py-2.5 rounded-2xl bg-neutral-100 dark:bg-[#161822] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 text-xs flex items-center justify-between gap-3 shadow-xs shrink-0">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-neutral-500 shrink-0" />
             <span>
               <strong>Mode Peninjau (Viewer):</strong> Anda memiliki akses baca untuk melihat seluruh kartu & progres proyek.
             </span>
           </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-[#252834] text-neutral-700 dark:text-neutral-300 uppercase tracking-wider shrink-0">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-neutral-200 dark:bg-[#252834] text-neutral-700 dark:text-neutral-300 uppercase tracking-wider shrink-0">
             Read-Only
           </span>
         </div>
@@ -599,7 +598,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
         <button
           type="button"
           onClick={() => setMobileActiveColumn('all')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
             mobileActiveColumn === 'all'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
               : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
@@ -616,7 +615,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
               key={col.id}
               type="button"
               onClick={() => setMobileActiveColumn(col.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs ring-1'
                   : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
@@ -636,7 +635,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
           <button
             type="button"
             onClick={() => setIsAddingList(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{language === 'id' ? 'Daftar' : 'List'}</span>
@@ -649,7 +648,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
         {columns.length === 0 ? (
           /* Empty Board State when no lists exist yet */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[360px] animate-in fade-in">
-            <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-[#161822] border border-neutral-200 dark:border-[#272a38] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
+            <div className="w-16 h-16 rounded-[24px] bg-neutral-100 dark:bg-[#161822] border border-neutral-200 dark:border-[#272a38] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
               <FolderKanban className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white mb-1.5">
@@ -665,7 +664,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                 {isAddingList ? (
                   <form
                     onSubmit={submitCreateList}
-                    className="p-3 rounded-2xl bg-white dark:bg-[#151722] border border-neutral-200 dark:border-[#282b3a] shadow-lg space-y-2.5"
+                    className="p-3.5 rounded-[28px] bg-white dark:bg-[#151722] border border-neutral-200 dark:border-[#282b3a] shadow-lg space-y-2.5"
                   >
                     <input
                       type="text"
@@ -673,7 +672,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       placeholder={language === 'id' ? 'Nama daftar (mis. Konsep)...' : 'List name...'}
                       value={newListTitle}
                       onChange={(e) => setNewListTitle(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#1d202d] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
+                      className="w-full px-3.5 py-2.5 rounded-2xl text-xs bg-neutral-100 dark:bg-[#1d202d] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
                     />
 
                     {/* Quick Color Picker Swatches */}
@@ -701,7 +700,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       <button
                         type="submit"
                         disabled={!newListTitle.trim()}
-                        className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
+                        className="flex-1 py-2 px-3 rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
                       >
                         {language === 'id' ? 'Tambah Daftar' : 'Add List'}
                       </button>
@@ -711,7 +710,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           setIsAddingList(false);
                           setNewListTitle('');
                         }}
-                        className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                        className="p-2 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#1d202d] cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -721,7 +720,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                   <button
                     type="button"
                     onClick={() => setIsAddingList(true)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-red-600/25 transition-all cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-red-600/25 transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4 stroke-[2.5]" />
                     <span>{language === 'id' ? 'Tambah Daftar Pertama' : 'Add First List'}</span>
@@ -752,7 +751,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     onDragEnd={handleDragEnd}
                     className={`${
                       mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
-                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-150 select-none shadow-md relative overflow-visible ${
+                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-[32px] border transition-all duration-150 select-none shadow-md relative overflow-visible ${
                       isOver
                         ? 'scale-[1.02] shadow-2xl ring-4 ring-white/60 brightness-105'
                         : ''
@@ -763,7 +762,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     }}
                   >
                     {/* Column Header */}
-                    <div className={`p-3 pb-2.5 flex items-center justify-between border-b ${isLight ? 'border-black/10' : 'border-white/15'}`}>
+                    <div className={`px-4 pt-3.5 pb-3 flex items-center justify-between border-b ${isLight ? 'border-black/10' : 'border-white/15'}`}>
                       {isEditing ? (
                         <div className="flex items-center gap-1.5 flex-1 min-w-0 mr-2">
                           <input
@@ -775,19 +774,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               if (e.key === 'Enter') submitEditColumn(column);
                               if (e.key === 'Escape') setEditingColumnId(null);
                             }}
-                            className="flex-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-[#1e212d] border border-neutral-300 text-neutral-900 dark:text-white focus:outline-none shadow-xs"
+                            className="flex-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-[#1e212d] border border-neutral-300 text-neutral-900 dark:text-white focus:outline-none shadow-xs"
                           />
                           <button
                             type="button"
                             onClick={() => submitEditColumn(column)}
-                            className="p-1 rounded-md text-emerald-600 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
+                            className="p-1.5 rounded-full text-emerald-600 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingColumnId(null)}
-                            className="p-1 rounded-md text-neutral-500 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
+                            className="p-1.5 rounded-full text-neutral-500 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -821,7 +820,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                             {displayTitle}
                           </h2>
                           <span
-                            className={`text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full font-bold shadow-xs ${
+                            className={`text-[11px] font-mono tabular-nums px-2.5 py-0.5 rounded-full font-bold shadow-xs ${
                               isLight
                                 ? 'bg-black/10 text-neutral-900 border border-black/15'
                                 : 'bg-black/25 text-white border border-white/20'
@@ -834,11 +833,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                       {/* Header Actions */}
                       {!isViewer && !isEditing && (
-                        <div className="flex items-center gap-0.5 relative column-menu-container">
+                        <div className="flex items-center gap-1 relative column-menu-container">
                           <button
                             onClick={() => onQuickAddTask(column.id)}
                             title={`+ ${displayTitle}`}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-full transition-colors cursor-pointer ${
                               isLight
                                 ? 'text-neutral-700 hover:text-neutral-950 hover:bg-black/10'
                                 : 'text-white/85 hover:text-white hover:bg-white/20'
@@ -854,7 +853,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               setColorPickerColumnId(null);
                             }}
                             title={language === 'id' ? 'Opsi daftar' : 'List options'}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-full transition-colors cursor-pointer ${
                               isLight
                                 ? 'text-neutral-700 hover:text-neutral-950 hover:bg-black/10'
                                 : 'text-white/85 hover:text-white hover:bg-white/20'
@@ -867,7 +866,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           {isMenuOpen && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="absolute right-0 top-8 z-30 w-48 rounded-xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f3f] shadow-xl py-1 text-xs animate-in zoom-in-95 duration-100 text-neutral-800 dark:text-neutral-200"
+                              className="absolute right-0 top-9 z-30 w-48 rounded-[24px] bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f3f] shadow-2xl p-1.5 text-xs animate-in zoom-in-95 duration-100 text-neutral-800 dark:text-neutral-200 overflow-hidden"
                             >
                               <button
                                 type="button"
@@ -875,7 +874,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                                   setColorPickerColumnId(column.id);
                                   setOpenMenuColumnId(null);
                                 }}
-                                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                                className="w-full px-3 py-2 rounded-xl text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
                               >
                                 <div
                                   className="w-3.5 h-3.5 rounded-full shrink-0 ring-1 ring-black/10 dark:ring-white/20"
@@ -886,7 +885,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               <button
                                 type="button"
                                 onClick={() => startEditColumn(column)}
-                                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                                className="w-full px-3 py-2 rounded-xl text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
                               >
                                 <Edit2 className="w-3.5 h-3.5 text-neutral-400" />
                                 <span>{language === 'id' ? 'Ubah Nama' : 'Rename List'}</span>
@@ -895,7 +894,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteColumn(column.id)}
-                                  className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
+                                  className="w-full px-3 py-2 rounded-xl text-left flex items-center gap-2 hover:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                   <span>{language === 'id' ? 'Hapus Daftar' : 'Delete List'}</span>
@@ -911,7 +910,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     {colorPickerColumnId === column.id && (
                       <div
                         onClick={(e) => e.stopPropagation()}
-                        className="column-color-picker-container absolute left-3 top-12 z-40 w-68 p-3.5 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200/90 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
+                        className="column-color-picker-container absolute left-3 top-14 z-40 w-70 p-4 rounded-[28px] bg-white dark:bg-[#181a24] border border-neutral-200/90 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
                       >
                         {/* Popover Header */}
                         <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-[#242738]">
@@ -922,7 +921,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           <button
                             type="button"
                             onClick={() => setColorPickerColumnId(null)}
-                            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202332] cursor-pointer transition-colors"
+                            className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202332] cursor-pointer transition-colors"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -930,7 +929,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                         {/* Live Preview Strip */}
                         <div
-                          className="p-2.5 rounded-xl border flex items-center justify-between transition-colors duration-200"
+                          className="p-2.5 rounded-[18px] border flex items-center justify-between transition-colors duration-200"
                           style={{
                             backgroundColor: `${colColor}14`,
                             borderColor: `${colColor}35`,
@@ -946,7 +945,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                             </span>
                           </div>
                           <span
-                            className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold"
                             style={{ color: colColor }}
                           >
                             {columnTasks.length} {language === 'id' ? 'tugas' : 'tasks'}
@@ -967,7 +966,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                                   type="button"
                                   onClick={() => handleSelectColumnColor(column, preset.value)}
                                   title={language === 'id' ? preset.labelId : preset.labelEn}
-                                  className={`w-9 h-9 rounded-xl transition-all duration-150 flex items-center justify-center cursor-pointer shadow-xs ${
+                                  className={`w-9 h-9 rounded-[14px] transition-all duration-150 flex items-center justify-center cursor-pointer shadow-xs ${
                                     isSelected
                                       ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-[#181a24] scale-105'
                                       : 'hover:scale-110 hover:shadow-md opacity-90 hover:opacity-100'
@@ -984,7 +983,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                         {/* Custom Color Input & Reset Default */}
                         <div className="pt-2 border-t border-neutral-100 dark:border-[#242738] flex items-center gap-2">
                           <label
-                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-700 dark:text-neutral-300 cursor-pointer transition-colors"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-700 dark:text-neutral-300 cursor-pointer transition-colors"
                           >
                             <input
                               type="color"
@@ -1004,7 +1003,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           <button
                             type="button"
                             onClick={() => handleSelectColumnColor(column, '')}
-                            className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors text-[11px] font-medium"
+                            className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-full border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors text-[11px] font-medium"
                             title={language === 'id' ? 'Reset ke warna standar' : 'Reset to default color'}
                           >
                             <RotateCcw className="w-3 h-3" />
@@ -1024,7 +1023,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               setNewCardTitle('');
                             }
                           }}
-                          className={`h-20 rounded-xl border border-dashed flex flex-col items-center justify-center p-3 text-center transition-all group ${
+                          className={`h-22 rounded-[24px] border border-dashed flex flex-col items-center justify-center p-3 text-center transition-all group ${
                             isLight
                               ? 'border-black/25 bg-black/5 hover:bg-black/10 text-neutral-800'
                               : 'border-white/30 bg-white/10 hover:bg-white/20 text-white'
@@ -1064,7 +1063,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                       {/* Inline Card Composer (Trello style) */}
                       {addingCardColumnId === column.id && (
-                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#161822] border border-red-500 shadow-md space-y-2 animate-in fade-in">
+                        <div className="p-3.5 rounded-[24px] bg-white dark:bg-[#161822] border border-red-500 shadow-md space-y-2.5 animate-in fade-in">
                           <textarea
                             autoFocus
                             rows={2}
@@ -1081,14 +1080,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               }
                             }}
                             placeholder={language === 'id' ? 'Masukkan judul kartu (Enter untuk simpan)...' : 'Enter card title (Press Enter to add)...'}
-                            className="w-full text-xs sm:text-[13px] bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none resize-none font-medium leading-snug"
+                            className="w-full text-xs sm:text-[13px] bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none resize-none font-medium leading-snug px-1"
                           />
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => submitCreateCard(column.id)}
                               disabled={!newCardTitle.trim()}
-                              className="py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+                              className="py-1.5 px-3.5 rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors"
                             >
                               {language === 'id' ? 'Tambah kartu' : 'Add card'}
                             </button>
@@ -1098,7 +1097,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                                 setAddingCardColumnId(null);
                                 setNewCardTitle('');
                               }}
-                              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                              className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1109,13 +1108,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                     {/* Column Footer: + Add a card */}
                     {!isViewer && addingCardColumnId !== column.id && (
-                      <div className={`p-2 border-t ${isLight ? 'border-black/10' : 'border-white/15'}`}>
+                      <div className={`p-2.5 px-3 border-t ${isLight ? 'border-black/10' : 'border-white/15'}`}>
                         <button
                           onClick={() => {
                             setAddingCardColumnId(column.id);
                             setNewCardTitle('');
                           }}
-                          className={`w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-start gap-1.5 cursor-pointer shadow-xs ${
+                          className={`w-full py-2 px-3 rounded-full text-xs font-semibold transition-colors flex items-center justify-start gap-1.5 cursor-pointer shadow-xs ${
                             isLight
                               ? 'text-neutral-800 hover:text-neutral-950 bg-black/5 hover:bg-black/10'
                               : 'text-white/90 hover:text-white bg-white/15 hover:bg-white/25'
@@ -1136,7 +1135,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                 {isAddingList ? (
                   <form
                     onSubmit={submitCreateList}
-                    className="p-3 rounded-2xl bg-white dark:bg-[#161822] border border-neutral-200 dark:border-[#262a38] shadow-md space-y-2.5 animate-in fade-in"
+                    className="p-3.5 rounded-[32px] bg-white dark:bg-[#161822] border border-neutral-200 dark:border-[#262a38] shadow-md space-y-3 animate-in fade-in"
                   >
                     <input
                       type="text"
@@ -1144,7 +1143,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       placeholder={language === 'id' ? 'Judul daftar (mis. Konsep, Aset)...' : 'List title...'}
                       value={newListTitle}
                       onChange={(e) => setNewListTitle(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
+                      className="w-full px-3.5 py-2.5 rounded-2xl text-xs bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
                     />
 
                     {/* Quick Color Picker Swatches */}
@@ -1172,7 +1171,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       <button
                         type="submit"
                         disabled={!newListTitle.trim()}
-                        className="flex-1 py-1.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
+                        className="flex-1 py-2 px-3 rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs cursor-pointer"
                       >
                         {language === 'id' ? 'Tambah Daftar' : 'Add List'}
                       </button>
@@ -1182,7 +1181,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           setIsAddingList(false);
                           setNewListTitle('');
                         }}
-                        className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+                        className="p-2 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1192,7 +1191,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                   <button
                     type="button"
                     onClick={() => setIsAddingList(true)}
-                    className="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-neutral-300 dark:border-[#272a38] hover:border-red-500/60 dark:hover:border-red-500/60 bg-neutral-100/60 dark:bg-[#12141d]/60 hover:bg-red-500/5 text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                    className="w-full py-4 px-5 rounded-[32px] border-2 border-dashed border-neutral-300 dark:border-[#272a38] hover:border-red-500/60 dark:hover:border-red-500/60 bg-neutral-100/60 dark:bg-[#12141d]/60 hover:bg-red-500/5 text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer shadow-xs"
                   >
                     <Plus className="w-4 h-4" />
                     <span>{language === 'id' ? '+ Tambah daftar lain' : '+ Add another list'}</span>

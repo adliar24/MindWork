@@ -136,10 +136,10 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#151722] border border-neutral-200 dark:border-[#272b3a] shadow-2xl overflow-hidden my-auto cursor-default text-neutral-900 dark:text-neutral-100"
+          className="relative w-full max-w-lg rounded-[36px] bg-white dark:bg-[#151722] border border-neutral-200 dark:border-[#272b3a] shadow-2xl overflow-hidden my-auto cursor-default text-neutral-900 dark:text-neutral-100"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 px-5 border-b border-neutral-200/80 dark:border-[#252837] bg-neutral-50/70 dark:bg-[#12141c]">
+          <div className="flex items-center justify-between p-4 px-6 border-b border-neutral-200/80 dark:border-[#252837] bg-neutral-50/70 dark:bg-[#12141c]">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center">
                 <FolderEdit className="w-4 h-4 stroke-[2.2]" />
@@ -156,7 +156,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+              className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
               aria-label="Tutup"
             >
               <X className="w-4 h-4" />
@@ -354,14 +354,14 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-[#1e212f] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-full text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-[#1e212f] transition-colors cursor-pointer"
               >
                 {t('cancel')}
               </button>
               <button
                 type="submit"
                 disabled={!name.trim()}
-                className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 disabled:opacity-50 text-white text-xs font-semibold shadow-md shadow-red-600/25 transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 disabled:opacity-50 text-white text-xs font-semibold shadow-md shadow-red-600/25 transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>{language === 'id' ? 'Simpan Perubahan' : 'Save Changes'}</span>

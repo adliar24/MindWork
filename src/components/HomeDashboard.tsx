@@ -58,7 +58,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
           <button
             type="button"
             onClick={onOpenNewProject}
-            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>{t('createNewProject')}</span>
@@ -67,7 +67,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
 
         {/* Quick Stats Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
               <FolderKanban className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
               <span>{t('totalProjects')}</span>
@@ -77,7 +77,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
               <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{t('totalTasks')}</span>
@@ -87,7 +87,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
               <Clock className="w-3.5 h-3.5 text-amber-500" />
               <span>{t('inProgress')}</span>
@@ -97,7 +97,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
+          <div className="p-4 sm:p-5 rounded-[28px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] shadow-xs project-card-item">
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs font-medium mb-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
               <span>{t('completed')}</span>
@@ -123,9 +123,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
 
           {projects.length === 0 ? (
             /* Empty State when 0 projects */
-            <div className="rounded-2xl border-2 border-dashed border-neutral-200 dark:border-[#272a35] bg-white/60 dark:bg-[#12141a]/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-[#1a1c24] border border-neutral-200 dark:border-[#272a35] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
-                <FolderKanban className="w-7 h-7 stroke-[1.6]" />
+            <div className="rounded-[32px] border-2 border-dashed border-neutral-200 dark:border-[#272a35] bg-white/60 dark:bg-[#12141a]/60 p-8 sm:p-12 text-center flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-[24px] bg-neutral-100 dark:bg-[#1a1c24] border border-neutral-200 dark:border-[#272a35] flex items-center justify-center text-neutral-400 mb-4 shadow-xs">
+                <FolderKanban className="w-8 h-8 stroke-[1.6]" />
               </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-1">
                 {t('noProjectsTitle')}
@@ -136,7 +136,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
               <button
                 type="button"
                 onClick={onOpenNewProject}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>{t('createFirstProject')}</span>
@@ -144,7 +144,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
             </div>
           ) : (
             /* Grid of Project Cards */
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {projects.map((project) => {
                 const projTasks = tasks.filter((t) => t.projectId === project.id);
                 const projDone = projTasks.filter(
@@ -170,7 +170,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                   <div
                     key={project.id}
                     onClick={() => onSelectProject(project.id)}
-                    className="group relative flex flex-col justify-between p-5 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item overflow-hidden"
+                    className="group relative flex flex-col justify-between p-5 rounded-[32px] bg-white dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/10 cursor-pointer text-left project-card-item overflow-hidden"
                   >
                     <div>
                       {/* Project Card Cover Banner */}
@@ -192,7 +192,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                         </div>
 
                         {/* Avatar Overlapping Cover - Placed outside banner overflow-hidden to prevent clipping */}
-                        <div className="absolute -bottom-3.5 left-4 w-12 h-12 rounded-xl overflow-hidden border-2 border-white dark:border-[#12141a] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center z-10">
+                        <div className="absolute -bottom-3.5 left-4 w-12 h-12 rounded-[20px] overflow-hidden border-2 border-white dark:border-[#12141a] shadow-md bg-white dark:bg-[#181a24] flex items-center justify-center z-10">
                           {project.avatar ? (
                             <img
                               src={project.avatar}
@@ -212,7 +212,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                       {/* Category & Actions */}
                       <div className="flex items-center justify-between gap-2 mb-2 pt-1 pl-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 truncate">
+                          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 truncate">
                             {project.category || 'Umum'}
                           </span>
                         </div>
@@ -225,14 +225,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
                                 e.stopPropagation();
                                 onOpenEditProjectModal(project);
                               }}
-                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+                              className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
                               title={language === 'id' ? 'Edit Proyek' : 'Edit Project'}
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                           )}
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                               isUserLeader
                                 ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
                                 : userRole === 'viewer' || userRole.toLowerCase().includes('peninjau')
@@ -316,10 +316,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = React.memo(({
               {/* Add Project Card at end of grid */}
               <div
                 onClick={onOpenNewProject}
-                className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 bg-transparent hover:bg-neutral-50/50 dark:hover:bg-[#14161f]/50 cursor-pointer text-center min-h-[220px] project-card-item"
+                className="flex flex-col items-center justify-center p-6 rounded-[32px] border-2 border-dashed border-neutral-200 dark:border-[#272a35] hover:border-red-500/60 dark:hover:border-red-500/60 bg-transparent hover:bg-neutral-50/50 dark:hover:bg-[#14161f]/50 cursor-pointer text-center min-h-[220px] project-card-item transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#1a1c24] text-neutral-500 dark:text-neutral-400 flex items-center justify-center mb-2.5 transition-transform group-hover:scale-110">
-                  <Plus className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-[20px] bg-neutral-100 dark:bg-[#1a1c24] text-neutral-500 dark:text-neutral-400 flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                  <Plus className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 <h4 className="text-xs font-bold text-neutral-900 dark:text-white mb-0.5">
                   {t('createNewProject')}

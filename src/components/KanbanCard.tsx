@@ -168,7 +168,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
       draggable={!isReadOnly}
       onDragStart={(e) => !isReadOnly && onDragStart && onDragStart(e, task.id)}
       onClick={onClick}
-      className={`group relative rounded-xl border kanban-card-item ${
+      className={`group relative rounded-[22px] border kanban-card-item ${
         isReadOnly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
       } select-none overflow-hidden transition-all duration-200
         ${
@@ -231,7 +231,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                 {/* Desktop: Compact text badge */}
                 <span
                   title="Prioritas: Tinggi"
-                  className="hidden sm:flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
+                  className="hidden sm:flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25"
                 >
                   <AlertCircle className="w-3 h-3 stroke-[2.2]" />
                   <span>Tinggi</span>
@@ -261,7 +261,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                 </span>
                 {/* Desktop: Full styled badge */}
                 <span
-                  className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeBadge.style}`}
+                  className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${typeBadge.style}`}
                 >
                   <typeBadge.Icon className="w-3 h-3 stroke-[2.2]" />
                   <span>{typeBadge.label}</span>
@@ -273,7 +273,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {task.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="hidden sm:inline-flex text-[9px] px-1.5 py-0.5 rounded font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
+                className="hidden sm:inline-flex text-[9px] px-2 py-0.5 rounded-full font-medium bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-[#2b2f3e]"
               >
                 {tag}
               </span>
@@ -307,7 +307,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               }
             }}
             title={`Berkas Audio: ${audioAttachment.name}`}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/25 text-violet-700 dark:text-violet-300 text-[10px] font-medium transition-all hover:bg-violet-500/20 cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/25 text-violet-700 dark:text-violet-300 text-[10px] font-medium transition-all hover:bg-violet-500/20 cursor-pointer"
           >
             <Headphones className="w-3 h-3 text-violet-600 dark:text-violet-400 shrink-0" />
             <span className="truncate flex-1 font-semibold">{audioAttachment.name}</span>
@@ -326,7 +326,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               }
             }}
             title={`Berkas: ${primaryDocAttachment.name}`}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[10px] font-medium transition-all cursor-pointer ${
               primaryDocAttachment.type === 'document'
                 ? 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
                 : primaryDocAttachment.type === 'spreadsheet'
@@ -354,7 +354,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
 
         {/* Trello-style Clickable Direct External Links */}
         {task.externalLinks && task.externalLinks.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-0.5">
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
             {task.externalLinks.slice(0, 2).map((link) => {
               const cloud = detectCloudService(link.url);
               return (
@@ -365,7 +365,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   title={`Buka ${link.title || cloud.name}: ${link.url}`}
-                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-all hover:scale-[1.02] hover:shadow-xs active:scale-95 max-w-full ${cloud.badgeClass}`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium border transition-all hover:scale-[1.02] hover:shadow-xs active:scale-95 max-w-full ${cloud.badgeClass}`}
                 >
                   <Link2 className="w-2.5 h-2.5 shrink-0" />
                   <span className="truncate max-w-[120px] sm:max-w-[150px]">{link.title || cloud.name}</span>
@@ -374,7 +374,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
               );
             })}
             {task.externalLinks.length > 2 && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-[#202330] text-neutral-500 border border-neutral-200/60 dark:border-[#2b2f3e] self-center">
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#202330] text-neutral-500 border border-neutral-200/60 dark:border-[#2b2f3e] self-center">
                 +{task.externalLinks.length - 2}
               </span>
             )}
@@ -382,13 +382,13 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
         )}
 
         {/* Card Footer: Metadata Indicators (Date, Checklist count, Attachments, Comments) + Assignee */}
-        <div className="pt-1.5 sm:pt-2 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-1.5 text-[10px]">
+        <div className="pt-2 sm:pt-2.5 border-t border-neutral-100 dark:border-[#232635] flex items-center justify-between gap-1.5 text-[10px]">
           {/* Left indicators */}
           <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 tabular-nums flex-wrap">
             {/* Due Date Indicator */}
             {task.dueDate && (
               <span
-                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
                   task.isCompleted || task.columnId === 'done'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                     : isOverdue
@@ -407,7 +407,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Checklist Count Pill */}
             {totalChecklistCount > 0 && (
               <span
-                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
                   checklistPercent === 100
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                     : 'bg-neutral-100 dark:bg-[#202330] text-neutral-600 dark:text-neutral-400 border-neutral-200/60 dark:border-neutral-800'
@@ -422,7 +422,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
             {/* Time Estimate (Desktop only) */}
             {task.estimate && (
               <span
-                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1 py-0.5 rounded"
+                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded-full"
                 title={`Estimasi: ${task.estimate}`}
               >
                 <Clock className="w-3 h-3" />

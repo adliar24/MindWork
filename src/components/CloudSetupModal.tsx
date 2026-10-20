@@ -113,12 +113,12 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[92vh] cursor-default animate-modal-in"
+        className="w-full max-w-lg rounded-[36px] bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-[#272a35] shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[92vh] cursor-default animate-modal-in"
       >
         {/* Modal Header */}
-        <div className="p-4 px-5 sm:px-6 border-b border-neutral-200 dark:border-[#272a35] flex items-center justify-between bg-neutral-50 dark:bg-[#161820] shrink-0">
+        <div className="p-4 px-6 border-b border-neutral-200 dark:border-[#272a35] flex items-center justify-between bg-neutral-50 dark:bg-[#161820] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs">
+            <div className="w-8 h-8 rounded-[14px] bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs">
               <Database className="w-4 h-4 stroke-[2.2]" />
             </div>
             <div>
@@ -132,7 +132,7 @@ export const CloudSetupModal: React.FC<CloudSetupModalProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

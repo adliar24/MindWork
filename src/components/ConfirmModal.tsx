@@ -74,13 +74,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-[#161822] border border-neutral-200 dark:border-[#272b3a] shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 text-neutral-900 dark:text-neutral-100"
+        className="relative w-full max-w-sm rounded-[32px] bg-white dark:bg-[#161822] border border-neutral-200 dark:border-[#272b3a] shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150 text-neutral-900 dark:text-neutral-100"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202330] transition-colors cursor-pointer"
           aria-label="Tutup"
         >
           <X className="w-4 h-4" />
@@ -89,15 +89,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         {/* Header Icon + Title */}
         <div className="flex items-start gap-3.5 pr-6">
           {variant === 'danger' ? (
-            <div className="w-11 h-11 rounded-2xl bg-red-500/10 dark:bg-red-500/15 border border-red-500/20 text-red-500 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[20px] bg-red-500/10 dark:bg-red-500/15 border border-red-500/20 text-red-500 flex items-center justify-center shrink-0">
               <Trash2 className="w-5 h-5 stroke-[2.2]" />
             </div>
           ) : variant === 'warning' ? (
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[20px] bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5 stroke-[2.2]" />
             </div>
           ) : (
-            <div className="w-11 h-11 rounded-2xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-blue-500 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[20px] bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-blue-500 flex items-center justify-center shrink-0">
               <AlertCircle className="w-5 h-5 stroke-[2.2]" />
             </div>
           )}
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         {/* Highlighted Item Badge (if provided) */}
         {itemName && (
-          <div className="p-2.5 px-3 rounded-xl bg-neutral-100 dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#242736] text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
+          <div className="p-2.5 px-3 rounded-[18px] bg-neutral-100 dark:bg-[#12141a] border border-neutral-200/80 dark:border-[#242736] text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${
                 variant === 'danger'
@@ -134,7 +134,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 py-2 px-3.5 rounded-xl border border-neutral-200 dark:border-[#272a38] bg-white hover:bg-neutral-100 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer text-center"
+            className="flex-1 py-2 px-4 rounded-full border border-neutral-200 dark:border-[#272a38] bg-white hover:bg-neutral-100 dark:bg-[#1a1d27] dark:hover:bg-[#252837] text-neutral-700 dark:text-neutral-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer text-center"
           >
             {defaultCancelText}
           </button>
@@ -146,7 +146,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               onClose();
             }}
             disabled={isLoading}
-            className={`flex-1 py-2 px-3.5 rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-4 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
               variant === 'danger'
                 ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
                 : variant === 'warning'
