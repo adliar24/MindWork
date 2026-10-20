@@ -147,7 +147,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {projects.map((project) => {
                 const projTasks = tasks.filter((t) => t.projectId === project.id);
-                const projDone = projTasks.filter((t) => t.columnId === 'done').length;
+                const projDone = projTasks.filter(
+                  (t) => t.columnId === 'done' || Boolean(t.isCompleted) || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
+                ).length;
                 const progressPercent =
                   projTasks.length > 0 ? Math.round((projDone / projTasks.length) * 100) : 0;
 

@@ -257,3 +257,30 @@ export function detectCloudService(url: string): {
   };
 }
 
+export function isImageAttachment(att: {
+  type?: string;
+  name?: string;
+  url?: string;
+  extension?: string;
+  isCover?: boolean;
+}): boolean {
+  if (att.isCover) return true;
+  if (att.type === 'image') return true;
+  if (att.url && (att.url.startsWith('data:image/') || att.url.startsWith('blob:'))) return true;
+  const target = ((att.name || '') + ' ' + (att.extension || '') + ' ' + (att.url || '')).toLowerCase();
+  return /\.(jpg|jpeg|png|webp|gif|svg|bmp|avif)(\?.*)?$/i.test(target);
+}
+
+export function isAudioAttachment(att: {
+  type?: string;
+  name?: string;
+  url?: string;
+  extension?: string;
+}): boolean {
+  if (att.type === 'audio') return true;
+  if (att.url && (att.url.startsWith('data:audio/') || att.url.startsWith('blob:audio'))) return true;
+  const target = ((att.name || '') + ' ' + (att.extension || '') + ' ' + (att.url || '')).toLowerCase();
+  return /\.(mp3|wav|ogg|m4a|flac|aac|wma)(\?.*)?$/i.test(target);
+}
+
+

@@ -46,7 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Task completion stats for the current project
   const projectTasks = tasks.filter((t) => t.projectId === activeProjectId);
-  const doneTasks = projectTasks.filter((t) => t.columnId === 'done').length;
+  const doneTasks = projectTasks.filter(
+    (t) => t.columnId === 'done' || Boolean(t.isCompleted) || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
+  ).length;
   const totalTasks = projectTasks.length;
   const progressPercent = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 

@@ -23,7 +23,12 @@ import {
   FolderGit2,
 } from 'lucide-react';
 import { Task, User, ColumnId, TaskType } from '../types';
-import { formatDateLocale, detectCloudService } from '../utils/fileHelpers';
+import {
+  formatDateLocale,
+  detectCloudService,
+  isImageAttachment,
+  isAudioAttachment,
+} from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -52,17 +57,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
 
   // Find cover image attachment if any
   const coverAttachment = task.attachments.find(
-    (att) => (att.isCover || att.type === 'image') && att.url
+    (att) => isImageAttachment(att) && att.url
   );
 
   // Find audio attachment if any
   const audioAttachment = task.attachments.find(
-    (att) => att.type === 'audio' || ['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes((att.extension || '').toLowerCase())
+    (att) => isAudioAttachment(att)
   );
 
   // Find document/sheet/archive preview if no cover image
   const primaryDocAttachment = !coverAttachment
-    ? task.attachments.find((att) => att.type !== 'audio' && att.type !== 'image')
+    ? task.attachments.find((att) => !isAudioAttachment(att) && !isImageAttachment(att))
     : undefined;
 
   const isNonTask =
@@ -180,12 +185,13 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
 
       {/* 2. Cover / Thumbnail image if exists */}
       {coverAttachment && coverAttachment.url && (
-        <div className="relative w-full h-20 sm:h-24 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
+        <div className="relative w-full h-32 sm:h-36 bg-neutral-100 dark:bg-[#12141a] overflow-hidden border-b border-neutral-200/80 dark:border-[#262937]">
           <img
             src={coverAttachment.url}
             alt={coverAttachment.name}
+            loading="lazy"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
       )}
@@ -256,60 +262,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           </div>
         </div>
 
-        {/* Task Title with Trello-style Check-off button or Non-task indicator */}
-        <div className="flex items-start gap-2">
-          {!isReadOnly && onToggleComplete && !isNonTask && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleComplete(task.id);
-              }}
-              title={task.isCompleted ? 'Tandai belum selesai' : 'Tandai selesai'}
-              className="mt-0.5 shrink-0 text-neutral-400 hover:text-emerald-500 transition-colors cursor-pointer"
-            >
-              {task.isCompleted ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              ) : (
-                <Circle className="w-4 h-4 text-neutral-400 hover:text-emerald-500" />
-              )}
-            </button>
-          )}
-          {isNonTask && (
-            <span
-              className="mt-0.5 shrink-0"
-              title={
-                task.taskType === 'concept'
-                  ? 'Konsep / Ide'
-                  : task.taskType === 'asset'
-                  ? 'Aset & Media'
-                  : 'Catatan'
-              }
-            >
-              {task.taskType === 'concept' ? (
-                <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-              ) : task.taskType === 'asset' ? (
-                <FolderGit2 className="w-3.5 h-3.5 text-indigo-500" />
-              ) : (
-                <Bookmark className="w-3.5 h-3.5 text-sky-500" />
-              )}
-            </span>
-          )}
-          <h3
-            className={`text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 flex-1 ${
-              task.isCompleted
-                ? 'text-neutral-900 dark:text-white'
-                : 'text-neutral-900 dark:text-white'
-            }`}
-          >
+        {/* Card Title (No checklist on title - checklists are managed inside the card) */}
+        <div>
+          <h3 className="text-xs sm:text-[13px] font-semibold leading-snug line-clamp-2 text-neutral-900 dark:text-white">
             {task.title}
           </h3>
-          {task.isCompleted && !isNonTask && (
-            <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-0.5">
-              <CheckCircle2 className="w-2.5 h-2.5" />
-              <span className="hidden sm:inline">Selesai</span>
-            </span>
-          )}
         </div>
 
         {/* Description excerpt (Desktop only - hidden on mobile for clean scannability) */}

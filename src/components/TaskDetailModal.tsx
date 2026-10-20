@@ -304,8 +304,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const { type, extension } = getFileTypeFromExtension(file.name);
 
       if (type === 'image') {
+        const hasCover = task.attachments.some((a) => a.isCover);
         try {
-          const compressed = await compressImageFile(file, 900, 0.78);
+          const compressed = await compressImageFile(file, 1200, 0.82);
           incomingList.push({
             id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             name: file.name,
@@ -315,17 +316,27 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             url: compressed.dataUrl,
             extension,
             isWorkResult,
+            isCover: !hasCover && incomingList.every((a) => !a.isCover),
           });
         } catch {
-          // Fallback if compression fails
-          incomingList.push({
-            id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            name: file.name,
-            size: formatFileSize(file.size),
-            type: 'image',
-            uploadedAt: 'Hari ini',
-            extension,
-            isWorkResult,
+          await new Promise<void>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              incomingList.push({
+                id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                name: file.name,
+                size: formatFileSize(file.size),
+                type: 'image',
+                uploadedAt: 'Hari ini',
+                url: e.target?.result as string,
+                extension,
+                isWorkResult,
+                isCover: !hasCover && incomingList.every((a) => !a.isCover),
+              });
+              resolve();
+            };
+            reader.onerror = () => resolve();
+            reader.readAsDataURL(file);
           });
         }
       } else {
@@ -629,21 +640,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
             {/* LEFT COLUMN: Main Task Body (Title, Description, Checklist, Attachments, Comments) */}
             <div className="flex-1 md:overflow-y-auto p-5 sm:p-7 space-y-6">
-              {/* Task Title (Seamless Inline Edit) with Trello Check-off Circle */}
+              {/* Task Title (Seamless Inline Edit) */}
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <button
-                    type="button"
-                    onClick={handleToggleComplete}
-                    title={isCompleted ? (language === 'id' ? 'Tandai belum selesai' : 'Mark incomplete') : (language === 'id' ? 'Tandai selesai' : 'Mark complete')}
-                    className="mt-1 text-neutral-400 hover:text-emerald-500 transition-colors shrink-0 cursor-pointer"
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-neutral-400 hover:text-emerald-500" />
-                    )}
-                  </button>
                   <div className="flex-1 min-w-0">
                     <input
                       type="text"
@@ -658,7 +657,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
 
                 {/* Trello-style Quick Action Toolstrip */}
-                <div className="relative flex items-center gap-1.5 flex-wrap pl-8">
+                <div className="relative flex items-center gap-1.5 flex-wrap">
                   {/* + Add button */}
                   <button
                     type="button"

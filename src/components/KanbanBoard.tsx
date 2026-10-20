@@ -169,12 +169,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return map;
   }, [tasks, columns]);
 
-  // Trello-style completion: card checked off or all checklist items completed
+  // Natural Kanban progress:
+  // Card is done if it is in a "Done / Selesai" column, or card is marked completed, or all its checklist items are completed
   const completedTasksCount = useMemo(() => {
-    return tasks.filter(
-      (t) => t.isCompleted || (t.checklist && t.checklist.length > 0 && t.checklist.every((c) => c.completed))
-    ).length;
-  }, [tasks]);
+    return tasks.filter((t) => {
+      const col = columns.find((c) => c.id === t.columnId);
+      const isDoneColumn = col ? /done|selesai/i.test(col.title) || col.id === 'done' : t.columnId === 'done';
+      const hasChecklist = t.checklist && t.checklist.length > 0;
+      const allChecklistDone = hasChecklist && t.checklist.every((c) => c.completed);
+      return isDoneColumn || Boolean(t.isCompleted) || allChecklistDone;
+    }).length;
+  }, [tasks, columns]);
 
   const doneCount = completedTasksCount;
   const totalCount = tasks.length;
@@ -442,9 +447,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
                 {/* Right: Stats & Collapse Toggle */}
                 <div className="flex items-center gap-2.5 shrink-0 self-start md:self-end pt-2 md:pt-0 pb-1 text-xs">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium">
-                    <span>{language === 'id' ? 'Progres' : 'Progress'}:</span>
-                    <span className="font-bold text-neutral-900 dark:text-white">
+                  <div
+                    title={`${language === 'id' ? 'Progres penyelesaian kartu di papan ini' : 'Board cards completion progress'}: ${doneCount} dari ${totalCount} selesai`}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#181a22] border border-neutral-200 dark:border-[#272a35] text-neutral-700 dark:text-neutral-300 font-medium"
+                  >
+                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">{language === 'id' ? 'Progres' : 'Progress'}:</span>
+                    <div className="w-16 sm:w-24 h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <span className="font-bold text-neutral-900 dark:text-white tabular-nums">
                       {doneCount}/{totalCount} ({progressPercent}%)
                     </span>
                   </div>
