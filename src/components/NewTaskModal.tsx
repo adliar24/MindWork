@@ -19,6 +19,10 @@ import {
   Clock,
   Check,
   Trash2,
+  Archive,
+  FileText,
+  FileSpreadsheet,
+  Link2,
 } from 'lucide-react';
 import { Column, ColumnId, Priority, Task, TaskType, User, Attachment } from '../types';
 import { formatFileSize, getFileTypeFromExtension, compressImageFile, detectCloudService } from '../utils/fileHelpers';
@@ -627,33 +631,69 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
 
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1.5">
-                {attachments.map((att) => (
-                  <span
-                    key={att.id}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border ${
-                      att.isCloudLink
-                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-700'
-                    }`}
-                  >
-                    {att.isCloudLink ? (
-                      <Cloud className="w-3.5 h-3.5 text-blue-500" />
-                    ) : (
-                      <Paperclip className="w-3.5 h-3.5 text-neutral-400" />
-                    )}
-                    <span className="truncate max-w-[140px] font-semibold">{att.name}</span>
-                    <span className="text-[10px] opacity-75 font-mono">
-                      {att.isCloudLink ? `(${att.cloudProvider || 'Cloud'})` : `(${att.size})`}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== att.id))}
-                      className="text-neutral-400 hover:text-red-500 cursor-pointer ml-0.5"
+                {attachments.map((att) => {
+                  const ext = (att.extension || '').toLowerCase();
+                  const isZip = att.type === 'archive' || ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
+                  const isSheet = att.type === 'spreadsheet' || ['xls', 'xlsx', 'csv'].includes(ext);
+                  const isCloud = Boolean(att.isCloudLink);
+
+                  return (
+                    <div
+                      key={att.id}
+                      className={`inline-flex items-stretch rounded-full border text-xs overflow-hidden shadow-2xs ${
+                        isCloud
+                          ? 'border-blue-300 dark:border-blue-800/70 bg-blue-50/60 dark:bg-blue-950/25'
+                          : isZip
+                          ? 'border-amber-300 dark:border-amber-800/70 bg-amber-50/60 dark:bg-amber-950/25'
+                          : isSheet
+                          ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/60 dark:bg-emerald-950/25'
+                          : 'border-neutral-300 dark:border-[#2f3346] bg-neutral-100 dark:bg-[#1a1d27]'
+                      }`}
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      {/* Left Compartment: Icon with vertical divider */}
+                      <div
+                        className={`px-2.5 py-1 border-r flex items-center justify-center shrink-0 ${
+                          isCloud
+                            ? 'bg-blue-100/80 dark:bg-blue-900/40 border-blue-300 dark:border-blue-800/70 text-blue-600 dark:text-blue-400'
+                            : isZip
+                            ? 'bg-amber-100/80 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800/70 text-amber-700 dark:text-amber-300'
+                            : isSheet
+                            ? 'bg-emerald-100/80 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-neutral-200/80 dark:bg-[#252838] border-neutral-300 dark:border-[#2f3346] text-neutral-700 dark:text-neutral-300'
+                        }`}
+                      >
+                        {isCloud ? (
+                          <Link2 className="w-3.5 h-3.5" />
+                        ) : isZip ? (
+                          <Archive className="w-3.5 h-3.5" />
+                        ) : isSheet ? (
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                        ) : ext === 'pdf' || att.type === 'document' ? (
+                          <FileText className="w-3.5 h-3.5" />
+                        ) : (
+                          <Paperclip className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+
+                      {/* Right Compartment: File info and delete button */}
+                      <div className="px-2.5 py-1 flex items-center gap-1.5 min-w-0">
+                        <span className="truncate max-w-[130px] font-bold text-neutral-900 dark:text-neutral-100">
+                          {att.name}
+                        </span>
+                        <span className="text-[10px] opacity-75 font-mono text-neutral-500 dark:text-neutral-400 font-semibold">
+                          {att.isCloudLink ? `(${att.cloudProvider || 'Cloud'})` : `(${att.size})`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== att.id))}
+                          className="text-neutral-400 hover:text-red-500 cursor-pointer ml-1 text-sm font-bold"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1287,48 +1287,53 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </form>
                 )}
 
-                {/* External Links List */}
+                {/* External Links List (Split-Pill: [ Icon | Title & Actions ]) */}
                 {externalLinksList.length > 0 && attachmentTab !== 'docs' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {externalLinksList.map((link) => (
                       <div
                         key={link.id}
-                        className="group flex items-center justify-between gap-2 p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/10 hover:border-blue-400 transition-all text-xs"
+                        className="group inline-flex items-stretch rounded-full border border-blue-300/80 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/20 hover:border-blue-400 dark:hover:border-blue-600 transition-all text-xs overflow-hidden shadow-2xs"
                       >
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 min-w-0 flex-1 hover:text-blue-600 dark:hover:text-blue-400"
-                        >
-                          <Globe className="w-4 h-4 text-blue-500 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-semibold text-neutral-900 dark:text-white truncate">
-                              {link.title}
-                            </p>
-                            <p className="text-[10px] text-neutral-400 truncate">
-                              {link.domain || link.url}
-                            </p>
-                          </div>
-                        </a>
-                        <div className="flex items-center gap-1 shrink-0">
+                        {/* Left Compartment: Link Icon with vertical divider */}
+                        <div className="px-3.5 py-2 bg-blue-100/80 dark:bg-blue-900/40 border-r border-blue-300/80 dark:border-blue-800/70 flex items-center justify-center shrink-0">
+                          <Link2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+
+                        {/* Right Compartment: Link Details & Actions */}
+                        <div className="px-3 py-1.5 flex items-center justify-between gap-2 min-w-0 flex-1">
                           <a
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1 text-neutral-400 hover:text-blue-500 transition-colors"
-                            title="Buka Tautan"
+                            className="min-w-0 flex-1 hover:text-blue-600 dark:hover:text-blue-400"
                           >
-                            <ExternalLinkIcon className="w-3.5 h-3.5" />
+                            <p className="font-bold text-neutral-950 dark:text-white truncate">
+                              {link.title}
+                            </p>
+                            <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate font-mono">
+                              {link.domain || link.url}
+                            </p>
                           </a>
-                          <button
-                            type="button"
-                            onClick={() => setLinkToDelete(link)}
-                            className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full hover:bg-blue-100/60 dark:hover:bg-blue-900/30 transition-colors"
+                              title="Buka Tautan"
+                            >
+                              <ExternalLinkIcon className="w-3.5 h-3.5" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => setLinkToDelete(link)}
+                              className="p-1.5 text-neutral-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1340,42 +1345,118 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {displayedAttachments.map((file) => {
                       const isImg = file.type === 'image' && file.url;
+                      if (!isImg) {
+                        const ext = (file.extension || '').toLowerCase();
+                        const isZip = file.type === 'archive' || ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
+                        const isSheet = file.type === 'spreadsheet' || ['xls', 'xlsx', 'csv'].includes(ext);
+                        const isAudio = file.type === 'audio' || ['mp3', 'wav', 'ogg', 'm4a'].includes(ext);
+
+                        return (
+                          <div
+                            key={file.id}
+                            className={`group relative rounded-full border transition-all flex items-stretch justify-between text-xs overflow-hidden shadow-2xs ${
+                              file.isWorkResult
+                                ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/50 dark:bg-emerald-950/20'
+                                : isZip
+                                ? 'border-amber-300 dark:border-amber-800/70 bg-amber-50/50 dark:bg-amber-950/20'
+                                : isSheet
+                                ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/50 dark:bg-emerald-950/20'
+                                : 'border-neutral-300 dark:border-[#2f3346] bg-neutral-50/70 dark:bg-[#181a25]'
+                            }`}
+                          >
+                            {/* Left Compartment: File Icon with vertical dividing border */}
+                            <div
+                              className={`px-3.5 py-2 border-r flex items-center justify-center shrink-0 ${
+                                isZip
+                                  ? 'bg-amber-100/80 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800/70 text-amber-700 dark:text-amber-300'
+                                  : isSheet
+                                  ? 'bg-emerald-100/80 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300'
+                                  : isAudio
+                                  ? 'bg-purple-100/80 dark:bg-purple-900/40 border-purple-300 dark:border-purple-800/70 text-purple-700 dark:text-purple-300'
+                                  : 'bg-neutral-200/80 dark:bg-[#252838] border-neutral-300 dark:border-[#2f3346] text-neutral-700 dark:text-neutral-300'
+                              }`}
+                            >
+                              {isZip ? (
+                                <Archive className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                              ) : isSheet ? (
+                                <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                              ) : isAudio ? (
+                                <Headphones className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                              ) : file.extension === 'pdf' ? (
+                                <FileText className="w-4 h-4 text-rose-500" />
+                              ) : (
+                                <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                              )}
+                            </div>
+
+                            {/* Right Compartment: File Info & Download/Delete */}
+                            <div className="px-3.5 py-1.5 flex-1 flex items-center justify-between gap-2 min-w-0">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <p title={file.name} className="font-bold text-neutral-950 dark:text-neutral-100 truncate">
+                                    {file.name}
+                                  </p>
+                                  {file.isWorkResult && (
+                                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 flex items-center gap-0.5">
+                                      <Sparkles className="w-2.5 h-2.5" />
+                                      <span>Hasil</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
+                                  {file.size} • {file.uploadedAt}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                {file.url && (
+                                  <button
+                                    type="button"
+                                    onClick={() => triggerDownload(file.name, file.url)}
+                                    className="p-1.5 text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white rounded-full hover:bg-neutral-200/60 dark:hover:bg-[#252837] transition-colors cursor-pointer"
+                                    title="Unduh berkas"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setAttachmentToDelete(file)}
+                                  className="p-1.5 text-neutral-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                                  title="Hapus berkas"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Images maintain thumbnail card
                       return (
                         <div
                           key={file.id}
-                          className={`group relative rounded-xl border p-2.5 transition-all flex items-center justify-between gap-2.5 text-xs ${
+                          className={`group relative rounded-2xl border p-2.5 transition-all flex items-center justify-between gap-2.5 text-xs ${
                             file.isWorkResult
                               ? 'border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/15 dark:bg-emerald-950/10'
                               : 'border-neutral-200/80 dark:border-[#222532] bg-white dark:bg-[#161822]'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            {isImg ? (
-                              <img
-                                src={file.url}
-                                alt={file.name}
-                                onClick={() => setPreviewImage(file.url || null)}
-                                className="w-10 h-10 rounded-lg object-cover border border-neutral-200/60 dark:border-[#292d3b] cursor-pointer hover:scale-105 transition-transform shrink-0"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-[#1d202c] border border-neutral-200/60 dark:border-[#292d3b] flex items-center justify-center shrink-0">
-                                {file.extension === 'pdf' ? (
-                                  <FileText className="w-5 h-5 text-red-500" />
-                                ) : ['xls', 'xlsx', 'csv'].includes(file.extension || '') ? (
-                                  <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
-                                ) : (
-                                  <Archive className="w-5 h-5 text-amber-500" />
-                                )}
-                              </div>
-                            )}
-
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              onClick={() => setPreviewImage(file.url || null)}
+                              className="w-10 h-10 rounded-xl object-cover border border-neutral-200/60 dark:border-[#292d3b] cursor-pointer hover:scale-105 transition-transform shrink-0"
+                            />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
-                                <p title={file.name} className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                                <p title={file.name} className="font-bold text-neutral-900 dark:text-neutral-100 truncate">
                                   {file.name}
                                 </p>
                                 {file.isWorkResult && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 flex items-center gap-0.5">
+                                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 flex items-center gap-0.5">
                                     <Sparkles className="w-2.5 h-2.5" />
                                     <span>Hasil</span>
                                   </span>

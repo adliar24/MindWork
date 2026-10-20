@@ -147,32 +147,41 @@
   transform: translateY(-1px);
 }
 
-/* Custom sleek scrollbar for Kanban board & modals */
+/* Ultra-minimalist modern scrollbar (blends seamlessly into UI) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 140, 160, 0.25) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 4.5px;
+  height: 4.5px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #272a35;
-  border-radius: 6px;
-  transition: background 150ms ease;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #3b3f50;
-}
-
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 6px;
+  background: rgba(140, 140, 160, 0.22);
+  border-radius: 9999px;
   transition: background 150ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
+  background: rgba(90, 95, 115, 0.45);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  transition: background 150ms ease;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }

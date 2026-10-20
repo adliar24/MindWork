@@ -29,6 +29,7 @@ import {
   detectCloudService,
   isImageAttachment,
   isAudioAttachment,
+  triggerDownload,
 } from '../utils/fileHelpers';
 import { UserAvatar } from './UserAvatar';
 import { useLanguage } from '../context/LanguageContext';
@@ -63,15 +64,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
     (att) => isImageAttachment(att) && att.url
   );
 
-  // Find audio attachment if any
-  const audioAttachment = task.attachments.find(
-    (att) => isAudioAttachment(att)
-  );
-
-  // Find document/sheet/archive preview if no cover image
-  const primaryDocAttachment = !coverAttachment
-    ? task.attachments.find((att) => !isAudioAttachment(att) && !isImageAttachment(att))
-    : undefined;
+  // Non-image attachments (documents, zip, pdf, sheets, audio, etc.)
+  const nonImageAttachments = React.useMemo(() => {
+    return task.attachments.filter((att) => !isImageAttachment(att));
+  }, [task.attachments]);
 
   const isNonTask =
     task.taskType === 'concept' ||
@@ -295,67 +291,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
           </p>
         )}
 
-        {/* Trello-style Media & Audio Preview Chips */}
-        {audioAttachment && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              if (audioAttachment.url) {
-                window.open(audioAttachment.url, '_blank', 'noopener,noreferrer');
-              } else {
-                onClick();
-              }
-            }}
-            title={`Berkas Audio: ${audioAttachment.name}`}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/25 text-violet-700 dark:text-violet-300 text-[10px] font-medium transition-all hover:bg-violet-500/20 cursor-pointer"
-          >
-            <Headphones className="w-3 h-3 text-violet-600 dark:text-violet-400 shrink-0" />
-            <span className="truncate flex-1 font-semibold">{audioAttachment.name}</span>
-            <span className="text-[9px] opacity-75 font-mono shrink-0">{audioAttachment.size || 'Audio'}</span>
-          </div>
-        )}
-
-        {primaryDocAttachment && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              if (primaryDocAttachment.url) {
-                window.open(primaryDocAttachment.url, '_blank', 'noopener,noreferrer');
-              } else {
-                onClick();
-              }
-            }}
-            title={`Berkas: ${primaryDocAttachment.name}`}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[10px] font-medium transition-all cursor-pointer ${
-              primaryDocAttachment.type === 'document'
-                ? 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
-                : primaryDocAttachment.type === 'spreadsheet'
-                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
-                : primaryDocAttachment.type === 'archive'
-                ? 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
-                : 'bg-neutral-100 dark:bg-[#202330] border-neutral-200/80 dark:border-neutral-700/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/70'
-            }`}
-          >
-            {primaryDocAttachment.type === 'document' ? (
-              <FileText className="w-3 h-3 shrink-0" />
-            ) : primaryDocAttachment.type === 'spreadsheet' ? (
-              <FileSpreadsheet className="w-3 h-3 shrink-0" />
-            ) : primaryDocAttachment.type === 'archive' ? (
-              <Archive className="w-3 h-3 shrink-0" />
-            ) : (
-              <Paperclip className="w-3 h-3 shrink-0" />
-            )}
-            <span className="truncate flex-1 font-semibold">{primaryDocAttachment.name}</span>
-            <span className="text-[9px] opacity-75 font-mono shrink-0">
-              {primaryDocAttachment.extension || primaryDocAttachment.size}
-            </span>
-          </div>
-        )}
-
-        {/* Trello-style Clickable Direct External Links */}
-        {task.externalLinks && task.externalLinks.length > 0 && (
+        {/* Split-Pill Chips for Links, Documents, Zip, and Non-image Files (Ref Match) */}
+        {((task.externalLinks && task.externalLinks.length > 0) || nonImageAttachments.length > 0) && (
           <div className="flex flex-wrap gap-1.5 pt-0.5">
-            {task.externalLinks.slice(0, 2).map((link) => {
+            {/* 1. External & Cloud Links (Split-Pill: [ Icon | Title ]) */}
+            {(task.externalLinks || []).slice(0, 2).map((link) => {
               const cloud = detectCloudService(link.url);
               return (
                 <a
@@ -365,17 +305,91 @@ export const KanbanCard: React.FC<KanbanCardProps> = React.memo(({
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   title={`Buka ${link.title || cloud.name}: ${link.url}`}
-                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium border transition-all hover:scale-[1.02] hover:shadow-xs active:scale-95 max-w-full ${cloud.badgeClass}`}
+                  className="group/pill inline-flex items-stretch rounded-full border border-blue-300/80 dark:border-blue-800/70 bg-blue-50/60 dark:bg-blue-950/25 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-xs active:scale-95 transition-all max-w-full cursor-pointer overflow-hidden text-xs"
                 >
-                  <Link2 className="w-2.5 h-2.5 shrink-0" />
-                  <span className="truncate max-w-[120px] sm:max-w-[150px]">{link.title || cloud.name}</span>
-                  <ExternalLinkIcon className="w-2 h-2 opacity-60 shrink-0" />
+                  {/* Left Compartment: Link Icon with vertical dividing border line */}
+                  <div className="px-2 sm:px-2.5 py-1 bg-blue-100/80 dark:bg-blue-900/40 border-r border-blue-300/80 dark:border-blue-800/70 flex items-center justify-center shrink-0">
+                    <Link2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  {/* Right Compartment: Link Title */}
+                  <div className="px-2.5 sm:px-3 py-1 flex items-center gap-1 min-w-0">
+                    <span className="truncate max-w-[120px] sm:max-w-[160px] text-blue-950 dark:text-blue-100 font-bold text-[11px] sm:text-xs">
+                      {link.title || cloud.name}
+                    </span>
+                    <ExternalLinkIcon className="w-2.5 h-2.5 text-blue-500 opacity-60 shrink-0" />
+                  </div>
                 </a>
               );
             })}
-            {task.externalLinks.length > 2 && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#202330] text-neutral-500 border border-neutral-200/60 dark:border-[#2b2f3e] self-center">
-                +{task.externalLinks.length - 2}
+
+            {/* 2. Uploaded Non-Image Files (Documents, Zip, Spreadsheets, Audio, etc.) */}
+            {nonImageAttachments.slice(0, 2).map((file) => {
+              const ext = (file.extension || '').toLowerCase();
+              const isZip = file.type === 'archive' || ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
+              const isSheet = file.type === 'spreadsheet' || ['xls', 'xlsx', 'csv'].includes(ext);
+              const isAudio = file.type === 'audio' || ['mp3', 'wav', 'ogg', 'm4a'].includes(ext);
+
+              return (
+                <div
+                  key={file.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (file.url) {
+                      triggerDownload(file.name, file.url);
+                    } else {
+                      onClick();
+                    }
+                  }}
+                  title={`Berkas: ${file.name} (${file.size || ext.toUpperCase()}) • Klik untuk unduh`}
+                  className={`group/pill inline-flex items-stretch rounded-full border transition-all max-w-full cursor-pointer overflow-hidden text-xs hover:shadow-xs active:scale-95 ${
+                    isZip
+                      ? 'border-amber-300 dark:border-amber-800/70 bg-amber-50/60 dark:bg-amber-950/25 hover:border-amber-400'
+                      : isSheet
+                      ? 'border-emerald-300 dark:border-emerald-800/70 bg-emerald-50/60 dark:bg-emerald-950/25 hover:border-emerald-400'
+                      : isAudio
+                      ? 'border-purple-300 dark:border-purple-800/70 bg-purple-50/60 dark:bg-purple-950/25 hover:border-purple-400'
+                      : 'border-neutral-300 dark:border-[#303448] bg-neutral-100/80 dark:bg-[#1a1c27] hover:border-neutral-400 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  {/* Left Compartment: Icon with vertical dividing border line */}
+                  <div
+                    className={`px-2 sm:px-2.5 py-1 border-r flex items-center justify-center shrink-0 ${
+                      isZip
+                        ? 'bg-amber-100/80 dark:bg-amber-900/40 border-amber-300 dark:border-amber-800/70 text-amber-700 dark:text-amber-300'
+                        : isSheet
+                        ? 'bg-emerald-100/80 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300'
+                        : isAudio
+                        ? 'bg-purple-100/80 dark:bg-purple-900/40 border-purple-300 dark:border-purple-800/70 text-purple-700 dark:text-purple-300'
+                        : 'bg-neutral-200/80 dark:bg-[#252838] border-neutral-300 dark:border-[#303448] text-neutral-700 dark:text-neutral-300'
+                    }`}
+                  >
+                    {isZip ? (
+                      <Archive className="w-3.5 h-3.5" />
+                    ) : isSheet ? (
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                    ) : isAudio ? (
+                      <Headphones className="w-3.5 h-3.5" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5" />
+                    )}
+                  </div>
+                  {/* Right Compartment: File Title & Extension */}
+                  <div className="px-2.5 sm:px-3 py-1 flex items-center gap-1.5 min-w-0">
+                    <span className="truncate max-w-[120px] sm:max-w-[160px] font-bold text-[11px] sm:text-xs text-neutral-900 dark:text-neutral-100">
+                      {file.name}
+                    </span>
+                    <span className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 font-bold shrink-0">
+                      {file.extension || file.size}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Overflow Count */}
+            {((task.externalLinks?.length || 0) + nonImageAttachments.length > 4) && (
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-[#202330] text-neutral-700 dark:text-neutral-300 self-center">
+                +{((task.externalLinks?.length || 0) + nonImageAttachments.length) - 4}
               </span>
             )}
           </div>
