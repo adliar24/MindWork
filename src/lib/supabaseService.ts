@@ -699,6 +699,7 @@ export async function fetchCloudLists(projectId?: string): Promise<Column[] | nu
         title: row.title,
         order: row.position ?? 0,
         badgeColor: row.color || '',
+        color: row.color || '',
       }));
     }
 
@@ -739,7 +740,7 @@ export async function saveCloudList(list: Column): Promise<boolean> {
       project_id: list.projectId,
       title: list.title,
       position: list.order ?? 0,
-      color: list.badgeColor || '',
+      color: list.color || list.badgeColor || '',
     };
     const { error } = await supabase.from('board_lists').upsert(payload);
     return !error;

@@ -52,6 +52,7 @@ export interface Column {
   title: string;
   description?: string;
   badgeColor?: string;
+  color?: string;
   order?: number;
 }
 

@@ -13,12 +13,56 @@ import {
   Check,
   FolderKanban,
   Download,
+  Palette,
+  RotateCcw,
 } from 'lucide-react';
 import { Column, ColumnId, Project, ProjectRole, Task, User } from '../types';
 import { KanbanCard } from './KanbanCard';
 import { useLanguage } from '../context/LanguageContext';
 import { ConfirmModal } from './ConfirmModal';
 import { triggerDownload } from '../utils/fileHelpers';
+
+export const LIST_COLOR_PRESETS = [
+  { name: 'Slate', value: '#64748b', labelId: 'Abu-abu Netral', labelEn: 'Slate Neutral' },
+  { name: 'Vermilion', value: '#ef4444', labelId: 'Merah Vermilion', labelEn: 'Vermilion Red' },
+  { name: 'Orange', value: '#f97316', labelId: 'Oranye Senja', labelEn: 'Sunset Orange' },
+  { name: 'Amber', value: '#f59e0b', labelId: 'Kuning Amber', labelEn: 'Warm Amber' },
+  { name: 'Emerald', value: '#10b981', labelId: 'Hijau Emerald', labelEn: 'Emerald Green' },
+  { name: 'Teal', value: '#14b8a6', labelId: 'Teal Mint', labelEn: 'Mint Teal' },
+  { name: 'Sky', value: '#0ea5e9', labelId: 'Biru Langit', labelEn: 'Sky Blue' },
+  { name: 'Indigo', value: '#6366f1', labelId: 'Indigo Royal', labelEn: 'Royal Indigo' },
+  { name: 'Purple', value: '#8b5cf6', labelId: 'Ungu Violet', labelEn: 'Electric Violet' },
+  { name: 'Rose', value: '#ec4899', labelId: 'Merah Muda Rose', labelEn: 'Rose Pink' },
+];
+
+export const getColumnColor = (col: Column): string => {
+  if (col.color && col.color.trim()) return col.color.trim();
+  if (col.badgeColor && col.badgeColor.startsWith('#')) return col.badgeColor.trim();
+  if (col.badgeColor) {
+    if (col.badgeColor.includes('red')) return '#ef4444';
+    if (col.badgeColor.includes('emerald') || col.badgeColor.includes('green')) return '#10b981';
+    if (col.badgeColor.includes('amber') || col.badgeColor.includes('yellow')) return '#f59e0b';
+    if (col.badgeColor.includes('blue') || col.badgeColor.includes('sky')) return '#0ea5e9';
+    if (col.badgeColor.includes('purple') || col.badgeColor.includes('violet')) return '#8b5cf6';
+    if (col.badgeColor.includes('neutral') || col.badgeColor.includes('slate')) return '#64748b';
+  }
+  if (col.id.endsWith('todo') || col.id === 'todo') return '#64748b';
+  if (col.id.endsWith('doing') || col.id === 'in_progress') return '#0ea5e9';
+  if (col.id.endsWith('review') || col.id === 'in_review') return '#f59e0b';
+  if (col.id.endsWith('done') || col.id === 'done') return '#10b981';
+  return '#64748b';
+};
+
+export const isLightColor = (hex: string): boolean => {
+  if (!hex || !hex.startsWith('#')) return false;
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6 && clean.length !== 3) return false;
+  const r = parseInt(clean.length === 3 ? clean[0] + clean[0] : clean.substring(0, 2), 16);
+  const g = parseInt(clean.length === 3 ? clean[1] + clean[1] : clean.substring(2, 4), 16);
+  const b = parseInt(clean.length === 3 ? clean[2] + clean[2] : clean.substring(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 185;
+};
 
 interface KanbanBoardProps {
   project?: Project | null;
@@ -32,7 +76,7 @@ interface KanbanBoardProps {
   onQuickAddTask: (columnId: ColumnId) => void;
   onInlineCreateCard?: (columnId: ColumnId, title: string) => void;
   onUpdateTask?: (updatedTask: Task) => void;
-  onCreateList?: (title: string) => void;
+  onCreateList?: (title: string, color?: string) => void;
   onUpdateList?: (updatedList: Column) => void;
   onDeleteList?: (listId: string) => void;
   onOpenEditProjectModal?: () => void;
@@ -74,9 +118,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
   // Dynamic Trello-style List Creation & Renaming State
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
+  const [newListColor, setNewListColor] = useState<string>('#64748b');
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingColumnTitle, setEditingColumnTitle] = useState('');
   const [openMenuColumnId, setOpenMenuColumnId] = useState<string | null>(null);
+  const [colorPickerColumnId, setColorPickerColumnId] = useState<string | null>(null);
 
   // Dynamic Trello-style Inline Card Composer State
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
@@ -199,12 +245,47 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [imageZoom]);
 
+  // Close popovers and menus on outside click or Escape
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest('.column-menu-container') && !target?.closest('.column-color-picker-container')) {
+        setOpenMenuColumnId(null);
+        setColorPickerColumnId(null);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenMenuColumnId(null);
+        setColorPickerColumnId(null);
+      }
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
   const submitCreateList = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newListTitle.trim() || !onCreateList) return;
-    onCreateList(newListTitle.trim());
+    onCreateList(newListTitle.trim(), newListColor);
     setNewListTitle('');
+    setNewListColor('#64748b');
     setIsAddingList(false);
+  };
+
+  const handleSelectColumnColor = (col: Column, color: string) => {
+    if (!onUpdateList) return;
+    onUpdateList({
+      ...col,
+      color: color,
+      badgeColor: color,
+    });
+    setColorPickerColumnId(null);
+    setOpenMenuColumnId(null);
   };
 
   const submitCreateCard = (columnId: string) => {
@@ -514,7 +595,6 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
       )}
 
       {/* Mobile Column Navigation Switcher */}
-      {/* Mobile Column Navigation Switcher */}
       <div className="sm:hidden px-3 pt-1 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
         <button
           type="button"
@@ -529,17 +609,24 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
         </button>
         {columns.map((col) => {
           const colTasks = tasksByColumn[col.id] || [];
+          const colColor = getColumnColor(col);
+          const isActive = mobileActiveColumn === col.id;
           return (
             <button
               key={col.id}
               type="button"
               onClick={() => setMobileActiveColumn(col.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                mobileActiveColumn === col.id
-                  ? 'bg-red-600 text-white shadow-xs'
+                isActive
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs ring-1'
                   : 'bg-neutral-200/70 text-neutral-600 dark:bg-[#181a24] dark:text-neutral-400'
               }`}
+              style={{ ringColor: isActive ? colColor : undefined }}
             >
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: colColor }}
+              />
               <span>{getColumnTitle(col.id, col.title)}</span>
               <span className="font-mono text-[10px] opacity-80">({colTasks.length})</span>
             </button>
@@ -588,6 +675,28 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       onChange={(e) => setNewListTitle(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#1d202d] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
                     />
+
+                    {/* Quick Color Picker Swatches */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
+                      <span className="text-[11px] text-neutral-400 font-medium shrink-0 mr-1">
+                        {language === 'id' ? 'Warna:' : 'Color:'}
+                      </span>
+                      {LIST_COLOR_PRESETS.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setNewListColor(c.value)}
+                          title={language === 'id' ? c.labelId : c.labelEn}
+                          className={`w-5 h-5 rounded-full transition-transform shrink-0 ${
+                            newListColor === c.value
+                              ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-[#151722] scale-110'
+                              : 'hover:scale-110 opacity-70 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: c.value }}
+                        />
+                      ))}
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <button
                         type="submit"
@@ -631,6 +740,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                 const displayTitle = getColumnTitle(column.id, column.title);
                 const isEditing = editingColumnId === column.id;
                 const isMenuOpen = openMenuColumnId === column.id;
+                const colColor = getColumnColor(column);
+                const isLight = isLightColor(colColor);
 
                 return (
                   <div
@@ -641,15 +752,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                     onDragEnd={handleDragEnd}
                     className={`${
                       mobileActiveColumn !== 'all' ? 'w-[calc(100vw-24px)] max-w-none' : 'w-[84vw] max-w-[320px]'
-                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-150 select-none shadow-xs relative
-                      ${
-                        isOver
-                          ? 'border-red-500 bg-red-500/8 dark:bg-red-950/20 shadow-md scale-[1.01]'
-                          : 'border-neutral-200/90 dark:border-[#222533] bg-neutral-100/75 dark:bg-[#12141d]'
-                      }`}
+                    } sm:w-80 md:w-84 flex flex-col max-h-full rounded-2xl border transition-all duration-150 select-none shadow-md relative overflow-visible ${
+                      isOver
+                        ? 'scale-[1.02] shadow-2xl ring-4 ring-white/60 brightness-105'
+                        : ''
+                    }`}
+                    style={{
+                      backgroundColor: colColor,
+                      borderColor: isOver ? (isLight ? '#000000' : '#ffffff') : 'rgba(0, 0, 0, 0.12)',
+                    }}
                   >
                     {/* Column Header */}
-                    <div className="p-3 pb-2.5 flex items-center justify-between border-b border-neutral-200/80 dark:border-[#222533]">
+                    <div className={`p-3 pb-2.5 flex items-center justify-between border-b ${isLight ? 'border-black/10' : 'border-white/15'}`}>
                       {isEditing ? (
                         <div className="flex items-center gap-1.5 flex-1 min-w-0 mr-2">
                           <input
@@ -661,36 +775,58 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               if (e.key === 'Enter') submitEditColumn(column);
                               if (e.key === 'Escape') setEditingColumnId(null);
                             }}
-                            className="flex-1 px-2 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-[#1e212d] border border-red-500 text-neutral-900 dark:text-white focus:outline-none"
+                            className="flex-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-[#1e212d] border border-neutral-300 text-neutral-900 dark:text-white focus:outline-none shadow-xs"
                           />
                           <button
                             type="button"
                             onClick={() => submitEditColumn(column)}
-                            className="p-1 rounded-md text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                            className="p-1 rounded-md text-emerald-600 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
                           >
-                            <Check className="w-3.5 h-3.5" />
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingColumnId(null)}
-                            className="p-1 rounded-md text-neutral-400 hover:bg-neutral-200 cursor-pointer"
+                            className="p-1 rounded-md text-neutral-500 bg-white hover:bg-white/90 shadow-xs cursor-pointer"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-red-600 dark:bg-red-500 shrink-0" />
+                          {/* List Color Dot Trigger */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isViewer) {
+                                setColorPickerColumnId(colorPickerColumnId === column.id ? null : column.id);
+                                setOpenMenuColumnId(null);
+                              }
+                            }}
+                            title={!isViewer ? (language === 'id' ? 'Klik untuk ubah warna papan daftar' : 'Click to change list color') : undefined}
+                            className={`w-3.5 h-3.5 rounded-full shrink-0 transition-all duration-200 shadow-xs ${
+                              isLight
+                                ? 'bg-neutral-900 ring-2 ring-neutral-900/40 hover:scale-125'
+                                : 'bg-white ring-2 ring-white/70 hover:ring-white hover:scale-125'
+                            } ${!isViewer ? 'cursor-pointer' : ''}`}
+                          />
                           <h2
                             onClick={() => !isViewer && startEditColumn(column)}
-                            title={!isViewer ? 'Klik untuk ubah nama' : undefined}
-                            className={`text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate ${
-                              !isViewer ? 'cursor-pointer hover:text-red-600 transition-colors' : ''
-                            }`}
+                            title={!isViewer ? (language === 'id' ? 'Klik untuk ubah nama' : 'Click to rename') : undefined}
+                            className={`text-sm font-bold truncate ${
+                              isLight ? 'text-neutral-900' : 'text-white drop-shadow-xs'
+                            } ${!isViewer ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                           >
                             {displayTitle}
                           </h2>
-                          <span className="text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full bg-white dark:bg-[#1c1f2b] text-neutral-600 dark:text-neutral-300 font-semibold border border-neutral-200/60 dark:border-neutral-800 shadow-xs">
+                          <span
+                            className={`text-[11px] font-mono tabular-nums px-2 py-0.5 rounded-full font-bold shadow-xs ${
+                              isLight
+                                ? 'bg-black/10 text-neutral-900 border border-black/15'
+                                : 'bg-black/25 text-white border border-white/20'
+                            }`}
+                          >
                             {columnTasks.length}
                           </span>
                         </div>
@@ -698,20 +834,31 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                       {/* Header Actions */}
                       {!isViewer && !isEditing && (
-                        <div className="flex items-center gap-0.5 relative">
+                        <div className="flex items-center gap-0.5 relative column-menu-container">
                           <button
                             onClick={() => onQuickAddTask(column.id)}
                             title={`+ ${displayTitle}`}
-                            className="p-1 rounded-md text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200/70 dark:hover:bg-[#1e212d] transition-colors cursor-pointer"
+                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                              isLight
+                                ? 'text-neutral-700 hover:text-neutral-950 hover:bg-black/10'
+                                : 'text-white/85 hover:text-white hover:bg-white/20'
+                            }`}
                           >
-                            <Plus className="w-4 h-4 stroke-[2]" />
+                            <Plus className="w-4 h-4 stroke-[2.5]" />
                           </button>
 
                           {/* List Menu (...) */}
                           <button
-                            onClick={() => setOpenMenuColumnId(isMenuOpen ? null : column.id)}
-                            title="Opsi daftar"
-                            className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#1e212d] transition-colors cursor-pointer"
+                            onClick={() => {
+                              setOpenMenuColumnId(isMenuOpen ? null : column.id);
+                              setColorPickerColumnId(null);
+                            }}
+                            title={language === 'id' ? 'Opsi daftar' : 'List options'}
+                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                              isLight
+                                ? 'text-neutral-700 hover:text-neutral-950 hover:bg-black/10'
+                                : 'text-white/85 hover:text-white hover:bg-white/20'
+                            }`}
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
@@ -720,8 +867,22 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                           {isMenuOpen && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="absolute right-0 top-8 z-30 w-44 rounded-xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f3f] shadow-xl py-1 text-xs animate-in zoom-in-95 duration-100"
+                              className="absolute right-0 top-8 z-30 w-48 rounded-xl bg-white dark:bg-[#181a24] border border-neutral-200 dark:border-[#2b2f3f] shadow-xl py-1 text-xs animate-in zoom-in-95 duration-100 text-neutral-800 dark:text-neutral-200"
                             >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setColorPickerColumnId(column.id);
+                                  setOpenMenuColumnId(null);
+                                }}
+                                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-neutral-100 dark:hover:bg-[#202330] text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                              >
+                                <div
+                                  className="w-3.5 h-3.5 rounded-full shrink-0 ring-1 ring-black/10 dark:ring-white/20"
+                                  style={{ backgroundColor: colColor }}
+                                />
+                                <span>{language === 'id' ? 'Ubah Warna Daftar' : 'Change List Color'}</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => startEditColumn(column)}
@@ -746,6 +907,113 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       )}
                     </div>
 
+                    {/* Color Picker Popover */}
+                    {colorPickerColumnId === column.id && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="column-color-picker-container absolute left-3 top-12 z-40 w-68 p-3.5 rounded-2xl bg-white dark:bg-[#181a24] border border-neutral-200/90 dark:border-[#2b2f42] shadow-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150"
+                      >
+                        {/* Popover Header */}
+                        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-[#242738]">
+                          <div className="flex items-center gap-1.5 font-bold text-neutral-900 dark:text-white">
+                            <Palette className="w-4 h-4 text-red-500" />
+                            <span>{language === 'id' ? 'Warna Papan Daftar' : 'List Color'}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setColorPickerColumnId(null)}
+                            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-[#202332] cursor-pointer transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Live Preview Strip */}
+                        <div
+                          className="p-2.5 rounded-xl border flex items-center justify-between transition-colors duration-200"
+                          style={{
+                            backgroundColor: `${colColor}14`,
+                            borderColor: `${colColor}35`,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                              style={{ backgroundColor: colColor }}
+                            />
+                            <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate text-[11px]">
+                              {displayTitle}
+                            </span>
+                          </div>
+                          <span
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold"
+                            style={{ color: colColor }}
+                          >
+                            {columnTasks.length} {language === 'id' ? 'tugas' : 'tasks'}
+                          </span>
+                        </div>
+
+                        {/* Color Presets Grid */}
+                        <div>
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-2">
+                            {language === 'id' ? 'Pilihan Warna' : 'Preset Colors'}
+                          </span>
+                          <div className="grid grid-cols-5 gap-2">
+                            {LIST_COLOR_PRESETS.map((preset) => {
+                              const isSelected = colColor.toLowerCase() === preset.value.toLowerCase();
+                              return (
+                                <button
+                                  key={preset.value}
+                                  type="button"
+                                  onClick={() => handleSelectColumnColor(column, preset.value)}
+                                  title={language === 'id' ? preset.labelId : preset.labelEn}
+                                  className={`w-9 h-9 rounded-xl transition-all duration-150 flex items-center justify-center cursor-pointer shadow-xs ${
+                                    isSelected
+                                      ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-[#181a24] scale-105'
+                                      : 'hover:scale-110 hover:shadow-md opacity-90 hover:opacity-100'
+                                  }`}
+                                  style={{ backgroundColor: preset.value }}
+                                >
+                                  {isSelected && <Check className="w-4 h-4 text-white stroke-[3] drop-shadow-xs" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Custom Color Input & Reset Default */}
+                        <div className="pt-2 border-t border-neutral-100 dark:border-[#242738] flex items-center gap-2">
+                          <label
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-700 dark:text-neutral-300 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="color"
+                              value={colColor.startsWith('#') ? colColor : '#64748b'}
+                              onChange={(e) => handleSelectColumnColor(column, e.target.value)}
+                              className="sr-only"
+                            />
+                            <div
+                              className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                              style={{ backgroundColor: colColor }}
+                            />
+                            <span className="text-[11px] font-medium">
+                              {language === 'id' ? 'Kustom...' : 'Custom...'}
+                            </span>
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSelectColumnColor(column, '')}
+                            className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl border border-neutral-200 dark:border-[#2b2f42] hover:bg-neutral-50 dark:hover:bg-[#202332] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors text-[11px] font-medium"
+                            title={language === 'id' ? 'Reset ke warna standar' : 'Reset to default color'}
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Reset</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Cards Container with smooth vertical scroll */}
                     <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[140px] max-h-[calc(100vh-175px)]">
                       {columnTasks.length === 0 && addingCardColumnId !== column.id && (
@@ -756,16 +1024,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                               setNewCardTitle('');
                             }
                           }}
-                          className={`h-20 rounded-xl border border-dashed border-neutral-300 dark:border-[#2c3040] bg-white/50 dark:bg-[#161822]/60 flex flex-col items-center justify-center p-3 text-center transition-all text-neutral-400 dark:text-neutral-500 group ${
-                            isViewer
-                              ? 'cursor-default'
-                              : 'cursor-pointer hover:border-red-500 hover:bg-red-500/5'
-                          }`}
+                          className={`h-20 rounded-xl border border-dashed flex flex-col items-center justify-center p-3 text-center transition-all group ${
+                            isLight
+                              ? 'border-black/25 bg-black/5 hover:bg-black/10 text-neutral-800'
+                              : 'border-white/30 bg-white/10 hover:bg-white/20 text-white'
+                          } ${isViewer ? 'cursor-default' : 'cursor-pointer'}`}
                         >
                           {!isViewer && (
-                            <Plus className="w-4 h-4 mb-0.5 group-hover:text-red-500 transition-colors text-neutral-400" />
+                            <Plus className={`w-4 h-4 mb-0.5 transition-transform group-hover:scale-110 ${isLight ? 'text-neutral-800' : 'text-white'}`} />
                           )}
-                          <span className="text-xs font-medium group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                          <span className="text-xs font-semibold">
                             {language === 'id' ? '+ Tambah kartu' : '+ Add a card'}
                           </span>
                         </div>
@@ -841,15 +1109,19 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
 
                     {/* Column Footer: + Add a card */}
                     {!isViewer && addingCardColumnId !== column.id && (
-                      <div className="p-2 border-t border-neutral-200/80 dark:border-[#222533]">
+                      <div className={`p-2 border-t ${isLight ? 'border-black/10' : 'border-white/15'}`}>
                         <button
                           onClick={() => {
                             setAddingCardColumnId(column.id);
                             setNewCardTitle('');
                           }}
-                          className="w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-[#1e212d] transition-colors flex items-center justify-start gap-1.5 cursor-pointer"
+                          className={`w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-start gap-1.5 cursor-pointer shadow-xs ${
+                            isLight
+                              ? 'text-neutral-800 hover:text-neutral-950 bg-black/5 hover:bg-black/10'
+                              : 'text-white/90 hover:text-white bg-white/15 hover:bg-white/25'
+                          }`}
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                           <span>{language === 'id' ? 'Tambah kartu' : 'Add a card'}</span>
                         </button>
                       </div>
@@ -874,6 +1146,28 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = React.memo(({
                       onChange={(e) => setNewListTitle(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-xs bg-neutral-100 dark:bg-[#12141c] border border-neutral-200 dark:border-[#2f3345] focus:outline-none focus:border-red-500 text-neutral-900 dark:text-white font-medium"
                     />
+
+                    {/* Quick Color Picker Swatches */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
+                      <span className="text-[11px] text-neutral-400 font-medium shrink-0 mr-1">
+                        {language === 'id' ? 'Warna:' : 'Color:'}
+                      </span>
+                      {LIST_COLOR_PRESETS.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setNewListColor(c.value)}
+                          title={language === 'id' ? c.labelId : c.labelEn}
+                          className={`w-5 h-5 rounded-full transition-transform shrink-0 ${
+                            newListColor === c.value
+                              ? 'ring-2 ring-red-500 ring-offset-1 dark:ring-offset-[#161822] scale-110'
+                              : 'hover:scale-110 opacity-70 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: c.value }}
+                        />
+                      ))}
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <button
                         type="submit"

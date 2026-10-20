@@ -663,9 +663,9 @@ export default function App() {
       const hasLists = prev.some((l) => l.projectId === projId);
       if (hasLists) return prev;
       const defaultCols: Column[] = [
-        { id: `list-${projId}-todo`, projectId: projId, title: 'To Do', order: 0 },
-        { id: `list-${projId}-doing`, projectId: projId, title: 'Doing', order: 1 },
-        { id: `list-${projId}-done`, projectId: projId, title: 'Done', order: 2 },
+        { id: `list-${projId}-todo`, projectId: projId, title: 'To Do', order: 0, color: '#64748b', badgeColor: '#64748b' },
+        { id: `list-${projId}-doing`, projectId: projId, title: 'Doing', order: 1, color: '#0ea5e9', badgeColor: '#0ea5e9' },
+        { id: `list-${projId}-done`, projectId: projId, title: 'Done', order: 2, color: '#10b981', badgeColor: '#10b981' },
       ];
       setTimeout(() => {
         defaultCols.forEach((c) => saveCloudList(c).catch(() => {}));
@@ -681,15 +681,17 @@ export default function App() {
   }, [tasks, selectedTaskId]);
 
   // List Management Handlers (Trello-style)
-  const handleCreateList = (title: string) => {
+  const handleCreateList = (title: string, color?: string) => {
     if (!activeProject || !title.trim()) return;
     const currentLists = boardLists.filter((l) => l.projectId === activeProject.id);
+    const listColor = color || '#64748b';
     const newList: Column = {
       id: `list-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       projectId: activeProject.id,
       title: title.trim(),
       order: currentLists.length,
-      badgeColor: '',
+      badgeColor: listColor,
+      color: listColor,
     };
     const nextLists = [...boardLists, newList];
     setBoardLists(nextLists);

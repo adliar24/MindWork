@@ -470,17 +470,22 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   ];
 
   const listOptions = columns.length > 0
-    ? columns.map((col) => ({
-        id: col.id,
-        label: col.title,
-        dot: col.badgeColor || (col.id === 'done' ? 'bg-emerald-500' : 'bg-red-500'),
-        color: 'text-neutral-800 dark:text-neutral-200',
-      }))
-    : defaultListOptions;
+    ? columns.map((col) => {
+        const hex = col.color || (col.badgeColor?.startsWith('#') ? col.badgeColor : undefined);
+        return {
+          id: col.id,
+          label: col.title,
+          dotColor: hex,
+          dot: !hex ? (col.badgeColor || (col.id === 'done' ? 'bg-emerald-500' : 'bg-red-500')) : '',
+          color: 'text-neutral-800 dark:text-neutral-200',
+        };
+      })
+    : defaultListOptions.map((opt) => ({ ...opt, dotColor: undefined }));
 
   const currentStatusConfig = listOptions.find((s) => s.id === columnId) || {
     id: columnId,
     label: columnId,
+    dotColor: undefined,
     dot: 'bg-neutral-400',
     color: 'text-neutral-700 dark:text-neutral-300',
   };
@@ -530,7 +535,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <span className="text-[11px] text-neutral-400 font-medium hidden sm:inline">
                   {language === 'id' ? 'dalam daftar' : 'in list'}
                 </span>
-                <span className={`w-2 h-2 rounded-full shrink-0 ${currentStatusConfig.dot}`} />
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${currentStatusConfig.dot || ''}`}
+                  style={currentStatusConfig.dotColor ? { backgroundColor: currentStatusConfig.dotColor } : undefined}
+                />
                 <select
                   value={columnId}
                   onChange={(e) => handleStatusChange(e.target.value as ColumnId)}

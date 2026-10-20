@@ -9,25 +9,29 @@ export const INITIAL_COLUMNS: Column[] = [
     id: 'todo',
     title: 'To Do',
     description: 'Tugas yang direncanakan dan siap dikerjakan',
-    badgeColor: 'border-neutral-500/30 text-neutral-400',
+    badgeColor: '#64748b',
+    color: '#64748b',
   },
   {
     id: 'in_progress',
     title: 'In Progress',
     description: 'Sedang aktif dikerjakan oleh anggota tim',
-    badgeColor: 'border-red-500/40 text-red-500',
+    badgeColor: '#0ea5e9',
+    color: '#0ea5e9',
   },
   {
     id: 'in_review',
     title: 'In Review',
     description: 'Pengecekan hasil kerja, revisi, atau approval ketua/klien',
-    badgeColor: 'border-amber-500/40 text-amber-500',
+    badgeColor: '#f59e0b',
+    color: '#f59e0b',
   },
   {
     id: 'done',
     title: 'Done',
     description: 'Selesai, terverifikasi, dan file sudah diserahkan / siap',
-    badgeColor: 'border-emerald-500/40 text-emerald-500',
+    badgeColor: '#10b981',
+    color: '#10b981',
   },
 ];
 
